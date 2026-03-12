@@ -1,0 +1,16 @@
+CLASS
+IDENTIFIER(Small)
+Line 6, col 13: illegal character:(#)
+PUBLIC
+STATIC
+VOID
+IDENTIFIER(main)
+LPAR
+STRING
+LSQ
+RSQ
+IDENTIFIER(args)
+RPAR
+LBRACE
+RBRACE
+Line 9, col 1: illegal character:(#)
