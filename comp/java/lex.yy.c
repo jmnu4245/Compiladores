@@ -1088,7 +1088,7 @@ YY_RULE_SETUP
 case 14:
 YY_RULE_SETUP
 #line 138 "jucompiler.l"
-{ ColumnCounter +=4; }
+{ ColumnCounter++; }
 	YY_BREAK
 case 15:
 /* rule 15 can match eol */

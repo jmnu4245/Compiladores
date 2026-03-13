@@ -135,7 +135,7 @@ tab "\t"
 "//"[^\r\n]* {}
 
 {whitespace}    { ColumnCounter++; }
-{tab}           { ColumnCounter +=4; }
+{tab}           { ColumnCounter++; }
 \n|\r\n|\r    { LineCounter++; ColumnCounter = 1; }
 
 {reserved}      { if(print_tokens) printf("RESERVED(%s)\n", yytext);
