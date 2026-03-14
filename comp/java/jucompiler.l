@@ -1,5 +1,5 @@
 /* Gabriela Mendoza 2022227025
-   Juan Cruz 2025269252
+   Juan Manuel Flores de la Cruz 2025269252
 */
 
 %{
