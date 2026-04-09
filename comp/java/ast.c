@@ -1,0 +1,64 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include "ast.h"
+
+//He puesto todas las que he encontrado, vamos adaptando
+const char* category_names[] = {
+    "Program", "FieldDecl", "VarDecl", "MethodDecl", "MethodHeader", "MethodParams",
+    "ParamDecl", "MethodBody", "Block", "If", "While", "Return", "Call", "Print", "ParseArgs",
+    "Assign", "Or", "And", "Eq", "Ne", "Lt", "Gt", "Le", "Ge", "Add", "Sub", "Mul", "Div", "Mod", "Lshift",
+    "Rshift", "Xor", "Not", "Minus", "Plus", "Length", "Bool", "BoolLit", "Double", "Decimal",
+    "Identifier", "Int", "Natural", "StrLit", "StringArray", "Void"
+};
+
+// create a node of a given category with a given lexical symbol
+struct node *newnode(enum category category, char *token) {
+    struct node *new = malloc(sizeof(struct node));
+    new->category = category;
+    new->token = token;
+    new->children = malloc(sizeof(struct node_list));
+    new->children->node = NULL;
+    new->children->next = NULL;
+    return new;
+}
+
+// append a node to the list of children of the parent node
+void addchild(struct node *parent, struct node *child) {
+    struct node_list *new = malloc(sizeof(struct node_list));
+    new->node = child;
+    new->next = NULL;
+    struct node_list *children = parent->children;
+    while(children->next != NULL)
+        children = children->next;
+    children->next = new;
+}
+// show subtree given a node
+void show(struct node *n, int depth) {
+    if (n == NULL) return;
+    for (int i = 0; i < depth * 2; i++) {
+        printf(".."); 
+    }
+    printf("%s", category_names[n->category]);
+    if (n->token != NULL) {
+        printf("(%s)", n->token);
+    }
+    printf("\n");
+    struct node_list *current = n->children;
+    while (current != NULL) {
+        show(current->node, depth + 1);
+        current = current->next;
+    }
+}
+//Dealocate tree
+void free_tree(struct node *n) {
+    if (n == NULL) return;
+    struct node_list *current = n->children;
+    while (current != NULL) {
+        struct node_list *next = current->next;
+        free_tree(current->node);
+        free(current);
+        current = next;
+    }
+    if (n->token != NULL) free(n->token);
+    free(n);
+}
