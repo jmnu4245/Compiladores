@@ -57,6 +57,7 @@
 #define YYSTYPE_IS_DECLARED 1
 typedef union YYSTYPE {
     char *lexeme;
+    struct node *node;
 } YYSTYPE;
 #endif /* !YYSTYPE_IS_DECLARED */
 extern YYSTYPE yylval;

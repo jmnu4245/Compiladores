@@ -8,7 +8,7 @@ const char* category_names[] = {
     "ParamDecl", "MethodBody", "Block", "If", "While", "Return", "Call", "Print", "ParseArgs",
     "Assign", "Or", "And", "Eq", "Ne", "Lt", "Gt", "Le", "Ge", "Add", "Sub", "Mul", "Div", "Mod", "Lshift",
     "Rshift", "Xor", "Not", "Minus", "Plus", "Length", "Bool", "BoolLit", "Double", "Decimal",
-    "Identifier", "Int", "Natural", "StrLit", "StringArray", "Void"
+    "Identifier", "Int", "Natural", "StrLit", "StringArray", "VoidNone"
 };
 
 // create a node of a given category with a given lexical symbol
@@ -36,7 +36,7 @@ void addchild(struct node *parent, struct node *child) {
 void show(struct node *n, int depth) {
     if (n == NULL) return;
     for (int i = 0; i < depth * 2; i++) {
-        printf(".."); 
+        printf("."); 
     }
     printf("%s", category_names[n->category]);
     if (n->token != NULL) {
