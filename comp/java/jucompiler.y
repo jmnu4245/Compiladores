@@ -79,11 +79,15 @@ MethodDecl: PUBLIC STATIC MethodHeader MethodBody {
     $$ = newnode(MethodDecl, NULL);
     addchild($$, $3);
     addchild($$, $4);
-};
+}
+| PUBLIC STATIC error RBRACE { $$ = NULL; }
+| PUBLIC STATIC error SEMICOLON { $$ = NULL; }
+| error RBRACE { $$ = NULL; };
 
 FieldDecl: PUBLIC STATIC Type IDENTIFIER FieldList SEMICOLON {
     $$ = create_multiple_decls(FieldDecl, $3, $4, $5);
 }
+| PUBLIC STATIC error SEMICOLON { $$ = NULL; }
     | error SEMICOLON {$$=NULL;};
 
 FieldList: FieldList COMMA IDENTIFIER {
@@ -168,31 +172,35 @@ VarDecl: Type IDENTIFIER FieldList SEMICOLON {
     $$ = create_multiple_decls(VarDecl, $1, $2, $3);
 };
 
-Statement: LBRACE StmtList RBRACE{
+Statement: LBRACE StmtList RBRACE {
     int count = count_children($2);
-        if (count == 1) {
-            $$ = $2->children->node; 
-        } else {
-            $$ = newnode(Block, NULL);
-            unpack_nodes($$, $2);
-        }
+    if (count == 0) {
+        $$ = newnode(Block, NULL);  // ← bloque vacío explícito
+    } else if (count == 1) {
+        struct node_list *curr = $2->children;
+        while (curr != NULL && curr->node == NULL) curr = curr->next;
+        $$ = (curr != NULL) ? curr->node : newnode(Block, NULL);
+    } else {
+        $$ = newnode(Block, NULL);
+        unpack_nodes($$, $2);
+    }
 }
          | IF LPAR Expr RPAR Statement %prec IF_PREC {
             $$ = newnode(If, NULL);
             addchild($$, $3);
-            addchild($$, $5);
+                addchild($$, $5 ? $5 : newnode(Block, NULL));
             addchild($$, newnode(Block, NULL)); // else branch vacio
          }
          | IF LPAR Expr RPAR Statement ELSE Statement {
             $$ = newnode(If, NULL);
             addchild($$, $3);
-            addchild($$, $5);
-            addchild($$, $7);
+            addchild($$, $5 ? $5 : newnode(Block, NULL));
+    addchild($$, $7 ? $7 : newnode(Block, NULL));
          }
          | WHILE LPAR Expr RPAR Statement {
     $$ = newnode(While, NULL);
     addchild($$, $3);
-    addchild($$, $5);
+        addchild($$, $5 ? $5 : newnode(Block, NULL));
          }
          | RETURN SEMICOLON {
     $$ = newnode(Return, NULL);
@@ -226,7 +234,6 @@ MethodInvocation: IDENTIFIER LPAR Args RPAR {
         addchild($$, newnode(Identifier, $1));
         unpack_nodes($$, $3);
     }
-    | IDENTIFIER LPAR error RPAR { $$ = NULL; }
 ;
 
 Args: Expr ExprList {
@@ -325,12 +332,14 @@ struct node *create_multiple_decls(enum category decl_type, struct node *type_no
 
     if (extra_ids_container != NULL) {
         struct node_list *curr = extra_ids_container->children;
-        while (curr != NULL && curr->node != NULL) {
+        while (curr != NULL ) {
+            if (curr->node != NULL) {
             struct node *extra = newnode(decl_type, NULL);
             addchild(extra, newnode(type_node->category, NULL)); 
             addchild(extra, curr->node);
             addchild(wrapper, extra);
-            curr = curr->next;
+        }
+        curr = curr->next;
         }
     }
     return wrapper;

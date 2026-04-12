@@ -11,15 +11,17 @@
     #include "y.tab.h"
     #include "ast.h"
 
-#define PASS_TOKEN() yylval.lexeme = strdup(yytext);
-
+#define PASS_TOKEN() LastColumnCounter = ColumnCounter; yylval.lexeme = strdup(yytext);
 int yyparse(void);
 
     int LineCounter = 1;
     int ColumnCounter = 1;
+    int LastColumnCounter = 1; 
+
     int print_tokens = 0;
     int str_start_line, str_start_col;
     int string_erro = 0;
+    int syntax_error = 0;
 
     char *str=NULL;
 
@@ -78,7 +80,7 @@ static "static"
 string "String"
 void "void"
 while "while"
-reserved "++"|"--"|"null"|"Integer"|"System"|"abstract"|"assert"|"break"|"byte"|"case"|"catch"|"char"|"const"|"continue"|"default"|"do"|"enum"|"extends"|"final"|"finally"|"float"|"for"|"goto"|"implements"|"import"|"instanceof"|"interface"|"long"|"native"|"new"|"package"|"private"|"protected"|"short"|"strictfp"|"super"|"switch"|"synchronized"|"this"|"throw"|"throws"|"transient"|"try"|"volatile"
+reserved "--"|"null"|"Integer"|"System"|"abstract"|"assert"|"break"|"byte"|"case"|"catch"|"char"|"const"|"continue"|"default"|"do"|"enum"|"extends"|"final"|"finally"|"float"|"for"|"goto"|"implements"|"import"|"instanceof"|"interface"|"long"|"native"|"new"|"package"|"private"|"protected"|"short"|"strictfp"|"super"|"switch"|"synchronized"|"this"|"throw"|"throws"|"transient"|"try"|"volatile"
 whitespace [ \f]
 tab "\t"
 
@@ -103,8 +105,16 @@ tab "\t"
     return 0; 
 }
 
-"\""               { BEGIN(STR_STATE); str_start_line = LineCounter; str_start_col = ColumnCounter; ColumnCounter++; string_erro = 0; if(str) free(str); str = strdup(""); }
-<STR_STATE>\"         { if(print_tokens && !string_erro) printf("STRLIT(\"%s\")\n",str); yylval.lexeme = strdup(str);if(str){ free(str); str = NULL; } ColumnCounter++; BEGIN(0); return STRLIT;}
+"\""               { LastColumnCounter = ColumnCounter;  BEGIN(STR_STATE); str_start_line = LineCounter; str_start_col = ColumnCounter; ColumnCounter++; string_erro = 0; if(str) free(str); str = strdup(""); }
+<STR_STATE>\"         { 
+    if(print_tokens && !string_erro) printf("STRLIT(\"%s\")\n",str); 
+    char *with_quotes = malloc(strlen(str) + 3);
+    sprintf(with_quotes, "\"%s\"", str);
+    yylval.lexeme = with_quotes;
+    if(str){ free(str); str = NULL; } 
+    ColumnCounter++; 
+    BEGIN(0); 
+    return STRLIT;}
 <STR_STATE>(\\n|\\f|\\r|\\t|\\\\|\\\") { 
     char *tmp = malloc(strlen(str) + strlen(yytext) + 1);
     strcpy(tmp, str);
@@ -149,77 +159,90 @@ tab "\t"
 {tab}           { ColumnCounter++; }
 \n|\r\n|\r    { LineCounter++; ColumnCounter = 1; }
 
-{reserved}      { if(print_tokens) printf("RESERVED(%s)\n", yytext);
+{boollit}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOLLIT(%s)\n", yytext); ColumnCounter += yyleng; PASS_TOKEN(); return BOOLLIT; }
+{and}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("AND\n"); ColumnCounter += yyleng; return AND; }
+{or}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("OR\n"); ColumnCounter += yyleng; return OR; }
+{eq}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("EQ\n"); ColumnCounter += yyleng; return EQ; }
+{ne}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NE\n"); ColumnCounter += yyleng; return NE; }
+{ge}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("GE\n"); ColumnCounter += yyleng; return GE; }
+{le}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LE\n"); ColumnCounter += yyleng; return LE; }
+{lshift}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LSHIFT\n"); ColumnCounter += yyleng; return LSHIFT; }
+{rshift}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RSHIFT\n"); ColumnCounter += yyleng; return RSHIFT; }
+{bool}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOL\n"); ColumnCounter += yyleng; return BOOL; }
+{class}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("CLASS\n"); ColumnCounter += yyleng; return CLASS; }
+{else}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("ELSE\n"); ColumnCounter += yyleng; return ELSE; }
+{if}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IF\n"); ColumnCounter += yyleng; return IF; }
+{int}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("INT\n"); ColumnCounter += yyleng; return INT; }
+{double}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DOUBLE\n"); ColumnCounter += yyleng; return DOUBLE; }
+{print}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("PRINT\n"); ColumnCounter += yyleng; return PRINT; }
+{parseInt}      { LastColumnCounter = ColumnCounter; if(print_tokens) printf("PARSEINT\n"); ColumnCounter += yyleng; return PARSEINT; }
+{public}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("PUBLIC\n"); ColumnCounter += yyleng; return PUBLIC; }
+{return}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RETURN\n"); ColumnCounter += yyleng; return RETURN; }
+{static}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("STATIC\n"); ColumnCounter += yyleng; return STATIC; }
+{string}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("STRING\n"); ColumnCounter += yyleng; return STRING; }
+{void}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("VOID\n"); ColumnCounter += yyleng; return VOID; }
+{while}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("WHILE\n"); ColumnCounter += yyleng; return WHILE; }
+{dotlength}     { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DOTLENGTH\n"); ColumnCounter += yyleng; return DOTLENGTH;}
+{assign}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("ASSIGN\n"); ColumnCounter += yyleng; return ASSIGN; }
+{star}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("STAR\n"); ColumnCounter += yyleng; return STAR; }
+{comma}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("COMMA\n"); ColumnCounter += yyleng; return COMMA; }
+{div}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DIV\n"); ColumnCounter += yyleng; return DIV; }
+{gt}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("GT\n"); ColumnCounter += yyleng; return GT; }
+{lt}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LT\n"); ColumnCounter += yyleng; return LT; }
+{lbrace}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LBRACE\n"); ColumnCounter += yyleng; return LBRACE; }
+{rbrace}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RBRACE\n"); ColumnCounter += yyleng; return RBRACE; }
+{lpar}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LPAR\n"); ColumnCounter += yyleng; return LPAR; }
+{rpar}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RPAR\n"); ColumnCounter += yyleng; return RPAR; }
+{lsq}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LSQ\n"); ColumnCounter += yyleng; return LSQ; }
+{rsq}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RSQ\n"); ColumnCounter += yyleng; return RSQ; }
+{semicolon}     { LastColumnCounter = ColumnCounter; if(print_tokens) printf("SEMICOLON\n"); ColumnCounter += yyleng; return SEMICOLON; }
+{minus}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("MINUS\n"); ColumnCounter += yyleng; return MINUS; }
+{mod}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("MOD\n"); ColumnCounter += yyleng; return MOD; }
+{plus}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("PLUS\n"); ColumnCounter += yyleng; return PLUS; }
+{xor}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("XOR\n"); ColumnCounter += yyleng; return XOR; }
+{not}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NOT\n"); ColumnCounter += yyleng; return NOT; }
+
+{decimal}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DECIMAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return DECIMAL; }
+{natural}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NATURAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return NATURAL; }
+{identifier}    { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return IDENTIFIER; }
+{reserved}      { LastColumnCounter = ColumnCounter; 
+                  if(print_tokens) printf("RESERVED(%s)\n", yytext);
                   ColumnCounter += yyleng; }
-{boollit}       { if(print_tokens) printf("BOOLLIT(%s)\n", yytext); ColumnCounter += yyleng; PASS_TOKEN(); return BOOLLIT; }
-{and}           { if(print_tokens) printf("AND\n"); ColumnCounter += yyleng; return AND; }
-{or}            { if(print_tokens) printf("OR\n"); ColumnCounter += yyleng; return OR; }
-{eq}            { if(print_tokens) printf("EQ\n"); ColumnCounter += yyleng; return EQ; }
-{ne}            { if(print_tokens) printf("NE\n"); ColumnCounter += yyleng; return NE; }
-{ge}            { if(print_tokens) printf("GE\n"); ColumnCounter += yyleng; return GE; }
-{le}            { if(print_tokens) printf("LE\n"); ColumnCounter += yyleng; return LE; }
-{lshift}        { if(print_tokens) printf("LSHIFT\n"); ColumnCounter += yyleng; return LSHIFT; }
-{rshift}        { if(print_tokens) printf("RSHIFT\n"); ColumnCounter += yyleng; return RSHIFT; }
-{bool}          { if(print_tokens) printf("BOOL\n"); ColumnCounter += yyleng;  return BOOL; }
-{class}         { if(print_tokens) printf("CLASS\n"); ColumnCounter += yyleng; return CLASS; }
-{else}          { if(print_tokens) printf("ELSE\n"); ColumnCounter += yyleng; return    ELSE; }
-{if}            { if(print_tokens) printf("IF\n"); ColumnCounter += yyleng; return IF; }
-{int}           { if(print_tokens) printf("INT\n"); ColumnCounter += yyleng; return INT; }
-{double}        {if(print_tokens) printf("DOUBLE\n"); ColumnCounter += yyleng; return DOUBLE; }
-{print}         { if(print_tokens) printf("PRINT\n"); ColumnCounter += yyleng; return PRINT; }
-{parseInt}      { if(print_tokens) printf("PARSEINT\n"); ColumnCounter += yyleng; return PARSEINT; }
-{public}        { if(print_tokens) printf("PUBLIC\n"); ColumnCounter += yyleng; return PUBLIC; }
-{return}        { if(print_tokens) printf("RETURN\n"); ColumnCounter += yyleng; return RETURN; }
-{static}        { if(print_tokens) printf("STATIC\n"); ColumnCounter += yyleng; return STATIC; }
-{string}        { if(print_tokens) printf("STRING\n"); ColumnCounter += yyleng; return STRING; }
-{void}          { if(print_tokens) printf("VOID\n"); ColumnCounter += yyleng; return VOID; }
-{while}         { if(print_tokens) printf("WHILE\n"); ColumnCounter += yyleng; return WHILE; }
-{dotlength}     { if(print_tokens) printf("DOTLENGTH\n"); ColumnCounter += yyleng; return DOTLENGTH;}
-{assign}        { if(print_tokens) printf("ASSIGN\n"); ColumnCounter += yyleng; return ASSIGN; }
-{star}          { if(print_tokens) printf("STAR\n"); ColumnCounter += yyleng; return STAR; }
-{comma}         { if(print_tokens) printf("COMMA\n"); ColumnCounter += yyleng; return COMMA; }
-{div}           { if(print_tokens) printf("DIV\n"); ColumnCounter += yyleng; return DIV; }
-{gt}            { if(print_tokens) printf("GT\n"); ColumnCounter += yyleng; return GT; }
-{lt}            { if(print_tokens) printf("LT\n"); ColumnCounter += yyleng; return LT; }
-{lbrace}        { if(print_tokens) printf("LBRACE\n"); ColumnCounter += yyleng; return LBRACE; }
-{rbrace}        { if(print_tokens) printf("RBRACE\n"); ColumnCounter += yyleng; return RBRACE; }
-{lpar}          { if(print_tokens) printf("LPAR\n"); ColumnCounter += yyleng; return LPAR; }
-{rpar}          { if(print_tokens) printf("RPAR\n"); ColumnCounter += yyleng; return RPAR; }
-{lsq}           { if(print_tokens) printf("LSQ\n"); ColumnCounter += yyleng; return LSQ; }
-{rsq}           { if(print_tokens) printf("RSQ\n"); ColumnCounter += yyleng; return RSQ; }
-{semicolon}     { if(print_tokens) printf("SEMICOLON\n"); ColumnCounter += yyleng;  return SEMICOLON; }
-{minus}         { if(print_tokens) printf("MINUS\n"); ColumnCounter += yyleng; return MINUS; }
-{mod}           { if(print_tokens) printf("MOD\n"); ColumnCounter += yyleng; return MOD; }
-{plus}          { if(print_tokens) printf("PLUS\n"); ColumnCounter += yyleng; return PLUS; }
-{xor}           { if(print_tokens) printf("XOR\n"); ColumnCounter += yyleng; return XOR; }
-{not}           { if(print_tokens) printf("NOT\n"); ColumnCounter += yyleng; return NOT; }
-
-{decimal}       { if(print_tokens) printf("DECIMAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return DECIMAL; }
-{natural}       { if(print_tokens) printf("NATURAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return NATURAL; }
-{identifier}    { if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return IDENTIFIER; }
-
 "."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, ColumnCounter); ColumnCounter++; }
 .               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, ColumnCounter, yytext); ColumnCounter++; }
 %%
 extern int yylex();
 int main(int argc, char *argv[]) {
-    LineCounter=1;
-    ColumnCounter=1;
-    if (argc > 1 && strcmp(argv[1], "-l") == 0) {
-        print_tokens = 1;
-        yylex();
-        return 0;
+    LineCounter = 1;
+    ColumnCounter = 1;
+    int flag_t = 0;
+
+    if (argc > 1) {
+        if (strcmp(argv[1], "-l") == 0) {
+            print_tokens = 1;
+            yylex();
+            return 0;
+        }
+        if (strcmp(argv[1], "-e1") == 0) {
+            yylex();
+            return 0;
+        }
+        if (strcmp(argv[1], "-t") == 0) {
+            flag_t = 1;
+        }
     }
-    if (argc > 1 && strcmp(argv[1], "-e1") == 0) {
-        yylex();
-        return 0;
-    }
+
     yyparse();
-    show(ast, 0);
-    if(str) {
+
+    if (flag_t && syntax_error == 0) {
+        show(ast, 0);
+    }
+
+    if (str) {
         free(str);
         str = NULL;
     }
+    
     return 0;
 }
 //int yywrap() {  /* called on EOF, return 1 to terminate */
@@ -228,5 +251,8 @@ int main(int argc, char *argv[]) {
 
 
 void yyerror(char *s) {
-    printf("Line %d, col %d: %s: %s\n", LineCounter, ColumnCounter, s, yytext);
+    syntax_error ++;
+    const char *tok = (yytext != NULL && yytext[0] != '\0') ? yytext : "";
+    if (tok[0] == '"') tok = "\"";
+    printf("Line %d, col %d: %s: %s\n", LineCounter, LastColumnCounter, s, tok);
 }
