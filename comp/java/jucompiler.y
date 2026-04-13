@@ -20,15 +20,15 @@ void unpack_nodes(struct node *parent, struct node *container);
 }
 
 %token CLASS PUBLIC STATIC LBRACE RBRACE LPAR RPAR LSQ RSQ SEMICOLON COMMA
-%token BOOL INT DOUBLE VOID STRING IF WHILE RETURN PRINT PARSEINT
+%token BOOL INT DOUBLE VOID STRING IF WHILE RETURN PRINT PARSEINT 
 %token ASSIGN PLUS MINUS STAR DIV MOD AND OR XOR LSHIFT RSHIFT EQ GE GT LE LT NE NOT DOTLENGTH // no se que es esto ultimo
-%token <lexeme> IDENTIFIER NATURAL DECIMAL BOOLLIT STRLIT
+%token <lexeme> IDENTIFIER NATURAL DECIMAL BOOLLIT STRLIT RESERVED
 
 %type <node> Program ProgramBody Element MethodDecl FieldDecl FieldList
 %type <node> Type TypeArray TypeVoid MethodHeader MethodParams FormalParams FormalParamsList
 %type <node> MethodBody MethodBodyContent BodyElement VarDecl 
 %type <node> Statement StmtList MethodInvocation Args ExprList 
-%type <node> Assignment ParseArgs Expr
+%type <node> Assignment ParseArgs Expr 
 
 /* precedencias y asociatividad */
 %right ASSIGN
@@ -173,35 +173,35 @@ VarDecl: Type IDENTIFIER FieldList SEMICOLON {
 };
 
 Statement: LBRACE StmtList RBRACE {
-    int count = count_children($2);
-    if (count == 0) {
-        $$ = newnode(Block, NULL);  // ← bloque vacío explícito
-    } else if (count == 1) {
-        struct node_list *curr = $2->children;
-        while (curr != NULL && curr->node == NULL) curr = curr->next;
-        $$ = (curr != NULL) ? curr->node : newnode(Block, NULL);
-    } else {
-        $$ = newnode(Block, NULL);
-        unpack_nodes($$, $2);
-    }
-}
+                                            int count = count_children($2);
+                                            if (count == 0) {
+                                                $$ = NULL;  // bloque vacío explícito o null??
+                                            } else if (count == 1) {
+                                                struct node_list *curr = $2->children;
+                                                while (curr != NULL && curr->node == NULL) curr = curr->next;
+                                                $$ = (curr != NULL) ? curr->node : newnode(Block, NULL);
+                                            } else {
+                                                $$ = newnode(Block, NULL);
+                                                unpack_nodes($$, $2);
+                                            }
+                                        }
          | IF LPAR Expr RPAR Statement %prec IF_PREC {
-            $$ = newnode(If, NULL);
-            addchild($$, $3);
-                addchild($$, $5 ? $5 : newnode(Block, NULL));
-            addchild($$, newnode(Block, NULL)); // else branch vacio
-         }
+                                                $$ = newnode(If, NULL);
+                                                addchild($$, $3);
+                                                    addchild($$, $5 ? $5 : newnode(Block, NULL));
+                                                addchild($$, newnode(Block, NULL)); // else branch vacio
+                                            }
          | IF LPAR Expr RPAR Statement ELSE Statement {
-            $$ = newnode(If, NULL);
-            addchild($$, $3);
-            addchild($$, $5 ? $5 : newnode(Block, NULL));
-    addchild($$, $7 ? $7 : newnode(Block, NULL));
-         }
+                                                $$ = newnode(If, NULL);
+                                                addchild($$, $3);
+                                                addchild($$, $5 ? $5 : newnode(Block, NULL));
+                                        addchild($$, $7 ? $7 : newnode(Block, NULL));
+                                            }
          | WHILE LPAR Expr RPAR Statement {
-    $$ = newnode(While, NULL);
-    addchild($$, $3);
-        addchild($$, $5 ? $5 : newnode(Block, NULL));
-         }
+                                            $$ = newnode(While, NULL);
+                                            addchild($$, $3);
+                                                addchild($$, $5 ? $5 : newnode(Block, NULL));
+                                                }
          | RETURN SEMICOLON {
     $$ = newnode(Return, NULL);
          }
@@ -243,6 +243,7 @@ Args: Expr ExprList {
         addchild($$, $1);
         unpack_nodes($$, $2);
     }
+    |Assignment ExprList {$$ = NULL;}
     | /* empty */ { $$ = NULL; }
 ;
 
@@ -290,7 +291,7 @@ Expr: Expr PLUS Expr   { $$ = newnode(Add, NULL); addchild($$, $1); addchild($$,
     | LPAR Expr RPAR    {$$ = $2;}
     | LPAR error RPAR {$$ = NULL;}
     | MethodInvocation  {$$=$1;}
-    | Assignment    {$$=$1;}
+    |Assignment {$$=$1;} 
     | ParseArgs   {$$=$1;}
     | IDENTIFIER {$$=newnode(Identifier,$1);}
     | IDENTIFIER DOTLENGTH {
@@ -299,8 +300,7 @@ Expr: Expr PLUS Expr   { $$ = newnode(Add, NULL); addchild($$, $1); addchild($$,
     | NATURAL {$$=newnode(Natural,$1); }
     | DECIMAL {$$=newnode(Decimal,$1);}
     | BOOLLIT {$$=newnode(BoolLit,$1);}
-    | STRLIT {$$=newnode(StrLit,$1); }
-;
+    ;
 %%
 int count_children(struct node *n) {
     if (n == NULL || n->children == NULL) return 0;

@@ -11,7 +11,7 @@
     #include "y.tab.h"
     #include "ast.h"
 
-#define PASS_TOKEN() LastColumnCounter = ColumnCounter; yylval.lexeme = strdup(yytext);
+#define PASS_TOKEN() yylval.lexeme = strdup(yytext);
 int yyparse(void);
 
     int LineCounter = 1;
@@ -26,6 +26,7 @@ int yyparse(void);
     char *str=NULL;
 
     extern struct node *ast;
+    extern int yychar;
 
 %}
 %option noyywrap
@@ -80,7 +81,7 @@ static "static"
 string "String"
 void "void"
 while "while"
-reserved "null"|"Integer"|"System"|"abstract"|"assert"|"break"|"byte"|"case"|"catch"|"char"|"const"|"continue"|"default"|"do"|"enum"|"extends"|"final"|"finally"|"float"|"for"|"goto"|"implements"|"import"|"instanceof"|"interface"|"long"|"native"|"new"|"package"|"private"|"protected"|"short"|"strictfp"|"super"|"switch"|"synchronized"|"this"|"throw"|"throws"|"transient"|"try"|"volatile"
+reserved "++"|"--"|"null"|"Integer"|"System"|"abstract"|"assert"|"break"|"byte"|"case"|"catch"|"char"|"const"|"continue"|"default"|"do"|"enum"|"extends"|"final"|"finally"|"float"|"for"|"goto"|"implements"|"import"|"instanceof"|"interface"|"long"|"native"|"new"|"package"|"private"|"protected"|"short"|"strictfp"|"super"|"switch"|"synchronized"|"this"|"throw"|"throws"|"transient"|"try"|"volatile"
 whitespace [ \f]
 tab "\t"
 
@@ -106,15 +107,19 @@ tab "\t"
 }
 
 "\""               { LastColumnCounter = ColumnCounter;  BEGIN(STR_STATE); str_start_line = LineCounter; str_start_col = ColumnCounter; ColumnCounter++; string_erro = 0; if(str) free(str); str = strdup(""); }
-<STR_STATE>\"         { 
-    if(print_tokens && !string_erro) printf("STRLIT(\"%s\")\n",str); 
-    char *with_quotes = malloc(strlen(str) + 3);
-    sprintf(with_quotes, "\"%s\"", str);
-    yylval.lexeme = with_quotes;
-    if(str){ free(str); str = NULL; } 
-    ColumnCounter++; 
-    BEGIN(0); 
-    return STRLIT;}
+<STR_STATE>\" {
+    ColumnCounter++;
+    BEGIN(0);
+    if (!string_erro) {
+        char *with_quotes = malloc(strlen(str) + 3);
+        sprintf(with_quotes, "\"%s\"", str);
+        if(print_tokens) printf("STRLIT(\"%s\")\n", str);
+        yylval.lexeme = with_quotes;
+        if(str){ free(str); str = NULL; }
+        return STRLIT;
+    }
+    if(str){ free(str); str = NULL; }
+}
 <STR_STATE>(\\n|\\f|\\r|\\t|\\\\|\\\") { 
     char *tmp = malloc(strlen(str) + strlen(yytext) + 1);
     strcpy(tmp, str);
@@ -206,8 +211,8 @@ tab "\t"
 {natural}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NATURAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return NATURAL; }
 {identifier}    { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return IDENTIFIER; }
 {reserved}      { LastColumnCounter = ColumnCounter; 
-                  if(print_tokens) printf("RESERVED(%s)\n", yytext);
-                  ColumnCounter += yyleng; }
+                  if(print_tokens) printf("RESERVED(%s)\n", yytext); PASS_TOKEN();ColumnCounter += yyleng; return RESERVED;
+                   }
 "."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, ColumnCounter); ColumnCounter++; }
 .               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, ColumnCounter, yytext); ColumnCounter++; }
 %%
@@ -249,10 +254,12 @@ int main(int argc, char *argv[]) {
 //    return 1;
 //}
 
-
 void yyerror(char *s) {
-    syntax_error ++;
-    const char *tok = (yytext != NULL && yytext[0] != '\0') ? yytext : "";
-    if (tok[0] == '"') tok = "\"";
+    syntax_error++;
+    const char *tok;
+    if (yytext && yytext[0] == '"' && yylval.lexeme != NULL)
+        tok = yylval.lexeme;
+    else
+        tok = (yytext && yytext[0]) ? yytext : "";
     printf("Line %d, col %d: %s: %s\n", LineCounter, LastColumnCounter, s, tok);
 }
