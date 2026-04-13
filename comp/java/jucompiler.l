@@ -261,5 +261,11 @@ void yyerror(char *s) {
         tok = yylval.lexeme;
     else
         tok = (yytext && yytext[0]) ? yytext : "";
-    printf("Line %d, col %d: %s: %s\n", LineCounter, LastColumnCounter, s, tok);
+        
+    int col = LastColumnCounter;
+    if (tok[0] == '\0') {
+        col = ColumnCounter;
+    }
+
+    printf("Line %d, col %d: %s: %s\n", LineCounter, col, s, tok);
 }
