@@ -221,7 +221,9 @@ Statement: LBRACE StmtList RBRACE {
     $$ = newnode(Print, NULL);
     addchild($$, newnode(StrLit, $3));
          }
-         | error SEMICOLON {$$=NULL;};
+         | error SEMICOLON {$$=NULL;}
+         | error RBRACE {$$=NULL;}
+;
 
 StmtList: StmtList Statement {
     $$ = $1;
