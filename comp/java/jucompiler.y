@@ -23,21 +23,22 @@ void unpack_nodes(struct node *parent, struct node *container);
 
 %token CLASS PUBLIC STATIC LBRACE RBRACE LPAR RPAR LSQ RSQ SEMICOLON COMMA
 %token BOOL INT DOUBLE VOID STRING IF WHILE RETURN PRINT PARSEINT 
-%token ASSIGN PLUS MINUS STAR DIV MOD AND OR XOR LSHIFT RSHIFT EQ GE GT LE LT NE NOT DOTLENGTH // no se que es esto ultimo
+%token ASSIGN PLUS MINUS STAR DIV MOD AND OR XOR LSHIFT RSHIFT EQ GE GT LE LT NE NOT DOTLENGTH ARROW// no se que es esto ultimo
 %token <lexeme> IDENTIFIER NATURAL DECIMAL BOOLLIT STRLIT RESERVED
 
 %type <node> Program ProgramBody Element MethodDecl FieldDecl FieldList
-%type <node> Type TypeArray TypeVoid MethodHeader MethodParams FormalParams FormalParamsList
+%type <node> Type TypeArray TypeVoid MethodHeader MethodParams FormalParamsList
 %type <node> MethodBody MethodBodyContent BodyElement VarDecl 
-%type <node> Statement StmtList MethodInvocation Args ExprList 
+%type <node> Statement MethodInvocation Args ExprList StmtList
 %type <node> Assignment ParseArgs Expr SimpleExpr
 
 /* precedencias y asociatividad */
 %right ASSIGN
 //En java es en este orden: 
 %left OR
-%left XOR
 %left AND
+%left XOR
+
 
 %left EQ NE
 %left LT GT LE GE
@@ -46,7 +47,7 @@ void unpack_nodes(struct node *parent, struct node *container);
 %left STAR DIV MOD
 %right NOT UNARY // UNARY para MINUS/PLUS unario
 %nonassoc IF_PREC
-%nonassoc ELSE
+%right ELSE
 
 
 %%
@@ -69,21 +70,17 @@ ProgramBody: ProgramBody Element {
 
 Element: MethodDecl { $$ = $1; }
        | FieldDecl { $$ = $1; }
-       | SEMICOLON { $$ = NULL; } 
+       | SEMICOLON { $$ = NULL; }
 ;
 MethodDecl: PUBLIC STATIC MethodHeader MethodBody {
     $$ = newnode(MethodDecl, NULL);
     addchild($$, $3);
     addchild($$, $4);
-}
-| PUBLIC STATIC error RBRACE { $$ = NULL; }
-| PUBLIC STATIC error SEMICOLON { $$ = NULL; }
-| error RBRACE { $$ = NULL; };
+};
 
 FieldDecl: PUBLIC STATIC Type IDENTIFIER FieldList SEMICOLON {
     $$ = create_multiple_decls(FieldDecl, $3, $4, $5);
 }
-//Innecesaria si esta en MethodDecl | PUBLIC STATIC error SEMICOLON { $$ = NULL; }
 | error SEMICOLON {$$=NULL;};
 
 FieldList: FieldList COMMA IDENTIFIER {
@@ -96,7 +93,8 @@ FieldList: FieldList COMMA IDENTIFIER {
 
 Type: BOOL { $$ = newnode(Bool,NULL); }
     | INT { $$ = newnode(Int,NULL); }
-    | DOUBLE { $$ = newnode(Double,NULL); };
+    | DOUBLE { $$ = newnode(Double,NULL); }
+    ;
 
 TypeArray: STRING LSQ RSQ { $$ = newnode(StringArray, NULL); }
 ;
@@ -115,30 +113,37 @@ MethodHeader: Type IDENTIFIER LPAR MethodParams RPAR {
     addchild($$, newnode(Identifier, $2));
     addchild($$, $4);
     };
+   // | Type IDENTIFIER LPAR error RPAR { $$ = NULL; }
+   // | TypeVoid IDENTIFIER LPAR error RPAR { $$ = NULL; }
+    ;
 
-MethodParams: FormalParamsList {$$=$1;}
-    | {$$ = newnode(MethodParams, NULL);};
+MethodParams: FormalParamsList { $$ = $1; }
+            | TypeArray IDENTIFIER {
+                $$ = newnode(MethodParams, NULL);
+                struct node *p = newnode(ParamDecl, NULL);
+                addchild(p, $1);
+                addchild(p, newnode(Identifier, $2));
+                addchild($$, p);
+            }
+            | /* empty */ { $$ = newnode(MethodParams, NULL); }
+            ;
 
-FormalParamsList: FormalParamsList COMMA FormalParams { 
-    $$ = $1;
-    addchild($$, $3);
-}
-|FormalParams {
-    $$=newnode(MethodParams, NULL);
-    addchild($$, $1);}
-;
-
-FormalParams: Type IDENTIFIER {
-    $$ = newnode(ParamDecl,NULL);
-    addchild($$, $1);
-    addchild($$, newnode(Identifier, $2));
-}
-    | TypeArray IDENTIFIER  {
-    $$ = newnode(ParamDecl,NULL);
-    addchild($$, $1);
-    addchild($$, newnode(Identifier, $2));
-            };
-
+FormalParamsList: FormalParamsList COMMA Type IDENTIFIER { 
+                $$ = $1;
+                struct node *p = newnode(ParamDecl, NULL);
+                addchild(p, $3);
+                addchild(p, newnode(Identifier, $4));
+                addchild($$, p);
+            }
+            | Type IDENTIFIER {
+                $$ = newnode(MethodParams, NULL);
+                struct node *p = newnode(ParamDecl, NULL);
+                addchild(p, $1);
+                addchild(p, newnode(Identifier, $2));
+                addchild($$, p);
+            }
+            //| error COMMA Type IDENTIFIER { $$ = NULL; }
+            ;
 
 MethodBody: LBRACE MethodBodyContent RBRACE {
     $$ = $2;
@@ -155,20 +160,32 @@ MethodBodyContent: MethodBodyContent BodyElement {
 ;
 
 BodyElement: Statement {$$ = $1;}
-| VarDecl {$$ = $1;};
+| VarDecl {$$ = $1;}
+;
 
 VarDecl: Type IDENTIFIER FieldList SEMICOLON {
     $$ = create_multiple_decls(VarDecl, $1, $2, $3);
-};
+}
+//| error SEMICOLON {$$=NULL;}
+;
+
+StmtList: StmtList Statement { 
+    $$ = $1; 
+    if ($2 != NULL) addchild($$, $2); 
+}
+| /* empty */ { $$ = newnode(Aux, NULL);}
+;
 
 Statement: LBRACE StmtList RBRACE {
                                             int count = count_children($2);
                                             if (count == 0) {
-                                                $$ = NULL;  // bloque vacío explícito o null??
+                                                $$ = NULL;
                                             } else if (count == 1) {
                                                 struct node_list *curr = $2->children;
                                                 while (curr != NULL && curr->node == NULL) curr = curr->next;
-                                                $$ = (curr != NULL) ? curr->node : newnode(Block, NULL);
+                                                //$$ = (curr != NULL) ? curr->node : newnode(Block, NULL);
+                                                $$ = curr->node;
+
                                             } else {
                                                 $$ = newnode(Block, NULL);
                                                 unpack_nodes($$, $2);
@@ -210,25 +227,19 @@ Statement: LBRACE StmtList RBRACE {
     $$ = newnode(Print, NULL);
     addchild($$, newnode(StrLit, $3));
          }
-         | error SEMICOLON {$$=NULL;}
-         | error RBRACE {$$=NULL;}
+| error SEMICOLON { $$ = NULL; }
 ;
-
-StmtList: StmtList Statement {
-    $$ = $1;
-        if ($2 != NULL) addchild($$, $2);
-}
-         | /* empty */ {$$ = newnode(MethodBody, NULL); };
 
 MethodInvocation: IDENTIFIER LPAR Args RPAR {
         $$ = newnode(Call, NULL);
         addchild($$, newnode(Identifier, $1));
         unpack_nodes($$, $3);
     }
+    | IDENTIFIER LPAR error RPAR { $$ = NULL; }
 ;
 
 Args: Expr ExprList {
-        $$ = newnode(Program, NULL); //Temporal
+        $$ = newnode(Aux, NULL); //Temporal
         addchild($$, $1);
         unpack_nodes($$, $2);
     }
@@ -236,7 +247,7 @@ Args: Expr ExprList {
 ;
 
 ExprList: ExprList COMMA Expr {
-        if ($1 == NULL) $$ = newnode(Program, NULL);
+        if ($1 == NULL) $$ = newnode(Aux, NULL);
         else $$ = $1;
         addchild($$, $3);
     } 
@@ -294,27 +305,6 @@ SimpleExpr: SimpleExpr PLUS SimpleExpr   { $$ = newnode(Add, NULL); addchild($$,
           | BOOLLIT                      { $$ = newnode(BoolLit, $1); }
           ;
 %%
-int count_children(struct node *n) {
-    if (n == NULL || n->children == NULL) return 0;
-    int count = 0;
-    struct node_list *curr = n->children;
-    while (curr != NULL) {
-        if (curr->node != NULL) count++;
-        curr = curr->next;
-    }
-    return count;
-}
-
-void unpack_nodes(struct node *parent, struct node *container) {
-    if (container == NULL || container->children == NULL) return;
-    struct node_list *curr = container->children;
-    while (curr != NULL) {
-        if (curr->node != NULL) {
-            addchild(parent, curr->node);
-        }
-        curr = curr->next;
-    }
-}
 
 struct node *create_multiple_decls(enum category decl_type, struct node *type_node, char *first_id_token, struct node *extra_ids_container) {
     struct node *wrapper = newnode(MethodBody, NULL); 

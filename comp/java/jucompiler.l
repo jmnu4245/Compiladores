@@ -63,6 +63,7 @@ rbrace "}"
 rpar ")"
 rsq "]"
 semicolon ";"
+arrow "->"
 lshift "<<"
 rshift ">>"
 xor "^"
@@ -163,7 +164,8 @@ tab "\t"
 {whitespace}    { ColumnCounter++; }
 {tab}           { ColumnCounter++; }
 \n|\r\n|\r    { LineCounter++; ColumnCounter = 1; }
-
+{reserved}      { LastColumnCounter = ColumnCounter;  if(print_tokens) printf("RESERVED(%s)\n", yytext);
+                  ColumnCounter += yyleng; PASS_TOKEN(); return  RESERVED; }
 {boollit}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOLLIT(%s)\n", yytext); ColumnCounter += yyleng; PASS_TOKEN(); return BOOLLIT; }
 {and}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("AND\n"); ColumnCounter += yyleng; return AND; }
 {or}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("OR\n"); ColumnCounter += yyleng; return OR; }
@@ -173,6 +175,7 @@ tab "\t"
 {le}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LE\n"); ColumnCounter += yyleng; return LE; }
 {lshift}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LSHIFT\n"); ColumnCounter += yyleng; return LSHIFT; }
 {rshift}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RSHIFT\n"); ColumnCounter += yyleng; return RSHIFT; }
+{arrow}         { LastColumnCounter = ColumnCounter;  if(print_tokens) printf("ARROW\n"); ColumnCounter += yyleng; return ARROW; }
 {bool}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOL\n"); ColumnCounter += yyleng; return BOOL; }
 {class}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("CLASS\n"); ColumnCounter += yyleng; return CLASS; }
 {else}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("ELSE\n"); ColumnCounter += yyleng; return ELSE; }
@@ -209,10 +212,11 @@ tab "\t"
 
 {decimal}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DECIMAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return DECIMAL; }
 {natural}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NATURAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return NATURAL; }
+
+
 {identifier}    { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return IDENTIFIER; }
-{reserved}      { LastColumnCounter = ColumnCounter; 
-                  if(print_tokens) printf("RESERVED(%s)\n", yytext); PASS_TOKEN();ColumnCounter += yyleng; return RESERVED;
-                   }
+
+
 "."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, ColumnCounter); ColumnCounter++; }
 .               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, ColumnCounter, yytext); ColumnCounter++; }
 %%
@@ -225,11 +229,11 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         if (strcmp(argv[1], "-l") == 0) {
             print_tokens = 1;
-            yylex();
+            while(yylex());
             return 0;
         }
         if (strcmp(argv[1], "-e1") == 0) {
-            yylex();
+            while(yylex());
             return 0;
         }
         if (strcmp(argv[1], "-t") == 0) {
@@ -238,9 +242,9 @@ int main(int argc, char *argv[]) {
     }
 
     yyparse();
-
     if (flag_t && syntax_error == 0) {
-        show(ast, 0);
+            show(ast, 0);
+
     }
 
     if (str) {
