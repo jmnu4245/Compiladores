@@ -8,11 +8,15 @@
     #include <string.h>
     #include <stdlib.h>
 
+    #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
 
-#define PASS_TOKEN() yylval.lexeme = strdup(yytext);
-int yyparse(void);
+    void check_semantics(struct node *n);
+    void print_sym_table(SymTable *table);
+
+    #define PASS_TOKEN(cat) yylval.node = newnode(cat, strdup(yytext), LineCounter, ColumnCounter);
+    int yyparse(void);
 
     int LineCounter = 1;
     int ColumnCounter = 1;
@@ -164,7 +168,7 @@ tab "\t"
 {tab}           { ColumnCounter++; }
 \n|\r\n|\r    { LineCounter++; ColumnCounter = 1; }
 
-{boollit}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOLLIT(%s)\n", yytext); ColumnCounter += yyleng; PASS_TOKEN(); return BOOLLIT; }
+{boollit}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOLLIT(%s)\n", yytext); PASS_TOKEN(BoolLit); ColumnCounter += yyleng; return BOOLLIT; }
 {and}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("AND\n"); ColumnCounter += yyleng; return AND; }
 {or}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("OR\n"); ColumnCounter += yyleng; return OR; }
 {eq}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("EQ\n"); ColumnCounter += yyleng; return EQ; }
@@ -207,11 +211,11 @@ tab "\t"
 {xor}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("XOR\n"); ColumnCounter += yyleng; return XOR; }
 {not}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NOT\n"); ColumnCounter += yyleng; return NOT; }
 
-{decimal}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DECIMAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return DECIMAL; }
-{natural}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NATURAL(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return NATURAL; }
-{identifier}    { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); ColumnCounter+=yyleng; PASS_TOKEN(); return IDENTIFIER; }
+{decimal}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DECIMAL(%s)\n",yytext); PASS_TOKEN(Decimal); ColumnCounter+=yyleng; return DECIMAL; }
+{natural}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NATURAL(%s)\n",yytext); PASS_TOKEN(Natural); ColumnCounter+=yyleng; return NATURAL; }
+{identifier}    { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); PASS_TOKEN(Identifier); ColumnCounter+=yyleng; return IDENTIFIER; }
 {reserved}      { LastColumnCounter = ColumnCounter; 
-                  if(print_tokens) printf("RESERVED(%s)\n", yytext); PASS_TOKEN();ColumnCounter += yyleng; return RESERVED;
+                  if(print_tokens) printf("RESERVED(%s)\n", yytext); PASS_TOKEN(Reserved);ColumnCounter += yyleng; return RESERVED;
                    }
 "."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, ColumnCounter); ColumnCounter++; }
 .               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, ColumnCounter, yytext); ColumnCounter++; }
@@ -221,6 +225,7 @@ int main(int argc, char *argv[]) {
     LineCounter = 1;
     ColumnCounter = 1;
     int flag_t = 0;
+    int flag_s =0;
 
     if (argc > 1) {
         if (strcmp(argv[1], "-l") == 0) {
@@ -235,17 +240,31 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[1], "-t") == 0) {
             flag_t = 1;
         }
+        if (strcmp(argv[1], "-s") == 0) flag_s = 1;
     }
 
     yyparse();
 
-    if (flag_t && syntax_error == 0) {
-        show(ast, 0);
-    }
+    if (syntax_error == 0) {
+        if (flag_t) {
+            show(ast, 0); 
+        } else {
 
-    if (str) {
-        free(str);
-        str = NULL;
+            check_semantics(ast); 
+
+            if (flag_s) {
+
+                extern SymTable *global_table;
+                if (global_table == NULL) {
+                }
+                SymTable *curr = global_table;
+                while (curr) {
+                    print_sym_table(curr);
+                    curr = curr->next;
+                }
+
+            }
+        }
     }
     
     return 0;

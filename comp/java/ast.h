@@ -7,11 +7,12 @@ enum category {
     ParamDecl, MethodBody, Block, If, While, Return, Call, Print, ParseArgs,
     Assign, Or, And, Eq, Ne, Lt, Gt, Le, Ge, Add, Sub, Mul, Div, Mod, Lshift,
     Rshift, Xor, Not, Minus, Plus, Length, Bool, BoolLit, Double, Decimal,
-    Identifier, Int, Natural, StrLit, StringArray, VoidNode
+    Identifier, Int, Natural, StrLit, StringArray, VoidNode, Reserved
 };
 struct node {
     enum category category;
     char *token;
+    int line, col;
     struct node_list *children;
 };
 
@@ -20,7 +21,7 @@ struct node_list {
     struct node_list *next;
 };
 
-struct node *newnode(enum category category, char *token);
+struct node *newnode(enum category category, char *token , int line, int col);
 void addchild(struct node *parent, struct node *child);
 void show(struct node *n, int depth);
 #endif
