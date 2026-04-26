@@ -41,6 +41,7 @@ Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
     return sym;
 }
 
+
 void insert_symbol(SymTable *table, const char *name, BasicType type, int is_param, char *params_list, int line, int col) {
 
     if (!table || !name) return;
@@ -79,6 +80,8 @@ void print_sym_table(SymTable *table) {
 
         if (curr->params_list != NULL) {
             printf("%s\t", curr->params_list);
+        } else { 
+            printf("\t");
         }
         
         printf("%s", type_to_str(curr->type));

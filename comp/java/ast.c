@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ast.h"
+#include "sym_table.h"
 
 //He puesto todas las que he encontrado, vamos adaptando
 const char* category_names[] = {
@@ -8,7 +9,7 @@ const char* category_names[] = {
     "ParamDecl", "MethodBody", "Block", "If", "While", "Return", "Call", "Print", "ParseArgs",
     "Assign", "Or", "And", "Eq", "Ne", "Lt", "Gt", "Le", "Ge", "Add", "Sub", "Mul", "Div", "Mod", "Lshift",
     "Rshift", "Xor", "Not", "Minus", "Plus", "Length", "Bool", "BoolLit", "Double", "Decimal",
-    "Identifier", "Int", "Natural", "StrLit", "StringArray", "Reserved", "Void"
+    "Identifier", "Int", "Natural", "StrLit", "StringArray","Void","Reserved"
 };
 
 // create a node of a given category with a given lexical symbol
@@ -18,7 +19,8 @@ struct node *newnode(enum category category, char *token, int line, int col) {
     new->token = token;
     new->line = line;
     new->col = col;
-    new->annot_type = T_Undef
+    new->annot_type = T_None;
+    new->annot_params = NULL;
     new->children = malloc(sizeof(struct node_list));
     new->children->node = NULL;
     new->children->next = NULL;
@@ -69,10 +71,9 @@ void show_annotated(struct node *n, int depth) {
     printf("%s", category_names[n->category]);
     if (n->token != NULL) printf("(%s)", n->token);
     
-    // Solo nodos expresiones por ahora
-    if (n->annot_type != T_Undef || n->category == Call || n->category == Assign || /* añadir más categorías de expresiones si necesario*/
-        n->category == Identifier || n->category == Natural || n->category == Decimal || n->category == BoolLit) {
-        
+    if (n->annot_params != NULL) {
+        printf(" - %s", n->annot_params);
+    } else if (n->annot_type != T_None) {
         printf(" - %s", type_to_str(n->annot_type));
     }
     printf("\n");

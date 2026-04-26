@@ -11,6 +11,8 @@
     #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
+    #include "sym_table.h"  
+    #include "semantics.h"
 
     void check_semantics(struct node *n);
     void print_sym_table(SymTable *table);
@@ -222,50 +224,49 @@ tab "\t"
 %%
 extern int yylex();
 int main(int argc, char *argv[]) {
-    LineCounter = 1;
-    ColumnCounter = 1;
-    int flag_t = 0;
-    int flag_s =0;
+    int flag_l = 0, flag_e1 = 0, flag_t = 0, flag_e2 = 0, flag_s = 0;
 
     if (argc > 1) {
-        if (strcmp(argv[1], "-l") == 0) {
-            print_tokens = 1;
-            yylex();
-            return 0;
-        }
-        if (strcmp(argv[1], "-e1") == 0) {
-            yylex();
-            return 0;
-        }
-        if (strcmp(argv[1], "-t") == 0) {
-            flag_t = 1;
-        }
-        if (strcmp(argv[1], "-s") == 0) flag_s = 1;
+        if (strcmp(argv[1], "-l") == 0) flag_l = 1;
+        else if (strcmp(argv[1], "-e1") == 0) flag_e1 = 1;
+        else if (strcmp(argv[1], "-t") == 0) flag_t = 1;
+        else if (strcmp(argv[1], "-e2") == 0) flag_e2 = 1;
+        else if (strcmp(argv[1], "-s") == 0) flag_s = 1;
+    }
+
+    if (flag_l) {
+        print_tokens = 1;
+        yylex();
+        return 0;
+    }
+    
+    if (flag_e1) {
+        print_tokens = 0;
+        yylex();
+        return 0;
     }
 
     yyparse();
 
+    if (flag_e2) {
+        return 0; 
+    }
+
     if (syntax_error == 0) {
         if (flag_t) {
-            show(ast, 0); 
-        } else {
-
-            check_semantics(ast); 
-
-            if (flag_s) {
-
-                extern SymTable *global_table;
-                if (global_table == NULL) {
-                }
-                SymTable *curr = global_table;
-                while (curr) {
-                    print_sym_table(curr);
-                    curr = curr->next;
-                }
-                printf("\n");
-                show_annotated(ast, 0);
-
+            show(ast, 0);
+        } else if (flag_s) {
+            check_semantics(ast);
+            
+            SymTable *curr = global_table;
+            while (curr) {
+                print_sym_table(curr);
+                curr = curr->next;
             }
+            
+            show_annotated(ast, 0);
+        } else {
+            check_semantics(ast);
         }
     }
     
