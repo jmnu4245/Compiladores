@@ -262,6 +262,8 @@ int main(int argc, char *argv[]) {
                     print_sym_table(curr);
                     curr = curr->next;
                 }
+                printf("\n");
+                show_annotated(ast, 0);
 
             }
         }

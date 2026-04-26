@@ -34,6 +34,12 @@ Symbol* search_symbol(SymTable *table, const char *name) {
     return NULL;
 }
 
+Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
+    Symbol *sym = NULL;
+    if (local != NULL) sym = search_symbol(local, name);
+    if (sym == NULL && global != NULL) sym = search_symbol(global, name);
+    return sym;
+}
 
 void insert_symbol(SymTable *table, const char *name, BasicType type, int is_param, char *params_list, int line, int col) {
 

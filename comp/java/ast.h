@@ -1,5 +1,6 @@
 #ifndef _AST_H
 #define _AST_H
+#include "sym_table.h"
 
 //He puesto todas las que he encontrado, vamos adaptando
 enum category {
@@ -13,6 +14,7 @@ struct node {
     enum category category;
     char *token;
     int line, col;
+    BasicType annot_type;
     struct node_list *children;
 };
 
@@ -23,5 +25,7 @@ struct node_list {
 
 struct node *newnode(enum category category, char *token , int line, int col);
 void addchild(struct node *parent, struct node *child);
+void show_annotated(struct node *n, int depth);
+struct node *get_child(struct node *n, int index);
 void show(struct node *n, int depth);
 #endif

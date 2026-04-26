@@ -18,6 +18,7 @@ struct node *newnode(enum category category, char *token, int line, int col) {
     new->token = token;
     new->line = line;
     new->col = col;
+    new->annot_type = T_Undef
     new->children = malloc(sizeof(struct node_list));
     new->children->node = NULL;
     new->children->next = NULL;
@@ -59,6 +60,39 @@ void show(struct node *n, int depth) {
         show(current->node, depth + 1);
         current = current->next;
     }
+}
+
+void show_annotated(struct node *n, int depth) {
+    if (n == NULL) return;
+    for (int i = 0; i < depth * 2; i++) printf("."); 
+    
+    printf("%s", category_names[n->category]);
+    if (n->token != NULL) printf("(%s)", n->token);
+    
+    // Solo nodos expresiones por ahora
+    if (n->annot_type != T_Undef || n->category == Call || n->category == Assign || /* añadir más categorías de expresiones si necesario*/
+        n->category == Identifier || n->category == Natural || n->category == Decimal || n->category == BoolLit) {
+        
+        printf(" - %s", type_to_str(n->annot_type));
+    }
+    printf("\n");
+    
+    struct node_list *current = n->children;
+    while (current != NULL) {
+        show_annotated(current->node, depth + 1);
+        current = current->next;
+    }
+}
+
+struct node *get_child(struct node *n, int index) {
+    if (n == NULL || n->children == NULL) return NULL;
+    struct node_list *curr = n->children;
+    int i = 0;
+    while (curr != NULL && i < index) {
+        curr = curr->next;
+        i++;
+    }
+    return curr ? curr->node : NULL;
 }
 //Dealocate tree
 void free_tree(struct node *n) {
