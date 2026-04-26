@@ -224,32 +224,41 @@ tab "\t"
 %%
 extern int yylex();
 int main(int argc, char *argv[]) {
-    int flag_l = 0, flag_e1 = 0, flag_t = 0, flag_e2 = 0, flag_s = 0;
+    LineCounter = 1;
+    ColumnCounter = 1;
+    int flag_t = 0;
+    int flag_s = 0;
+    int flag_e2 = 0;
 
     if (argc > 1) {
-        if (strcmp(argv[1], "-l") == 0) flag_l = 1;
-        else if (strcmp(argv[1], "-e1") == 0) flag_e1 = 1;
-        else if (strcmp(argv[1], "-t") == 0) flag_t = 1;
-        else if (strcmp(argv[1], "-e2") == 0) flag_e2 = 1;
-        else if (strcmp(argv[1], "-s") == 0) flag_s = 1;
-    }
-
-    if (flag_l) {
-        print_tokens = 1;
-        yylex();
-        return 0;
-    }
-    
-    if (flag_e1) {
-        print_tokens = 0;
-        yylex();
-        return 0;
+        if (strcmp(argv[1], "-l") == 0) {
+            print_tokens = 1;
+            while(yylex());
+            return 0;
+        }
+        if (strcmp(argv[1], "-e1") == 0) {
+            while(yylex());
+            return 0;
+        }
+        if (strcmp(argv[1], "-t") == 0) {
+            flag_t = 1;
+        }
+        if (strcmp(argv[1], "-s") == 0) {
+            flag_s = 1;
+        }
+        if (strcmp(argv[1], "-e2") == 0) {
+            flag_e2 = 1;
+        }
     }
 
     yyparse();
 
     if (flag_e2) {
-        return 0; 
+        if (str) {
+            free(str);
+            str = NULL;
+        }
+        return 0;
     }
 
     if (syntax_error == 0) {
@@ -257,17 +266,20 @@ int main(int argc, char *argv[]) {
             show(ast, 0);
         } else if (flag_s) {
             check_semantics(ast);
-            
             SymTable *curr = global_table;
             while (curr) {
                 print_sym_table(curr);
                 curr = curr->next;
             }
-            
             show_annotated(ast, 0);
-        } else {
+        } else if (argc == 1) {
             check_semantics(ast);
         }
+    }
+
+    if (str) {
+        free(str);
+        str = NULL;
     }
     
     return 0;

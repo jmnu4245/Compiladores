@@ -1,109 +1,10 @@
 === meta1/Blank.java ===
-0a1
-> Line 5, col 1: syntax error: 
-FAIL: meta1/Blank.java
 === meta1/Comments1.java ===
-0a1
-> Line 13, col 1: syntax error: 
-FAIL: meta1/Comments1.java
 === meta1/Comments2.java ===
-0a1
-> Line 21, col 1: syntax error: 
-FAIL: meta1/Comments2.java
 === meta1/Comments3.java ===
-1,5c1
-< RESERVED(--)
-< STAR
-< STAR
-< MOD
-< MOD
----
-> Line 1, col 1: syntax error: --
-FAIL: meta1/Comments3.java
 === meta1/Comments4.java ===
-1,3c1
-< BOOL
-< DOUBLE
-< AND
----
-> Line 1, col 1: syntax error: boolean
-FAIL: meta1/Comments4.java
 === meta1/Comments5.java ===
-1a2
-> Line 5, col 28: syntax error: 
-FAIL: meta1/Comments5.java
 === meta1/errorsAndOthers.java ===
-1,67c1
-< IDENTIFIER(recurso)
-< Line 1, col 9: illegal character (&)
-< IDENTIFIER(recurso)
-< Line 2, col 11: invalid escape sequence (\5)
-< Line 2, col 20: invalid escape sequence (\x)
-< Line 2, col 8: unterminated string literal
-< Line 3, col 9: invalid escape sequence (\g)
-< Line 4, col 5: invalid escape sequence (\g)
-< Line 5, col 5: invalid escape sequence (\g)
-< Line 5, col 1: unterminated string literal
-< Line 6, col 2: invalid escape sequence (\)
-< Line 6, col 1: unterminated string literal
-< DECIMAL(0123.3)
-< DECIMAL(3.333)
-< IDENTIFIER(_e_1)
-< IDENTIFIER(recurso)
-< Line 9, col 9: invalid escape sequence (\)
-< Line 9, col 8: unterminated string literal
-< Line 10, col 1: unterminated string literal
-< Line 11, col 1: illegal character (#)
-< Line 11, col 2: unterminated string literal
-< Line 12, col 1: illegal character (#)
-< IDENTIFIER(linha)
-< Line 12, col 7: illegal character (#)
-< Line 13, col 1: illegal character (`)
-< Line 13, col 2: illegal character (')
-< STRLIT("outraLinha")
-< Line 16, col 1: illegal character (#)
-< STRLIT("recurso''")
-< Line 16, col 13: illegal character (?)
-< IDENTIFIER(xD)
-< Line 17, col 4: illegal character (?)
-< Line 17, col 5: illegal character (\)
-< IDENTIFIER(n)
-< Line 17, col 7: illegal character (|)
-< Line 17, col 8: illegal character (')
-< Line 17, col 9: illegal character (')
-< INT
-< IDENTIFIER(a)
-< ASSIGN
-< IDENTIFIER(x)
-< Line 18, col 9: illegal character (?)
-< NATURAL(0)
-< NATURAL(0)
-< NATURAL(123321)
-< IDENTIFIER(ttrhwrhewrjree)
-< Line 20, col 2: illegal character (?)
-< Line 20, col 5: illegal character (?)
-< STRLIT("asdadasdas")
-< STRLIT("dsadasd sadsad")
-< STRLIT("dasdsadas		asdasd123")
-< STRLIT("dsadasdas\n")
-< IDENTIFIER(sd)
-< Line 25, col 3: unterminated string literal
-< IDENTIFIER(duaslinhas)
-< IDENTIFIER(ultimalinha)
-< Line 27, col 12: unterminated string literal
-< STRLIT("")
-< STRLIT("\tadssadsadsa\t")
-< STRLIT("\\")
-< STRLIT("\f")
-< STRLIT("\r\f")
-< STRLIT("aspas\"")
-< STRLIT("\\dsadasdsadas")
-< Line 35, col 1: illegal character (\)
-< Line 35, col 3: invalid escape sequence (\b)
-< Line 35, col 2: unterminated string literal
----
-> Line 1, col 1: syntax error: recurso
-FAIL: meta1/errorsAndOthers.java
 === meta1/errors_e1.java ===
 2c2
 < Line 7, col 1: illegal character (#)
@@ -111,237 +12,19 @@ FAIL: meta1/errorsAndOthers.java
 > Line 5, col 2: syntax error: public
 FAIL: meta1/errors_e1.java
 === meta1/escape_sequences.java ===
-1,18c1
-< STRLIT("\n")
-< STRLIT("\\")
-< Line 3, col 2: invalid escape sequence (\ )
-< STRLIT("\"")
-< Line 5, col 1: unterminated string literal
-< Line 6, col 3: invalid escape sequence (\ )
-< Line 6, col 7: invalid escape sequence (\*)
-< Line 7, col 2: invalid escape sequence (\ )
-< Line 7, col 4: invalid escape sequence (\ )
-< Line 7, col 6: invalid escape sequence (\ )
-< Line 7, col 8: invalid escape sequence (\ )
-< Line 7, col 10: invalid escape sequence (\ )
-< Line 8, col 2: invalid escape sequence (\s)
-< Line 8, col 10: invalid escape sequence (\s)
-< Line 9, col 3: invalid escape sequence (\c)
-< Line 10, col 2: invalid escape sequence (\%)
-< STRLIT("\f")
-< Line 12, col 2: invalid escape sequence (\a)
----
-> Line 1, col 1: syntax error: "\n"
-FAIL: meta1/escape_sequences.java
 === meta1/EsteEPuxado.java ===
-1,46c1
-< STRLIT("")
-< STRLIT("\\")
-< STRLIT("\"")
-< STRLIT("This is a string")
-< STRLIT("This is a ")
-< PLUS
-< Line 8, col 20: invalid escape sequence (\g)
-< CLASS
-< IDENTIFIER(Small)
-< Line 9, col 13: illegal character (#)
-< PUBLIC
-< STATIC
-< VOID
-< IDENTIFIER(main)
-< LPAR
-< STRING
-< LSQ
-< RSQ
-< IDENTIFIER(args)
-< RPAR
-< LBRACE
-< RBRACE
-< Line 12, col 1: illegal character (#)
-< STRLIT("Hello /\\\\**/ boyyyy")
-< IDENTIFIER(vari)
-< Line 16, col 5: illegal character (.)
-< IDENTIFIER(able)
-< NATURAL(0)
-< NATURAL(2)
-< DECIMAL(1.e0_0)
-< Line 19, col 2: invalid escape sequence (\)
-< Line 19, col 1: unterminated string literal
-< STRLIT("\\")
-< Line 21, col 5: invalid escape sequence (\)
-< Line 21, col 1: unterminated string literal
-< STRLIT("\\")
-< IDENTIFIER(asd3)
-< DECIMAL(.3)
-< IDENTIFIER(a)
-< MINUS
-< DECIMAL(1.0)
-< IDENTIFIER(e)
-< MINUS
-< NATURAL(1)
-< DECIMAL(1.E+09)
-< Line 30, col 1: unterminated comment
----
-> Line 3, col 1: syntax error: ""
-FAIL: meta1/EsteEPuxado.java
 === meta1/Factorial.java ===
-1,66c1,47
-< CLASS
-< IDENTIFIER(Factorial)
-< LBRACE
-< PUBLIC
-< STATIC
-< INT
-< IDENTIFIER(factorial)
-< LPAR
-< INT
-< IDENTIFIER(n)
-< RPAR
-< LBRACE
-< IF
-< LPAR
-< IDENTIFIER(n)
-< EQ
-< NATURAL(0)
-< RPAR
-< RETURN
-< NATURAL(1)
-< SEMICOLON
-< RETURN
-< IDENTIFIER(n)
-< STAR
-< IDENTIFIER(factorial)
-< LPAR
-< IDENTIFIER(n)
-< MINUS
-< NATURAL(1)
-< RPAR
-< SEMICOLON
-< RBRACE
-< PUBLIC
-< STATIC
-< VOID
-< IDENTIFIER(main)
-< LPAR
-< STRING
-< LSQ
-< RSQ
-< IDENTIFIER(args)
-< RPAR
-< LBRACE
-< INT
-< IDENTIFIER(argument)
-< SEMICOLON
-< IDENTIFIER(argument)
-< ASSIGN
-< PARSEINT
-< LPAR
-< IDENTIFIER(args)
-< LSQ
-< NATURAL(0)
-< RSQ
-< RPAR
-< SEMICOLON
-< PRINT
-< LPAR
-< IDENTIFIER(factorial)
-< LPAR
-< IDENTIFIER(argument)
-< RPAR
-< RPAR
-< SEMICOLON
-< RBRACE
-< RBRACE
----
-> Program
-> ..Identifier(Factorial)
-> ..MethodDecl
-> ....MethodHeader
-> ......Int
-> ......Identifier(factorial)
-> ......MethodParams
-> ........ParamDecl
-> ..........Int
-> ..........Identifier(n)
-> ....MethodBody
-> ......If
-> ........Eq
-> ..........Identifier(n)
-> ..........Natural(0)
-> ........Return
-> ..........Natural(1)
-> ........Block
-> ......Return
-> ........Mul
-> ..........Identifier(n)
-> ..........Call
-> ............Identifier(factorial)
-> ............Sub
-> ..............Identifier(n)
-> ..............Natural(1)
-> ..MethodDecl
-> ....MethodHeader
-> ......Void
-> ......Identifier(main)
-> ......MethodParams
-> ........ParamDecl
-> ..........StringArray
-> ..........Identifier(args)
-> ....MethodBody
-> ......VarDecl
-> ........Int
-> ........Identifier(argument)
-> ......Assign
-> ........Identifier(argument)
-> ........ParseArgs
-> ..........Identifier(args)
-> ..........Natural(0)
-> ......Print
-> ........Call
-> ..........Identifier(factorial)
-> ..........Identifier(argument)
-FAIL: meta1/Factorial.java
 === meta1/HyperSuperMegaTest.java ===
-1,349c1
-< MOD
-< NE
-< NOT
-< OR
-< PLUS
-< RBRACE
-< RPAR
-< RSQ
-< SEMICOLON
+10c10,11
 < ARROW
-< LSHIFT
-< RSHIFT
-< XOR
-< BOOL
-< CLASS
-< DOTLENGTH
-< IDENTIFIER(Xlength)
-< DOUBLE
-< ELSE
-< IF
-< INT
-< PRINT
-< IDENTIFIER(SystemXout)
-< Line 25, col 11: illegal character (.)
-< IDENTIFIER(print)
+---
+> MINUS
+> GT
+26c27
 < RESERVED(System)
-< Line 26, col 7: illegal character (.)
-< IDENTIFIER(outXprint)
-< IDENTIFIER(SystemXoutXprint)
-< PARSEINT
-< IDENTIFIER(IntegerXparseInt)
-< PUBLIC
-< RETURN
-< STATIC
-< STRING
-< VOID
-< WHILE
-< RESERVED(++)
-< RESERVED(--)
+---
+> IDENTIFIER(System)
+40,69c41,70
 < RESERVED(null)
 < RESERVED(Integer)
 < RESERVED(System)
@@ -372,7 +55,38 @@ FAIL: meta1/Factorial.java
 < RESERVED(package)
 < RESERVED(private)
 < RESERVED(protected)
-< PUBLIC
+---
+> IDENTIFIER(null)
+> IDENTIFIER(Integer)
+> IDENTIFIER(System)
+> IDENTIFIER(abstract)
+> IDENTIFIER(assert)
+> IDENTIFIER(break)
+> IDENTIFIER(byte)
+> IDENTIFIER(case)
+> IDENTIFIER(catch)
+> IDENTIFIER(char)
+> IDENTIFIER(const)
+> IDENTIFIER(default)
+> IDENTIFIER(do)
+> IDENTIFIER(enum)
+> IDENTIFIER(extends)
+> IDENTIFIER(final)
+> IDENTIFIER(finally)
+> IDENTIFIER(float)
+> IDENTIFIER(for)
+> IDENTIFIER(goto)
+> IDENTIFIER(implements)
+> IDENTIFIER(import)
+> IDENTIFIER(instanceof)
+> IDENTIFIER(interface)
+> IDENTIFIER(long)
+> IDENTIFIER(native)
+> IDENTIFIER(new)
+> IDENTIFIER(package)
+> IDENTIFIER(private)
+> IDENTIFIER(protected)
+71,82c72,83
 < RESERVED(short)
 < RESERVED(strictfp)
 < RESERVED(super)
@@ -385,385 +99,125 @@ FAIL: meta1/Factorial.java
 < RESERVED(try)
 < RESERVED(volatile)
 < RESERVED(continue)
-< BOOLLIT(true)
-< BOOLLIT(false)
-< IDENTIFIER(tru)
-< IDENTIFIER(fals)
-< IDENTIFIER(truee)
-< IDENTIFIER(falsee)
-< IDENTIFIER(sa9dyas9_ya9sydas$0as_0)
-< NATURAL(9)
-< IDENTIFIER(dyas9_ya9sydas$0as_0)
-< NATURAL(0)
-< NATURAL(1039123_897123___8931271)
-< IDENTIFIER(_1039123_897123___8931271)
-< IDENTIFIER(booleane)
-< IDENTIFIER(classe)
-< DOTLENGTH
-< IDENTIFIER(e)
-< IDENTIFIER(Xlengthe)
-< IDENTIFIER(doublee)
-< IDENTIFIER(elsee)
-< IDENTIFIER(ife)
-< IDENTIFIER(inte)
-< PRINT
-< IDENTIFIER(e)
-< IDENTIFIER(SystemXout)
-< Line 101, col 11: illegal character (.)
-< IDENTIFIER(printe)
-< RESERVED(System)
-< Line 102, col 7: illegal character (.)
-< IDENTIFIER(outXprinte)
-< IDENTIFIER(SystemXoutXprinte)
-< PARSEINT
-< IDENTIFIER(e)
-< IDENTIFIER(IntegerXparseInte)
-< IDENTIFIER(publice)
-< IDENTIFIER(returne)
-< IDENTIFIER(statice)
-< IDENTIFIER(Stringe)
-< IDENTIFIER(voide)
-< IDENTIFIER(whilee)
-< RESERVED(++)
-< IDENTIFIER(e)
-< RESERVED(--)
-< IDENTIFIER(e)
-< IDENTIFIER(nulle)
-< IDENTIFIER(Integere)
-< IDENTIFIER(Systeme)
-< IDENTIFIER(abstracte)
-< IDENTIFIER(asserte)
-< IDENTIFIER(breake)
-< RESERVED(byte)
-< Line 120, col 5: illegal character (\)
-< RESERVED(case)
-< Line 121, col 5: illegal character (\)
-< RESERVED(catch)
-< Line 122, col 6: illegal character (\)
-< RESERVED(char)
-< Line 123, col 5: illegal character (\)
-< RESERVED(const)
-< Line 124, col 6: illegal character (\)
-< RESERVED(default)
-< Line 125, col 8: illegal character (\)
-< RESERVED(do)
-< Line 126, col 3: illegal character (\)
-< RESERVED(enum)
-< Line 127, col 5: illegal character (\)
-< RESERVED(extends)
-< Line 128, col 8: illegal character (.)
-< RESERVED(final)
-< Line 129, col 6: illegal character (.)
-< RESERVED(finally)
-< Line 130, col 8: illegal character (.)
-< RESERVED(float)
-< Line 131, col 6: illegal character (.)
-< RESERVED(for)
-< Line 133, col 4: illegal character (.)
-< RESERVED(goto)
-< Line 134, col 5: illegal character (.)
-< RESERVED(implements)
-< COMMA
-< RESERVED(import)
-< COMMA
-< RESERVED(instanceof)
-< COMMA
-< RESERVED(interface)
-< COMMA
-< RESERVED(long)
-< COMMA
-< RESERVED(native)
-< COMMA
-< RESERVED(new)
-< COMMA
-< IDENTIFIER(packagee)
-< IDENTIFIER(privatee)
-< IDENTIFIER(protectede)
-< IDENTIFIER(publice)
-< IDENTIFIER(shorte)
-< IDENTIFIER(strictfpe)
-< IDENTIFIER(supere)
-< IDENTIFIER(switche)
-< IDENTIFIER(esynchronizede)
-< IDENTIFIER(thise)
-< IDENTIFIER(throwe)
-< RESERVED(throws)
-< IDENTIFIER(transiente)
-< IDENTIFIER(tryr)
-< IDENTIFIER(volatilee)
-< RESERVED(continue)
-< Line 159, col 9: illegal character (\)
-< AND
-< MOD
-< Line 161, col 5: illegal character (&)
-< MOD
-< AND
-< OR
-< Line 161, col 15: illegal character (&)
-< Line 161, col 16: illegal character (|)
-< AND
-< Line 161, col 20: illegal character (&)
-< MOD
-< MOD
-< MOD
-< OR
-< Line 161, col 28: illegal character (|)
-< ASSIGN
-< EQ
-< ASSIGN
-< IDENTIFIER(e)
-< IDENTIFIER(fefa)
-< STAR
-< STAR
-< STAR
-< STAR
-< STAR
-< STAR
-< MOD
-< STAR
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< COMMA
-< DIV
-< Line 170, col 5: illegal character (&)
-< Line 172, col 1: illegal character (&)
-< NATURAL(6)
-< NATURAL(6)
-< NATURAL(66)
-< NATURAL(66)
-< NATURAL(7)
-< AND
-< AND
-< NATURAL(6)
-< Line 172, col 25: illegal character (&)
-< Line 172, col 27: illegal character (&)
-< DIV
-< NATURAL(6)
-< Line 172, col 31: illegal character (&)
-< Line 172, col 34: illegal character (&)
-< EQ
-< ASSIGN
-< EQ
-< NATURAL(0)
-< EQ
-< EQ
-< ASSIGN
-< ASSIGN
-< ASSIGN
-< ASSIGN
-< ASSIGN
-< ASSIGN
-< ASSIGN
-< NATURAL(0)
-< NATURAL(0)
-< EQ
-< ASSIGN
-< NATURAL(0)
-< NATURAL(0)
-< LE
-< EQ
-< ASSIGN
-< GT
-< GE
-< GE
-< GT
-< ASSIGN
-< GE
-< GE
-< ASSIGN
-< GE
-< RSHIFT
-< LT
-< GT
-< GT
-< LT
-< LT
-< NATURAL(0)
-< ASSIGN
-< LE
-< LT
-< NATURAL(0)
-< ASSIGN
-< LE
-< LBRACE
-< LBRACE
-< RBRACE
-< LBRACE
-< LSQ
-< RSQ
-< LSQ
-< RSQ
-< LBRACE
-< RBRACE
-< LPAR
-< RPAR
-< LPAR
-< RPAR
-< DIV
-< LBRACE
-< RBRACE
-< IDENTIFIER($)
-< RSQ
-< RPAR
-< LPAR
-< RPAR
-< RESERVED(--)
-< MINUS
-< RESERVED(--)
-< MINUS
-< MINUS
-< MINUS
-< MINUS
-< MINUS
-< DIV
-< IDENTIFIER(aso)
-< IDENTIFIER(dijaj)
-< STAR
-< STAR
-< DIV
-< STRLIT("sui ghasuidhasui dhiash ")
-< STRLIT("")
-< IDENTIFIER(sapdj)
-< IDENTIFIER(a)
-< Line 190, col 29: invalid escape sequence (\)
-< Line 190, col 10: unterminated string literal
-< Line 191, col 23: invalid escape sequence (\U)
-< Line 192, col 18: invalid escape sequence (\)
-< Line 192, col 1: unterminated string literal
-< Line 193, col 1: unterminated string literal
-< STRLIT("aspj dpas !")
-< STRLIT("")
 ---
-> Line 2, col 1: syntax error: %
+> IDENTIFIER(short)
+> IDENTIFIER(strictfp)
+> IDENTIFIER(super)
+> IDENTIFIER(switch)
+> IDENTIFIER(synchronized)
+> IDENTIFIER(this)
+> IDENTIFIER(throw)
+> IDENTIFIER(throws)
+> IDENTIFIER(transient)
+> IDENTIFIER(try)
+> IDENTIFIER(volatile)
+> IDENTIFIER(continue)
+109c110
+< RESERVED(System)
+---
+> IDENTIFIER(System)
+132c133
+< RESERVED(byte)
+---
+> IDENTIFIER(byte)
+134c135
+< RESERVED(case)
+---
+> IDENTIFIER(case)
+136c137
+< RESERVED(catch)
+---
+> IDENTIFIER(catch)
+138c139
+< RESERVED(char)
+---
+> IDENTIFIER(char)
+140c141
+< RESERVED(const)
+---
+> IDENTIFIER(const)
+142c143
+< RESERVED(default)
+---
+> IDENTIFIER(default)
+144c145
+< RESERVED(do)
+---
+> IDENTIFIER(do)
+146c147
+< RESERVED(enum)
+---
+> IDENTIFIER(enum)
+148c149
+< RESERVED(extends)
+---
+> IDENTIFIER(extends)
+150c151
+< RESERVED(final)
+---
+> IDENTIFIER(final)
+152c153
+< RESERVED(finally)
+---
+> IDENTIFIER(finally)
+154c155
+< RESERVED(float)
+---
+> IDENTIFIER(float)
+156c157
+< RESERVED(for)
+---
+> IDENTIFIER(for)
+158c159
+< RESERVED(goto)
+---
+> IDENTIFIER(goto)
+160c161
+< RESERVED(implements)
+---
+> IDENTIFIER(implements)
+162c163
+< RESERVED(import)
+---
+> IDENTIFIER(import)
+164c165
+< RESERVED(instanceof)
+---
+> IDENTIFIER(instanceof)
+166c167
+< RESERVED(interface)
+---
+> IDENTIFIER(interface)
+168c169
+< RESERVED(long)
+---
+> IDENTIFIER(long)
+170c171
+< RESERVED(native)
+---
+> IDENTIFIER(native)
+172c173
+< RESERVED(new)
+---
+> IDENTIFIER(new)
+185c186
+< RESERVED(throws)
+---
+> IDENTIFIER(throws)
+189c190
+< RESERVED(continue)
+---
+> IDENTIFIER(continue)
 FAIL: meta1/HyperSuperMegaTest.java
 === meta1/IdentifiersAndKeywords1.java ===
-1,46c1
-< BOOLLIT(true)
-< BOOLLIT(false)
-< AND
-< ASSIGN
-< STAR
-< COMMA
-< DIV
-< EQ
-< GE
-< GT
-< LBRACE
-< LE
-< LPAR
-< LSQ
-< LT
-< MINUS
-< MOD
-< NE
-< NOT
-< OR
-< PLUS
-< RBRACE
-< RPAR
-< RSQ
-< SEMICOLON
+26c26,27
 < ARROW
-< LSHIFT
-< RSHIFT
-< XOR
-< BOOL
-< CLASS
-< DOTLENGTH
-< DOUBLE
-< ELSE
-< IF
-< INT
-< PRINT
-< PARSEINT
-< PUBLIC
-< RETURN
-< STATIC
-< STRING
-< VOID
-< WHILE
-< IDENTIFIER(whilestatic)
-< IDENTIFIER(whileestatico)
 ---
-> Line 1, col 1: syntax error: true
+> MINUS
+> GT
 FAIL: meta1/IdentifiersAndKeywords1.java
 === meta1/IdentifiersAndKeywords2.java ===
-1,34c1
-< IDENTIFIER(T)
-< IDENTIFIER(T99)
-< IDENTIFIER(T0)
-< IDENTIFIER(T0T0)
-< IDENTIFIER($)
-< IDENTIFIER(_)
-< IDENTIFIER(teste)
-< IDENTIFIER(teste)
-< IDENTIFIER(teste1)
-< IDENTIFIER(teste2_23)
-< IDENTIFIER(tes2_23te)
-< IDENTIFIER(te$_te)
-< IDENTIFIER(TeStE)
-< IDENTIFIER(tEsTe)
-< IDENTIFIER(TESTE)
-< IDENTIFIER(_T_E_S_T_E_)
-< IDENTIFIER($T$E$S$T$E$)
-< IDENTIFIER(T_E_S_T_E)
-< IDENTIFIER(T$E$S$T$E)
-< IDENTIFIER(_$T$_$E$_$S$_$T$_$E$_$)
-< IDENTIFIER($$$T$$$$E$$$S$$$$T$$E$$$$)
-< IDENTIFIER(T$_$E$_$S$_$T$_$E)
-< IDENTIFIER(T$$$$E$$$S$$$$T$$E)
-< IDENTIFIER(T_)
-< IDENTIFIER(T$)
-< IDENTIFIER(T_$)
-< IDENTIFIER(T_$_$_$_$_$_)
-< IDENTIFIER(T__$__$__$_$$___$$_$_$_$_$$$_$$_)
-< IDENTIFIER(T__123321__$$1231_$123_2112_123_$)
-< IDENTIFIER(T__$__$__$_$$___$$_$_$_$_$$$_$$_T)
-< IDENTIFIER(T__123321__$$1231_$123_2112_123_$T)
-< IDENTIFIER(public2123)
-< PUBLIC
-< IDENTIFIER(public122312313)
----
-> Line 1, col 1: syntax error: T
-FAIL: meta1/IdentifiersAndKeywords2.java
 === meta1/ids.java ===
-1,14c1
-< IDENTIFIER(_test1)
-< IDENTIFIER($var_)
-< IDENTIFIER($2142var_)
-< IDENTIFIER($var_21212)
-< IDENTIFIER(KEYWORD)
-< IDENTIFIER(canelCase)
-< IDENTIFIER(CamelCase)
-< IDENTIFIER(id)
-< IDENTIFIER($$$ThisIsValid)
-< IDENTIFIER($2323232$$ThisIsValid)
-< IDENTIFIER(_validCamelCase)
-< IDENTIFIER(______validCamelCase)
-< IDENTIFIER(_223valid)
-< IDENTIFIER(_$id)
----
-> Line 1, col 1: syntax error: _test1
-FAIL: meta1/ids.java
 === meta1/InsertionSort_e1.java ===
 1,4c1
 < Line 22, col 32: invalid escape sequence (\h)
@@ -774,101 +228,10 @@ FAIL: meta1/ids.java
 > Line 2, col 41: syntax error: [
 FAIL: meta1/InsertionSort_e1.java
 === meta1/INTLIT2.java ===
-1,5c1
-< NATURAL(11)
-< IDENTIFIER(_)
-< NATURAL(5_6)
-< NATURAL(38_0)
-< IDENTIFIER(___)
----
-> Line 1, col 1: syntax error: 11
-FAIL: meta1/INTLIT2.java
 === meta1/INTLIT.java ===
-1,15c1
-< NATURAL(0)
-< NATURAL(1)
-< NATURAL(2)
-< NATURAL(3)
-< NATURAL(4)
-< NATURAL(5)
-< NATURAL(6)
-< NATURAL(7)
-< NATURAL(8)
-< NATURAL(9)
-< NATURAL(10)
-< NATURAL(1_1)
-< NATURAL(1____2)
-< NATURAL(134_123)
-< NATURAL(1_0_3_0)
----
-> Line 1, col 1: syntax error: 0
-FAIL: meta1/INTLIT.java
 === meta1/literals.java ===
-1,59c1
-< NATURAL(0)
-< NATURAL(2115)
-< NATURAL(1215)
-< NATURAL(125_251)
-< NATURAL(0)
-< IDENTIFIER(_1515_0)
-< NATURAL(0)
-< NATURAL(0)
-< NATURAL(1_15151_2)
-< DECIMAL(12.12)
-< IDENTIFIER(E)
-< PLUS
-< NATURAL(2)
-< DECIMAL(0.124)
-< NATURAL(24)
-< IDENTIFIER(_)
-< DECIMAL(.52)
-< DECIMAL(024.)
-< IDENTIFIER(E)
-< NATURAL(24)
-< IDENTIFIER(_E)
-< DECIMAL(02.14)
-< DECIMAL(0.02)
-< DECIMAL(.01)
-< DECIMAL(.999)
-< DECIMAL(423e-3)
-< DECIMAL(0E+4)
-< DECIMAL(05e2)
-< DECIMAL(09.5e+1)
-< DECIMAL(0.4e2)
-< DECIMAL(64.8E-2)
-< DECIMAL(64.)
-< IDENTIFIER(E)
-< Line 24, col 1: illegal character (.)
-< IDENTIFIER(e)
-< MINUS
-< NATURAL(1)
-< IDENTIFIER(e2)
-< Line 27, col 1: illegal character (.)
-< IDENTIFIER(e2)
-< STRLIT("string")
-< STRLIT("varios escapes \n \f \r")
-< Line 31, col 1: unterminated string literal
-< Line 32, col 2: invalid escape sequence (\)
-< Line 32, col 1: unterminated string literal
-< STRLIT("newline")
-< STRLIT("\"\"")
-< STRLIT("")
-< STRLIT("")
-< STRLIT("\n")
-< Line 37, col 1: unterminated string literal
-< Line 38, col 1: unterminated string literal
-< STRLIT("")
-< IDENTIFIER(aaaaa)
-< Line 41, col 1: unterminated string literal
-< STRLIT("   ")
-< Line 42, col 29: invalid escape sequence (\h)
-< Line 42, col 7: unterminated string literal
-< Line 43, col 1: unterminated string literal
----
-> Line 1, col 1: syntax error: 0
-FAIL: meta1/literals.java
 === meta1/Missing_Reserved.java ===
-1,31c1
+1,31c1,31
 < RESERVED(break)
 < RESERVED(byte)
 < RESERVED(case)
@@ -901,269 +264,51 @@ FAIL: meta1/literals.java
 < RESERVED(Integer)
 < RESERVED(System)
 ---
-> Line 1, col 1: syntax error: break
+> IDENTIFIER(break)
+> IDENTIFIER(byte)
+> IDENTIFIER(case)
+> IDENTIFIER(catch)
+> IDENTIFIER(char)
+> IDENTIFIER(const)
+> IDENTIFIER(enum)
+> IDENTIFIER(extends)
+> IDENTIFIER(final)
+> IDENTIFIER(finally)
+> IDENTIFIER(float)
+> IDENTIFIER(for)
+> IDENTIFIER(implements)
+> IDENTIFIER(import)
+> IDENTIFIER(instanceof)
+> IDENTIFIER(interface)
+> IDENTIFIER(long)
+> IDENTIFIER(native)
+> IDENTIFIER(new)
+> IDENTIFIER(protected)
+> IDENTIFIER(short)
+> IDENTIFIER(strictfp)
+> IDENTIFIER(super)
+> IDENTIFIER(this)
+> IDENTIFIER(throw)
+> IDENTIFIER(throws)
+> IDENTIFIER(transient)
+> IDENTIFIER(try)
+> IDENTIFIER(volatile)
+> IDENTIFIER(Integer)
+> IDENTIFIER(System)
 FAIL: meta1/Missing_Reserved.java
 === meta1/newlines.java ===
-7,99c7
-< STRLIT("n")
-< Line 7, col 1: unterminated string literal
-< Line 8, col 1: illegal character (î)
-< Line 9, col 2: invalid escape sequence (\î)
-< Line 9, col 1: unterminated string literal
-< IDENTIFIER(nn)
-< Line 11, col 3: illegal character (\)
-< Line 12, col 1: illegal character (\)
-< Line 12, col 2: illegal character (î)
-< IDENTIFIER(n)
-< Line 12, col 4: illegal character (\)
-< Line 12, col 5: illegal character (\)
-< Line 13, col 1: unterminated string literal
-< STRLIT("")
-< Line 16, col 2: invalid escape sequence (\)
-< Line 16, col 1: unterminated string literal
-< Line 18, col 1: illegal character (\)
-< Line 18, col 2: illegal character (\)
-< Line 19, col 1: unterminated string literal
-< Line 20, col 1: illegal character (î)
-< Line 20, col 2: illegal character (î)
-< Line 20, col 3: unterminated string literal
-< Line 22, col 1: illegal character (î)
-< Line 22, col 2: illegal character (î)
-< IDENTIFIER(nnn)
-< Line 22, col 6: unterminated string literal
-< Line 23, col 1: unterminated string literal
-< IDENTIFIER(nn)
-< Line 25, col 3: illegal character (\)
-< Line 25, col 4: unterminated string literal
-< Line 26, col 1: illegal character (\)
-< IDENTIFIER(n)
-< Line 32, col 1: illegal character (\)
-< IDENTIFIER(n)
-< Line 32, col 3: illegal character (î)
-< Line 33, col 1: illegal character (î)
-< Line 33, col 2: illegal character (î)
-< Line 33, col 3: illegal character (\)
-< IDENTIFIER(n)
-< Line 33, col 5: illegal character (\)
-< Line 34, col 1: illegal character (î)
-< Line 34, col 2: illegal character (î)
-< Line 34, col 3: illegal character (\)
-< Line 34, col 5: invalid escape sequence (\)
-< Line 34, col 4: unterminated string literal
-< Line 36, col 1: illegal character (î)
-< Line 36, col 2: illegal character (î)
-< IDENTIFIER(n)
-< Line 37, col 1: unterminated string literal
-< Line 38, col 1: illegal character (\)
-< Line 38, col 2: illegal character (\)
-< Line 38, col 3: illegal character (î)
-< STRLIT("î")
-< Line 39, col 1: illegal character (\)
-< Line 41, col 1: illegal character (î)
-< Line 41, col 2: illegal character (î)
-< Line 41, col 3: illegal character (î)
-< Line 41, col 4: illegal character (\)
-< Line 41, col 5: illegal character (\)
-< Line 41, col 6: unterminated string literal
-< STRLIT("")
-< IDENTIFIER(n)
-< Line 45, col 1: illegal character (î)
-< IDENTIFIER(nn)
-< IDENTIFIER(n)
-< IDENTIFIER(nn)
-< Line 48, col 1: illegal character (\)
-< Line 48, col 2: illegal character (\)
-< IDENTIFIER(n)
-< Line 48, col 4: illegal character (\)
-< Line 48, col 5: illegal character (î)
-< STRLIT("\"\n")
-< Line 48, col 12: unterminated string literal
-< Line 49, col 1: illegal character (î)
-< IDENTIFIER(n)
-< Line 49, col 3: unterminated string literal
-< Line 50, col 1: illegal character (î)
-< Line 51, col 1: unterminated string literal
-< Line 52, col 1: illegal character (\)
-< STRLIT("î")
-< IDENTIFIER(n)
-< STRLIT("nn")
-< IDENTIFIER(nn)
-< Line 56, col 4: invalid escape sequence (\)
-< Line 56, col 3: unterminated string literal
-< Line 57, col 1: illegal character (\)
-< Line 59, col 2: invalid escape sequence (\î)
-< Line 59, col 1: unterminated string literal
-< IDENTIFIER(n)
-< Line 61, col 3: invalid escape sequence (\)
-< Line 62, col 2: invalid escape sequence (\)
-< Line 62, col 1: unterminated string literal
-< Line 63, col 1: unterminated string literal
----
-> Line 6, col 2: syntax error: "n"
-FAIL: meta1/newlines.java
 === meta1/Num.java ===
-1,28c1
-< NATURAL(1815)
-< IDENTIFIER(__)
-< DECIMAL(.3165161)
-< MINUS
-< NATURAL(15)
-< IDENTIFIER(falsetrue)
-< IDENTIFIER(true1)
-< NATURAL(15)
-< IDENTIFIER(E)
-< PLUS
-< IDENTIFIER(__1)
-< NATURAL(15)
-< IDENTIFIER(E___1)
-< PLUS
-< DECIMAL(1816.45)
-< DECIMAL(455.E+0)
-< DECIMAL(.221)
-< NATURAL(0)
-< NATURAL(0)
-< NATURAL(0)
-< NATURAL(4545)
-< NATURAL(15511)
-< IDENTIFIER(E)
-< DECIMAL(.21515)
-< DECIMAL(1215e95)
-< DECIMAL(3E+5)
-< DECIMAL(3E-5)
-< DECIMAL(3E5)
----
-> Line 1, col 1: syntax error: 1815
-FAIL: meta1/Num.java
 === meta1/PoucoDeTudo.java ===
-1,31c1
-< CLASS
-< IDENTIFIER(Compiladores2020)
-< DIV
-< NATURAL(2019)
-< STAR
-< STAR
-< DIV
-< WHILE
-< IDENTIFIER(e)
-< MINUS
-< NATURAL(1)
-< RESERVED(++)
-< PRINT
-< LPAR
-< Line 8, col 36: invalid escape sequence (\)
-< Line 8, col 18: unterminated string literal
-< STRLIT(" \\ ")
-< RPAR
-< Line 10, col 26: invalid escape sequence (\	)
-< Line 10, col 1: unterminated string literal
-< DECIMAL(0.0e0)
-< DECIMAL(.0e0)
-< DECIMAL(.0)
-< DECIMAL(123.123e123)
-< IDENTIFIER(e)
-< RESERVED(--)
-< NATURAL(123)
+28c28,29
 < ARROW
-< IDENTIFIER(reallit)
-< Line 13, col 29: illegal character (?)
-< STRLIT(" \\\\\n 	")
 ---
-> Line 1, col 23: syntax error: /
+> MINUS
+> GT
 FAIL: meta1/PoucoDeTudo.java
 === meta1/REALLIT_2.java ===
-1,68c1
-< DECIMAL(.0)
-< DECIMAL(.1)
-< DECIMAL(.09)
-< DECIMAL(.19)
-< DECIMAL(.09)
-< DECIMAL(.019)
-< DECIMAL(.0_9)
-< DECIMAL(.1__9)
-< DECIMAL(.09)
-< DECIMAL(.0__1_9)
-< DECIMAL(0.)
-< DECIMAL(1.)
-< DECIMAL(10.)
-< DECIMAL(1__0.)
-< DECIMAL(1_9_0.)
-< DECIMAL(0.0)
-< DECIMAL(0.1)
-< DECIMAL(1.0)
-< DECIMAL(1.1)
-< DECIMAL(10.0)
-< DECIMAL(10.01)
-< DECIMAL(1_0.0)
-< DECIMAL(1_0__9.01)
-< DECIMAL(0e0)
-< DECIMAL(0e+0)
-< DECIMAL(0e-0)
-< DECIMAL(0E0)
-< DECIMAL(0E+0)
-< DECIMAL(0E-0)
-< DECIMAL(0E-0___0_1)
-< DECIMAL(1e0)
-< DECIMAL(1e+0)
-< DECIMAL(1e-0)
-< DECIMAL(1E0)
-< DECIMAL(1E+0)
-< DECIMAL(1E-0)
-< DECIMAL(1e9)
-< DECIMAL(1e+9)
-< DECIMAL(1e-9)
-< DECIMAL(1E9)
-< DECIMAL(1E+9)
-< DECIMAL(1E-9)
-< DECIMAL(1e01)
-< DECIMAL(1e+01)
-< DECIMAL(1e-01)
-< DECIMAL(1E01)
-< DECIMAL(1E+01)
-< DECIMAL(1E-01)
-< DECIMAL(1e91)
-< DECIMAL(1e+91)
-< DECIMAL(1e-91)
-< DECIMAL(1E91)
-< DECIMAL(1E+91)
-< DECIMAL(1E-91)
-< DECIMAL(0.0e10)
-< DECIMAL(0.1e10)
-< DECIMAL(0.1_0e10)
-< DECIMAL(1.0e10)
-< DECIMAL(1.1e10)
-< DECIMAL(10.0e10)
-< DECIMAL(10.01e10)
-< DECIMAL(.0e10)
-< DECIMAL(.1e10)
-< DECIMAL(.0e10)
-< DECIMAL(.0e1_0_9)
-< DECIMAL(.1e10)
-< DECIMAL(.0e10)
-< DECIMAL(.01e10)
----
-> Line 1, col 1: syntax error: .0
-FAIL: meta1/REALLIT_2.java
 === meta1/REALLIT.java ===
-1,14c1
-< DECIMAL(3.)
-< DECIMAL(0.)
-< DECIMAL(3_1.)
-< DECIMAL(3.0)
-< DECIMAL(3.0_1)
-< DECIMAL(3_3.0_1_3____5)
-< DECIMAL(3.e1)
-< DECIMAL(3.e+1_2)
-< DECIMAL(3_00.5_3E-1_2_3)
-< DECIMAL(3E-5)
-< DECIMAL(9.4E-0)
-< DECIMAL(.4)
-< DECIMAL(.1_42)
-< DECIMAL(.03e-13_3)
----
-> Line 1, col 1: syntax error: 3.
-FAIL: meta1/REALLIT.java
 === meta1/Reserved_All.java ===
-1,42c1
+1,42c1,42
 < RESERVED(abstract)
 < RESERVED(continue)
 < RESERVED(for)
@@ -1207,18 +352,63 @@ FAIL: meta1/REALLIT.java
 < RESERVED(Integer)
 < RESERVED(null)
 ---
-> Line 1, col 1: syntax error: abstract
+> IDENTIFIER(abstract)
+> IDENTIFIER(continue)
+> IDENTIFIER(for)
+> IDENTIFIER(new)
+> IDENTIFIER(switch)
+> IDENTIFIER(assert)
+> IDENTIFIER(default)
+> IDENTIFIER(package)
+> IDENTIFIER(synchronized)
+> IDENTIFIER(do)
+> IDENTIFIER(goto)
+> IDENTIFIER(private)
+> IDENTIFIER(this)
+> IDENTIFIER(break)
+> IDENTIFIER(implements)
+> IDENTIFIER(protected)
+> IDENTIFIER(throw)
+> IDENTIFIER(byte)
+> IDENTIFIER(import)
+> IDENTIFIER(throws)
+> IDENTIFIER(case)
+> IDENTIFIER(enum)
+> IDENTIFIER(instanceof)
+> IDENTIFIER(transient)
+> IDENTIFIER(catch)
+> IDENTIFIER(extends)
+> IDENTIFIER(short)
+> IDENTIFIER(try)
+> IDENTIFIER(char)
+> IDENTIFIER(final)
+> IDENTIFIER(interface)
+> IDENTIFIER(finally)
+> IDENTIFIER(long)
+> IDENTIFIER(strictfp)
+> IDENTIFIER(volatile)
+> IDENTIFIER(const)
+> IDENTIFIER(float)
+> IDENTIFIER(native)
+> IDENTIFIER(super)
+> IDENTIFIER(System)
+> IDENTIFIER(Integer)
+> IDENTIFIER(null)
 FAIL: meta1/Reserved_All.java
 === meta1/Reserved_Blank.java ===
-1,16c1
-< RESERVED(++)
-< RESERVED(--)
+3,7c3,7
 < RESERVED(Integer)
 < RESERVED(null)
 < RESERVED(System)
 < RESERVED(abstract)
 < RESERVED(continue)
-< IDENTIFIER(fornew)
+---
+> IDENTIFIER(Integer)
+> IDENTIFIER(null)
+> IDENTIFIER(System)
+> IDENTIFIER(abstract)
+> IDENTIFIER(continue)
+9,16c9,16
 < RESERVED(switch)
 < RESERVED(assert)
 < RESERVED(default)
@@ -1228,429 +418,34 @@ FAIL: meta1/Reserved_All.java
 < RESERVED(goto)
 < RESERVED(private)
 ---
-> Line 1, col 1: syntax error: ++
+> IDENTIFIER(switch)
+> IDENTIFIER(assert)
+> IDENTIFIER(default)
+> IDENTIFIER(package)
+> IDENTIFIER(synchronized)
+> IDENTIFIER(do)
+> IDENTIFIER(goto)
+> IDENTIFIER(private)
 FAIL: meta1/Reserved_Blank.java
 === meta1/SimpleClass.java ===
-1,117c1
-< PUBLIC
-< CLASS
-< IDENTIFIER(SimpleClass)
-< LBRACE
-< PUBLIC
-< STATIC
-< VOID
-< IDENTIFIER(main)
-< LPAR
-< STRING
-< LSQ
-< RSQ
-< IDENTIFIER(args)
-< RPAR
-< LBRACE
-< INT
-< IDENTIFIER(n)
-< ASSIGN
-< NATURAL(0)
-< SEMICOLON
-< BOOL
-< IDENTIFIER(print)
-< ASSIGN
-< BOOLLIT(true)
-< SEMICOLON
-< BOOL
-< IDENTIFIER(empty)
-< ASSIGN
-< BOOLLIT(true)
-< SEMICOLON
-< STRING
-< LSQ
-< RSQ
-< IDENTIFIER(albums)
-< ASSIGN
-< LBRACE
-< STRLIT("Cowboys From Hell")
-< COMMA
-< STRLIT("Vulgar Display Of Power")
-< COMMA
-< STRLIT("Far Beyond Driven")
-< COMMA
-< STRLIT("The Great Southern Trendkill")
-< COMMA
-< STRLIT("Reinventing The Steel")
-< RBRACE
-< SEMICOLON
-< PRINT
-< LPAR
-< STRLIT("Albums:\n")
-< RPAR
-< SEMICOLON
+53c53
 < RESERVED(for)
-< LPAR
-< INT
-< IDENTIFIER(i)
-< ASSIGN
-< NATURAL(0)
-< SEMICOLON
-< IDENTIFIER(i)
-< LT
-< IDENTIFIER(albums)
-< DOTLENGTH
-< SEMICOLON
-< IDENTIFIER(i)
-< RESERVED(++)
-< RPAR
-< LBRACE
-< IDENTIFIER(n)
-< RESERVED(++)
-< SEMICOLON
-< PRINT
-< LPAR
-< IDENTIFIER(albums)
-< LSQ
-< IDENTIFIER(i)
-< RSQ
-< PLUS
-< STRLIT(": ")
-< PLUS
-< IDENTIFIER(n)
-< PLUS
-< STRLIT("\n")
-< RPAR
-< SEMICOLON
-< RBRACE
-< IF
-< LPAR
-< IDENTIFIER(n)
-< GT
-< NATURAL(0)
-< RPAR
-< LBRACE
-< IDENTIFIER(empty)
-< ASSIGN
-< BOOLLIT(false)
-< SEMICOLON
-< RBRACE
-< IF
-< LPAR
-< IDENTIFIER(print)
-< AND
-< NOT
-< IDENTIFIER(empty)
-< RPAR
-< LBRACE
-< PRINT
-< IDENTIFIER(ln)
-< LPAR
-< STRLIT("Total albums: ")
-< PLUS
-< IDENTIFIER(n)
-< RPAR
-< SEMICOLON
-< RBRACE
-< RBRACE
-< RBRACE
 ---
-> Line 6, col 1: syntax error: public
+> IDENTIFIER(for)
 FAIL: meta1/SimpleClass.java
 === meta1/Sopa.java ===
-1,20c1
-< CLASS
-< IDENTIFIER(Sopa)
-< LBRACE
-< PUBLIC
-< STATIC
-< VOID
-< IDENTIFIER(main)
-< LPAR
-< STRING
-< LSQ
-< RSQ
-< IDENTIFIER(args)
-< RPAR
-< LBRACE
-< STRLIT("Duas")
-< PLUS
-< STRLIT("linhas de string")
-< STRING
-< IDENTIFIER(nome)
-< ASSIGN
----
-> Line 3, col 3: syntax error: "Duas"
-22,28d2
-< SEMICOLON
-< PRINT
-< LPAR
-< IDENTIFIER(nome)
-< RPAR
-< SEMICOLON
-< IDENTIFIER(Ststem)
-30c4
-< IDENTIFIER(out)
----
-> Line 7, col 10: syntax error: out
-32,33d5
-< IDENTIFIER(print)
-< LPAR
-42,54d13
-< STAR
-< DIV
-< IDENTIFIER(comentario)
-< IDENTIFIER(que)
-< IDENTIFIER(nao)
-< IDENTIFIER(comeca)
-< STAR
-< RESERVED(++)
-< RESERVED(--)
-< NATURAL(1210)
-< IDENTIFIER(nem)
-< IDENTIFIER(acaba)
-< STAR
-56,57d14
-< RBRACE
-< RBRACE
-FAIL: meta1/Sopa.java
 === meta1/SRTLIT_AND_ERRORS.java ===
-1,25c1
-< STRLIT("jnjksdkjnded")
-< NATURAL(1)
-< STRLIT("cdjhb  dhh a")
-< Line 1, col 32: illegal character (.)
-< STRLIT("rrrr")
-< NATURAL(2)
-< Line 1, col 45: invalid escape sequence (\u)
-< Line 2, col 7: invalid escape sequence (\g)
-< STRLIT("rrrr")
-< STRLIT("	")
-< STRLIT("\r       ")
-< STRLIT("\f")
-< STRLIT("\n")
-< STRLIT("\t")
-< STRLIT("\\")
-< STRLIT("\"")
-< Line 14, col 2: invalid escape sequence (\+)
-< Line 15, col 2: invalid escape sequence (\.)
-< STRLIT("\n\n")
-< Line 17, col 2: invalid escape sequence (\<)
-< Line 18, col 2: invalid escape sequence (\h)
-< Line 19, col 2: invalid escape sequence (\p)
-< STRLIT("\"\"")
-< STRLIT("\r \f \n \t \\ \"")
-< Line 22, col 2: invalid escape sequence (\()
----
-> Line 1, col 1: syntax error: "jnjksdkjnded"
-FAIL: meta1/SRTLIT_AND_ERRORS.java
 === meta1/Stats.java ===
-1,90c1,60
-< CLASS
-< IDENTIFIER(Stats)
-< LBRACE
-< PUBLIC
-< STATIC
-< DOUBLE
-< IDENTIFIER(stats)
-< LPAR
-< INT
-< IDENTIFIER(a)
-< COMMA
-< DOUBLE
-< IDENTIFIER(b)
-< COMMA
-< BOOL
-< IDENTIFIER(c)
-< COMMA
-< INT
-< IDENTIFIER(a)
-< RPAR
-< LBRACE
-< IF
-< LPAR
-< NOT
-< IDENTIFIER(a)
-< NE
-< NATURAL(555)
-< RPAR
-< SEMICOLON
-< IF
-< LPAR
-< IDENTIFIER(c)
-< LT
-< NATURAL(666)
-< RPAR
-< LBRACE
-< SEMICOLON
-< RBRACE
-< ELSE
-< LBRACE
-< IF
-< LPAR
-< NOT
-< IDENTIFIER(b)
-< GT
-< NATURAL(1)
-< RPAR
-< LBRACE
-< IDENTIFIER(a)
-< ASSIGN
-< NATURAL(22)
-< SEMICOLON
-< LBRACE
-< IF
-< LPAR
-< NOT
-< IDENTIFIER(a)
-< NE
-< NATURAL(0)
-< RPAR
-< LBRACE
-< IDENTIFIER(b)
-< ASSIGN
-< NATURAL(3)
-< SEMICOLON
-< LBRACE
-< RBRACE
-< RBRACE
-< ELSE
-< LBRACE
-< SEMICOLON
-< RBRACE
-< RBRACE
-< RBRACE
-< ELSE
-< SEMICOLON
-< RETURN
-< NATURAL(0)
-< SEMICOLON
-< RBRACE
-< RETURN
-< IDENTIFIER(c)
-< STAR
-< IDENTIFIER(statsl)
-< LPAR
-< IDENTIFIER(args)
-< RPAR
-< SEMICOLON
-< RBRACE
-< RBRACE
----
-> Program
-> ..Identifier(Stats)
-> ..MethodDecl
-> ....MethodHeader
-> ......Double
-> ......Identifier(stats)
-> ......MethodParams
-> ........ParamDecl
-> ..........Int
-> ..........Identifier(a)
-> ........ParamDecl
-> ..........Double
-> ..........Identifier(b)
-> ........ParamDecl
-> ..........Bool
-> ..........Identifier(c)
-> ........ParamDecl
-> ..........Int
-> ..........Identifier(a)
-> ....MethodBody
-> ......If
-> ........Ne
-> ..........Not
-> ............Identifier(a)
-> ..........Natural(555)
-> ........Block
-> ........Block
-> ......If
-> ........Lt
-> ..........Identifier(c)
-> ..........Natural(666)
-> ........Block
-> ........Block
-> ..........If
-> ............Gt
-> ..............Not
-> ................Identifier(b)
-> ..............Natural(1)
-> ............Block
-> ..............Assign
-> ................Identifier(a)
-> ................Natural(22)
-> ..............If
-> ................Ne
-> ..................Not
-> ....................Identifier(a)
-> ..................Natural(0)
-> ................Assign
-> ..................Identifier(b)
-> ..................Natural(3)
-> ................Block
-> ............Block
-> ..........Return
-> ............Natural(0)
-> ......Return
-> ........Mul
-> ..........Identifier(c)
-> ..........Call
-> ............Identifier(statsl)
-> ............Identifier(args)
-FAIL: meta1/Stats.java
 === meta1/StringsAndComments.java ===
-1,19c1
-< STRLIT("Esta e uma string valida")
-< Line 2, col 1: unterminated string literal
-< CLASS
-< IDENTIFIER(Main)
-< LBRACE
-< Line 4, col 2: unterminated string literal
-< PUBLIC
-< STATIC
-< INT
-< IDENTIFIER(soma)
-< LPAR
-< INT
-< IDENTIFIER(n)
-< RPAR
-< LBRACE
-< Line 6, col 2: illegal character (?)
-< Line 6, col 3: illegal character (#)
-< Line 9, col 1: unterminated string literal
-< Line 10, col 1: unterminated comment
----
-> Line 1, col 1: syntax error: "Esta e uma string valida"
-FAIL: meta1/StringsAndComments.java
 === meta1/strlit_win.java ===
-4a5
-> Line 4, col 1: syntax error: 
-FAIL: meta1/strlit_win.java
 === meta1/TestesExtra.java ===
-1,24c1
-< IDENTIFIER(loop)
-< Line 2, col 5: illegal character (:)
-< IDENTIFIER(cmp)
-< NATURAL(0)
-< NATURAL(51)
-< Line 2, col 14: illegal character (:)
-< COMMA
-< NATURAL(0)
-< IDENTIFIER(xcd10xba)
-< Line 3, col 1: illegal character (:)
-< IDENTIFIER(ab)
-< NATURAL(0)
-< IDENTIFIER(x123)
-< IDENTIFIER(ret)
-< PUBLIC
+16c16
 < RESERVED(this)
-< RESERVED(++)
-< RESERVED(protected)
-< PRINT
-< LPAR
-< Line 7, col 18: unterminated string literal
-< Line 8, col 11: invalid escape sequence (\h)
-< Line 8, col 1: unterminated string literal
-< Line 12, col 1: unterminated comment
 ---
-> Line 2, col 1: syntax error: loop
+> IDENTIFIER(this)
+18c18
+< RESERVED(protected)
+---
+> IDENTIFIER(protected)
 FAIL: meta1/TestesExtra.java
 === meta1/UnterminatedComment.java ===
-1a2
-> Line 4, col 8: syntax error: 
-FAIL: meta1/UnterminatedComment.java
