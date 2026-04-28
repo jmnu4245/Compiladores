@@ -9,9 +9,8 @@ const char* category_names[] = {
     "ParamDecl", "MethodBody", "Block", "If", "While", "Return", "Call", "Print", "ParseArgs",
     "Assign", "Or", "And", "Eq", "Ne", "Lt", "Gt", "Le", "Ge", "Add", "Sub", "Mul", "Div", "Mod", "Lshift",
     "Rshift", "Xor", "Not", "Minus", "Plus", "Length", "Bool", "BoolLit", "Double", "Decimal",
-    "Identifier", "Int", "Natural", "StrLit", "StringArray","Void","Reserved"
+    "Identifier", "Int", "Natural", "StrLit", "StringArray","Void","Reserved","Aux"
 };
-
 // create a node of a given category with a given lexical symbol
 struct node *newnode(enum category category, char *token, int line, int col) {
     struct node *new = malloc(sizeof(struct node));
@@ -27,24 +26,26 @@ struct node *newnode(enum category category, char *token, int line, int col) {
     return new;
 }
 
+int count_children(struct node *n) {
+    if (n == NULL || n->children == NULL) return 0;
+    int count = 0;
+    struct node_list *curr = n->children;
+    while (curr != NULL) {
+        if (curr->node != NULL) count++;
+        curr = curr->next;
+    }
+    return count;
+}
 // append a node to the list of children of the parent node
 void addchild(struct node *parent, struct node *child) {
-
-    if (parent == NULL || child == NULL) return;
-
+    if (parent == NULL) return;
     struct node_list *new = malloc(sizeof(struct node_list));
     new->node = child;
     new->next = NULL;
-
-    if (parent->children->node == NULL && parent->children->next == NULL) {
-        parent->children->node = child;
-        free(new);
-    } else {
-        struct node_list *current = parent->children;
-        while(current->next != NULL)
-            current = current->next;
-        current->next = new;
-    }
+    struct node_list *children = parent->children;
+    while(children->next != NULL)
+        children = children->next;
+    children->next = new;
 }
 // show subtree given a node
 void show(struct node *n, int depth) {

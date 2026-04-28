@@ -42,14 +42,15 @@
 #define NOT 295
 #define DOTLENGTH 296
 #define RESERVED 297
-#define IDENTIFIER 298
-#define NATURAL 299
-#define DECIMAL 300
-#define BOOLLIT 301
-#define STRLIT 302
-#define UNARY 303
-#define IF_PREC 304
-#define ELSE 305
+#define ARROW 298
+#define IDENTIFIER 299
+#define NATURAL 300
+#define DECIMAL 301
+#define BOOLLIT 302
+#define STRLIT 303
+#define UNARY 304
+#define IF_PREC 305
+#define ELSE 306
 #ifdef YYSTYPE
 #undef  YYSTYPE_IS_DECLARED
 #define YYSTYPE_IS_DECLARED 1

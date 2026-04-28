@@ -17,6 +17,18 @@ void check_semantics_pass2(struct node *n);
  * UTILITIES
  * ================================================================ */
 
+ struct node* get_identifier(struct node *parent) {
+    if (!parent || !parent->children) return NULL;
+    struct node_list *curr = parent->children;
+    while (curr) {
+        if (curr->node && curr->node->category == Identifier) {
+            return curr->node;
+        }
+        curr = curr->next;
+    }
+    return NULL;
+}
+
 BasicType get_type_from_node(struct node *n) {
     if (n == NULL) return T_Undef;
     switch (n->category) {
@@ -373,7 +385,7 @@ for (Symbol *sym = global->first; sym && !exact_match; sym = sym->next) {
     if (exact_match) {
          n->annot_type         = exact_match->type;
     id_node->annot_type   = T_None;
-    id_node->annot_params = exact_match->params_list;
+    //id_node->annot_params = exact_match->params_list;
     } else if (ambiguous) {
         printf("Line %d, col %d: Reference to method %s is ambiguous\n",
                id_node->line, id_node->col, method_name);
@@ -441,6 +453,8 @@ void check_expression(struct node *n, SymTable *global, SymTable *local) {
 /* Returns 1 if the identifier should be rejected (reserved or duplicate) */
 static int check_declaration_errors(const char *token, int line, int col,
                                     SymTable *table, const char *params) {
+
+    if (!token) return 0;                                    
     if (strcmp(token, "_") == 0) {
         printf("Line %d, col %d: Symbol _ is reserved\n", line, col);
         return 1;
@@ -463,8 +477,10 @@ static int check_declaration_errors(const char *token, int line, int col,
 }
 
 static void register_global_field(struct node *field) {
-    struct node *type_node = field->children->node;
-    struct node *id_node   = field->children->next->node;
+    struct node *type_node = get_child(field,0);
+    struct node *id_node   = get_identifier(field);
+
+    if (!type_node || !id_node || !id_node->token) return;
 
     if (check_declaration_errors(id_node->token, id_node->line, id_node->col,
                                  global_table, NULL))
@@ -476,10 +492,12 @@ static void register_global_field(struct node *field) {
 }
 
 static void register_method_header(struct node *method) {
-    struct node *header      = method->children->node;
-    struct node *ret_type    = header->children->node;
-    struct node *method_id   = header->children->next->node;
-    struct node *params_node = header->children->next->next->node;
+    struct node *header = get_child(method, 0);
+    if (!header) return;
+    struct node *method_id = get_identifier(header);
+    if (!method_id || !method_id->token) return;
+    struct node *ret_type = get_child(header, 0);
+    struct node *params_node = get_child(header, 2);
 
     char params_str[256];
     build_params_str(params_node, params_str, sizeof(params_str));
@@ -517,15 +535,15 @@ void check_semantics_pass1(struct node *n) {
 
 
 static void process_method_body(struct node *method) {
-    if (!method->children || !method->children->next) return;
+    struct node *header = get_child(method, 0);
+    struct node *body   = get_child(method, 1);
+    if (!header || !body) return;
 
-    struct node *header      = method->children->node;
-    struct node *body        = method->children->next->node;
-    struct node *ret_type    = header->children->node;
-    struct node *method_id   = header->children->next->node;
-    struct node *params_node = header->children->next->next->node;
+    struct node *ret_type    = get_child(header, 0);
+    struct node *method_id   = get_identifier(header);
+    struct node *params_node = get_child(header, 2);
+    if (!method_id || !method_id->token) return;
 
-    /* Rebuild params string to find the correct overload in global table */
     char params_str[256];
     build_params_str(params_node, params_str, sizeof(params_str));
 
@@ -572,24 +590,22 @@ void check_semantics_pass2(struct node *n) {
             break;
 
         case ParamDecl: {
-            struct node *type_node = n->children->node;
-            struct node *id_node   = n->children->next->node;
-            if (!check_declaration_errors(id_node->token, id_node->line, id_node->col,
-                                          current_table, NULL))
-                insert_symbol(current_table, id_node->token,
-                              get_type_from_node(type_node), 1, NULL,
-                              id_node->line, id_node->col);
+            struct node *type_node = get_child(n, 0);
+            struct node *id_node   = get_identifier(n);
+            if (!type_node || !id_node || !id_node->token) break;
+
+            if (!check_declaration_errors(id_node->token, id_node->line, id_node->col, current_table, NULL))
+                insert_symbol(current_table, id_node->token, get_type_from_node(type_node), 1, NULL, id_node->line, id_node->col);
             break;
         }
 
         case VarDecl: {
-            struct node *type_node = n->children->node;
-            struct node *id_node   = n->children->next->node;
-            if (!check_declaration_errors(id_node->token, id_node->line, id_node->col,
-                                          current_table, NULL))
-                insert_symbol(current_table, id_node->token,
-                              get_type_from_node(type_node), 0, NULL,
-                              id_node->line, id_node->col);
+            struct node *type_node = get_child(n, 0);
+            struct node *id_node   = get_identifier(n);
+            if (!type_node || !id_node || !id_node->token) break;
+
+            if (!check_declaration_errors(id_node->token, id_node->line, id_node->col, current_table, NULL))
+                insert_symbol(current_table, id_node->token, get_type_from_node(type_node), 0, NULL, id_node->line, id_node->col);
             break;
         }
 

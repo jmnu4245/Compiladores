@@ -11,13 +11,14 @@
     #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
-    #include "sym_table.h"  
-    #include "semantics.h"
 
     void check_semantics(struct node *n);
     void print_sym_table(SymTable *table);
 
-    #define PASS_TOKEN(cat) yylval.node = newnode(cat, strdup(yytext), LineCounter, ColumnCounter);
+    #define PASS_TOKEN(cat, tok_str) { \
+        if (print_tokens) printf("%s(%s)\n", tok_str, yytext); \
+        yylval.node = newnode(cat, strdup(yytext), LineCounter, ColumnCounter); \
+    }
     int yyparse(void);
 
     int LineCounter = 1;
@@ -69,6 +70,7 @@ rbrace "}"
 rpar ")"
 rsq "]"
 semicolon ";"
+arrow "->"
 lshift "<<"
 rshift ">>"
 xor "^"
@@ -120,7 +122,7 @@ tab "\t"
         char *with_quotes = malloc(strlen(str) + 3);
         sprintf(with_quotes, "\"%s\"", str);
         if(print_tokens) printf("STRLIT(\"%s\")\n", str);
-        yylval.lexeme = with_quotes;
+        yylval.node = newnode(StrLit, with_quotes, str_start_line ,  str_start_col);
         if(str){ free(str); str = NULL; }
         return STRLIT;
     }
@@ -170,7 +172,10 @@ tab "\t"
 {tab}           { ColumnCounter++; }
 \n|\r\n|\r    { LineCounter++; ColumnCounter = 1; }
 
-{boollit}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOLLIT(%s)\n", yytext); PASS_TOKEN(BoolLit); ColumnCounter += yyleng; return BOOLLIT; }
+{reserved}      { LastColumnCounter = ColumnCounter; PASS_TOKEN(Reserved, "RESERVED");ColumnCounter += yyleng; return RESERVED; }
+{boollit}       { LastColumnCounter = ColumnCounter; PASS_TOKEN(BoolLit, "BOOLLIT"); ColumnCounter += yyleng; return BOOLLIT; }
+
+
 {and}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("AND\n"); ColumnCounter += yyleng; return AND; }
 {or}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("OR\n"); ColumnCounter += yyleng; return OR; }
 {eq}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("EQ\n"); ColumnCounter += yyleng; return EQ; }
@@ -179,6 +184,7 @@ tab "\t"
 {le}            { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LE\n"); ColumnCounter += yyleng; return LE; }
 {lshift}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("LSHIFT\n"); ColumnCounter += yyleng; return LSHIFT; }
 {rshift}        { LastColumnCounter = ColumnCounter; if(print_tokens) printf("RSHIFT\n"); ColumnCounter += yyleng; return RSHIFT; }
+{arrow}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("ARROW\n"); ColumnCounter += yyleng; return ARROW; }
 {bool}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("BOOL\n"); ColumnCounter += yyleng; return BOOL; }
 {class}         { LastColumnCounter = ColumnCounter; if(print_tokens) printf("CLASS\n"); ColumnCounter += yyleng; return CLASS; }
 {else}          { LastColumnCounter = ColumnCounter; if(print_tokens) printf("ELSE\n"); ColumnCounter += yyleng; return ELSE; }
@@ -213,12 +219,10 @@ tab "\t"
 {xor}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("XOR\n"); ColumnCounter += yyleng; return XOR; }
 {not}           { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NOT\n"); ColumnCounter += yyleng; return NOT; }
 
-{decimal}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("DECIMAL(%s)\n",yytext); PASS_TOKEN(Decimal); ColumnCounter+=yyleng; return DECIMAL; }
-{natural}       { LastColumnCounter = ColumnCounter; if(print_tokens) printf("NATURAL(%s)\n",yytext); PASS_TOKEN(Natural); ColumnCounter+=yyleng; return NATURAL; }
-{identifier}    { LastColumnCounter = ColumnCounter; if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); PASS_TOKEN(Identifier); ColumnCounter+=yyleng; return IDENTIFIER; }
-{reserved}      { LastColumnCounter = ColumnCounter; 
-                  if(print_tokens) printf("RESERVED(%s)\n", yytext); PASS_TOKEN(Reserved);ColumnCounter += yyleng; return RESERVED;
-                   }
+{decimal}       { LastColumnCounter = ColumnCounter; PASS_TOKEN(Decimal, "DECIMAL"); ColumnCounter+=yyleng; return DECIMAL; }
+{natural}       { LastColumnCounter = ColumnCounter; PASS_TOKEN(Natural, "NATURAL"); ColumnCounter+=yyleng; return NATURAL; }
+{identifier}    { LastColumnCounter = ColumnCounter; PASS_TOKEN(Identifier, "IDENTIFIER"); ColumnCounter+=yyleng; return IDENTIFIER; }
+
 "."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, ColumnCounter); ColumnCounter++; }
 .               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, ColumnCounter, yytext); ColumnCounter++; }
 %%
@@ -227,8 +231,7 @@ int main(int argc, char *argv[]) {
     LineCounter = 1;
     ColumnCounter = 1;
     int flag_t = 0;
-    int flag_s = 0;
-    int flag_e2 = 0;
+    int flag_s =0;
 
     if (argc > 1) {
         if (strcmp(argv[1], "-l") == 0) {
@@ -243,45 +246,37 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[1], "-t") == 0) {
             flag_t = 1;
         }
-        if (strcmp(argv[1], "-s") == 0) {
-            flag_s = 1;
-        }
-        if (strcmp(argv[1], "-e2") == 0) {
-            flag_e2 = 1;
-        }
+        if (strcmp(argv[1], "-s") == 0) flag_s = 1;
     }
 
     yyparse();
 
-    if (flag_e2) {
-        if (str) {
-            free(str);
-            str = NULL;
-        }
-        return 0;
-    }
-
     if (syntax_error == 0) {
         if (flag_t) {
-            show(ast, 0);
-        } else if (flag_s) {
-            check_semantics(ast);
-            SymTable *curr = global_table;
-            while (curr) {
-                print_sym_table(curr);
-                curr = curr->next;
+            show(ast, 0); 
+        } else {
+
+            check_semantics(ast); 
+
+            if (flag_s) {
+
+                extern SymTable *global_table;
+                if (global_table == NULL) {
+                }
+                SymTable *curr = global_table;
+                while (curr) {
+                    print_sym_table(curr);
+                    curr = curr->next;
+                }
+
             }
-            show_annotated(ast, 0);
-        } else if (argc == 1) {
-            check_semantics(ast);
         }
     }
-
-    if (str) {
-        free(str);
-        str = NULL;
-    }
     
+    if (str) {
+    free(str);
+    str = NULL;
+}
     return 0;
 }
 //int yywrap() {  /* called on EOF, return 1 to terminate */
@@ -291,8 +286,8 @@ int main(int argc, char *argv[]) {
 void yyerror(char *s) {
     syntax_error++;
     const char *tok;
-    if (yytext && yytext[0] == '"' && yylval.lexeme != NULL)
-        tok = yylval.lexeme;
+    if (yytext && yytext[0] == '"' && yylval.node != NULL)
+        tok = yylval.node->token;
     else
         tok = (yytext && yytext[0]) ? yytext : "";
         

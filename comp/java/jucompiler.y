@@ -24,7 +24,7 @@ void unpack_nodes(struct node *parent, struct node *container);
 %token CLASS PUBLIC STATIC LBRACE RBRACE LPAR RPAR LSQ RSQ SEMICOLON COMMA
 %token BOOL INT DOUBLE VOID STRING IF WHILE RETURN PRINT PARSEINT 
 %token ASSIGN PLUS MINUS STAR DIV MOD AND OR XOR LSHIFT RSHIFT EQ GE GT LE LT NE NOT DOTLENGTH // no se que es esto ultimo
-%token RESERVED
+%token RESERVED ARROW
 
 %token <node> IDENTIFIER NATURAL DECIMAL BOOLLIT STRLIT
 %type <node> Program ProgramBody Element MethodDecl FieldDecl FieldList
@@ -36,9 +36,9 @@ void unpack_nodes(struct node *parent, struct node *container);
 /* precedencias y asociatividad */
 %right ASSIGN
 //En java es en este orden: 
+%left AND
 %left OR
 %left XOR
-%left AND
 
 %left EQ NE
 %left LT GT LE GE
@@ -47,7 +47,7 @@ void unpack_nodes(struct node *parent, struct node *container);
 %left STAR DIV MOD
 %right NOT UNARY // UNARY para MINUS/PLUS unario
 %nonassoc IF_PREC
-%nonassoc ELSE
+%right ELSE
 
 
 %%
@@ -219,17 +219,18 @@ StmtList: StmtList Statement {
     $$ = $1;
         if ($2 != NULL) addchild($$, $2);
 }
-         | /* empty */ {$$ = newnode(MethodBody, NULL, 0, 0); };
+         | /* empty */ {$$ = newnode(Aux, NULL, 0, 0); };
 
 MethodInvocation: IDENTIFIER LPAR Args RPAR {
         $$ = newnode(Call, NULL, 0, 0);
         addchild($$, $1);
         unpack_nodes($$, $3);
     }
+| IDENTIFIER LPAR error RPAR { $$ = NULL; }
 ;
 
 Args: Expr ExprList {
-        $$ = newnode(Program, NULL, 0, 0); //Temporal
+        $$ = newnode(Aux, NULL, 0, 0); 
         addchild($$, $1);
         unpack_nodes($$, $2);
     }
@@ -237,7 +238,7 @@ Args: Expr ExprList {
 ;
 
 ExprList: ExprList COMMA Expr {
-        if ($1 == NULL) $$ = newnode(Program, NULL, 0, 0);
+        if ($1 == NULL) $$ = newnode(Aux, NULL, 0, 0);
         else $$ = $1;
         addchild($$, $3);
     } 
@@ -295,42 +296,33 @@ SimpleExpr: SimpleExpr PLUS SimpleExpr   { $$ = newnode(Add, NULL, 0, 0); addchi
           | BOOLLIT                      { $$ = $1; }
           ;
 %%
-int count_children(struct node *n) {
-    if (n == NULL || n->children == NULL) return 0;
-    int count = 0;
-    struct node_list *curr = n->children;
-    while (curr != NULL) {
-        if (curr->node != NULL) count++;
-        curr = curr->next;
-    }
-    return count;
-}
+
 
 void unpack_nodes(struct node *parent, struct node *container) {
     if (container == NULL || container->children == NULL) return;
     struct node_list *curr = container->children;
     while (curr != NULL) {
-        if (curr->node != NULL) {
+        
             addchild(parent, curr->node);
-        }
+        
         curr = curr->next;
     }
 }
 
-struct node *create_multiple_decls(enum category decl_type, struct node *type_node, struct node *first_id_node, struct node *extra_ids_container) {
-    struct node *wrapper = newnode(MethodBody, NULL, 0, 0); 
+struct node *create_multiple_decls(enum category decl_type, struct node *type_node, struct node *id_node, struct node *extra_ids_container) {
+    struct node *wrapper = newnode(MethodBody, NULL,0,0); 
     
-    struct node *first = newnode(decl_type, NULL, 0, 0);
+    struct node *first = newnode(decl_type, NULL,0,0);
     addchild(first, type_node);
-    addchild(first, first_id_node);
+    addchild(first, id_node);
     addchild(wrapper, first);
 
     if (extra_ids_container != NULL) {
         struct node_list *curr = extra_ids_container->children;
         while (curr != NULL ) {
             if (curr->node != NULL) {
-            struct node *extra = newnode(decl_type, NULL, 0, 0);
-            addchild(extra, newnode(type_node->category, NULL, 0, 0)); 
+            struct node *extra = newnode(decl_type, NULL,0,0);
+            addchild(extra, newnode(type_node->category, NULL,0,0)); 
             addchild(extra, curr->node);
             addchild(wrapper, extra);
         }

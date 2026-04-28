@@ -69,49 +69,50 @@
   49           |
 
   50  MethodInvocation : IDENTIFIER LPAR Args RPAR
+  51                   | IDENTIFIER LPAR error RPAR
 
-  51  Args : Expr ExprList
-  52       |
+  52  Args : Expr ExprList
+  53       |
 
-  53  ExprList : ExprList COMMA Expr
-  54           |
+  54  ExprList : ExprList COMMA Expr
+  55           |
 
-  55  Assignment : IDENTIFIER ASSIGN Expr
+  56  Assignment : IDENTIFIER ASSIGN Expr
 
-  56  ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr RSQ RPAR
-  57            | PARSEINT LPAR error RPAR
+  57  ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr RSQ RPAR
+  58            | PARSEINT LPAR error RPAR
 
-  58  Expr : Assignment
-  59       | SimpleExpr
+  59  Expr : Assignment
+  60       | SimpleExpr
 
-  60  SimpleExpr : SimpleExpr PLUS SimpleExpr
-  61             | SimpleExpr MINUS SimpleExpr
-  62             | SimpleExpr STAR SimpleExpr
-  63             | SimpleExpr DIV SimpleExpr
-  64             | SimpleExpr MOD SimpleExpr
-  65             | SimpleExpr AND SimpleExpr
-  66             | SimpleExpr OR SimpleExpr
-  67             | SimpleExpr XOR SimpleExpr
-  68             | SimpleExpr LSHIFT SimpleExpr
-  69             | SimpleExpr RSHIFT SimpleExpr
-  70             | SimpleExpr EQ SimpleExpr
-  71             | SimpleExpr NE SimpleExpr
-  72             | SimpleExpr GT SimpleExpr
-  73             | SimpleExpr GE SimpleExpr
-  74             | SimpleExpr LT SimpleExpr
-  75             | SimpleExpr LE SimpleExpr
-  76             | MINUS SimpleExpr
-  77             | PLUS SimpleExpr
-  78             | NOT SimpleExpr
-  79             | LPAR Expr RPAR
-  80             | LPAR error RPAR
-  81             | MethodInvocation
-  82             | ParseArgs
-  83             | IDENTIFIER
-  84             | IDENTIFIER DOTLENGTH
-  85             | NATURAL
-  86             | DECIMAL
-  87             | BOOLLIT
+  61  SimpleExpr : SimpleExpr PLUS SimpleExpr
+  62             | SimpleExpr MINUS SimpleExpr
+  63             | SimpleExpr STAR SimpleExpr
+  64             | SimpleExpr DIV SimpleExpr
+  65             | SimpleExpr MOD SimpleExpr
+  66             | SimpleExpr AND SimpleExpr
+  67             | SimpleExpr OR SimpleExpr
+  68             | SimpleExpr XOR SimpleExpr
+  69             | SimpleExpr LSHIFT SimpleExpr
+  70             | SimpleExpr RSHIFT SimpleExpr
+  71             | SimpleExpr EQ SimpleExpr
+  72             | SimpleExpr NE SimpleExpr
+  73             | SimpleExpr GT SimpleExpr
+  74             | SimpleExpr GE SimpleExpr
+  75             | SimpleExpr LT SimpleExpr
+  76             | SimpleExpr LE SimpleExpr
+  77             | MINUS SimpleExpr
+  78             | PLUS SimpleExpr
+  79             | NOT SimpleExpr
+  80             | LPAR Expr RPAR
+  81             | LPAR error RPAR
+  82             | MethodInvocation
+  83             | ParseArgs
+  84             | IDENTIFIER
+  85             | IDENTIFIER DOTLENGTH
+  86             | NATURAL
+  87             | DECIMAL
+  88             | BOOLLIT
 
 state 0
 	$accept : . Program $end  (0)
@@ -558,8 +559,8 @@ state 50
 
 
 state 51
-	ParseArgs : PARSEINT . LPAR IDENTIFIER LSQ Expr RSQ RPAR  (56)
-	ParseArgs : PARSEINT . LPAR error RPAR  (57)
+	ParseArgs : PARSEINT . LPAR IDENTIFIER LSQ Expr RSQ RPAR  (57)
+	ParseArgs : PARSEINT . LPAR error RPAR  (58)
 
 	LPAR  shift 87
 	.  error
@@ -567,7 +568,8 @@ state 51
 
 state 52
 	MethodInvocation : IDENTIFIER . LPAR Args RPAR  (50)
-	Assignment : IDENTIFIER . ASSIGN Expr  (55)
+	MethodInvocation : IDENTIFIER . LPAR error RPAR  (51)
+	Assignment : IDENTIFIER . ASSIGN Expr  (56)
 
 	LPAR  shift 88
 	ASSIGN  shift 89
@@ -749,8 +751,8 @@ state 71
 
 
 state 72
-	SimpleExpr : LPAR . Expr RPAR  (79)
-	SimpleExpr : LPAR . error RPAR  (80)
+	SimpleExpr : LPAR . Expr RPAR  (80)
+	SimpleExpr : LPAR . error RPAR  (81)
 
 	error  shift 100
 	LPAR  shift 72
@@ -778,7 +780,7 @@ state 73
 
 
 state 74
-	SimpleExpr : PLUS . SimpleExpr  (77)
+	SimpleExpr : PLUS . SimpleExpr  (78)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -797,7 +799,7 @@ state 74
 
 
 state 75
-	SimpleExpr : MINUS . SimpleExpr  (76)
+	SimpleExpr : MINUS . SimpleExpr  (77)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -816,7 +818,7 @@ state 75
 
 
 state 76
-	SimpleExpr : NOT . SimpleExpr  (78)
+	SimpleExpr : NOT . SimpleExpr  (79)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -836,69 +838,70 @@ state 76
 
 state 77
 	MethodInvocation : IDENTIFIER . LPAR Args RPAR  (50)
-	Assignment : IDENTIFIER . ASSIGN Expr  (55)
-	SimpleExpr : IDENTIFIER .  (83)
-	SimpleExpr : IDENTIFIER . DOTLENGTH  (84)
+	MethodInvocation : IDENTIFIER . LPAR error RPAR  (51)
+	Assignment : IDENTIFIER . ASSIGN Expr  (56)
+	SimpleExpr : IDENTIFIER .  (84)
+	SimpleExpr : IDENTIFIER . DOTLENGTH  (85)
 
 	LPAR  shift 88
 	ASSIGN  shift 89
 	DOTLENGTH  shift 106
-	RPAR  reduce 83
-	RSQ  reduce 83
-	SEMICOLON  reduce 83
-	COMMA  reduce 83
-	PLUS  reduce 83
-	MINUS  reduce 83
-	STAR  reduce 83
-	DIV  reduce 83
-	MOD  reduce 83
-	AND  reduce 83
-	OR  reduce 83
-	XOR  reduce 83
-	LSHIFT  reduce 83
-	RSHIFT  reduce 83
-	EQ  reduce 83
-	GE  reduce 83
-	GT  reduce 83
-	LE  reduce 83
-	LT  reduce 83
-	NE  reduce 83
+	RPAR  reduce 84
+	RSQ  reduce 84
+	SEMICOLON  reduce 84
+	COMMA  reduce 84
+	PLUS  reduce 84
+	MINUS  reduce 84
+	STAR  reduce 84
+	DIV  reduce 84
+	MOD  reduce 84
+	AND  reduce 84
+	OR  reduce 84
+	XOR  reduce 84
+	LSHIFT  reduce 84
+	RSHIFT  reduce 84
+	EQ  reduce 84
+	GE  reduce 84
+	GT  reduce 84
+	LE  reduce 84
+	LT  reduce 84
+	NE  reduce 84
 
 
 state 78
-	SimpleExpr : NATURAL .  (85)
-
-	.  reduce 85
-
-
-state 79
-	SimpleExpr : DECIMAL .  (86)
+	SimpleExpr : NATURAL .  (86)
 
 	.  reduce 86
 
 
-state 80
-	SimpleExpr : BOOLLIT .  (87)
+state 79
+	SimpleExpr : DECIMAL .  (87)
 
 	.  reduce 87
 
 
-state 81
-	SimpleExpr : MethodInvocation .  (81)
+state 80
+	SimpleExpr : BOOLLIT .  (88)
 
-	.  reduce 81
+	.  reduce 88
+
+
+state 81
+	SimpleExpr : MethodInvocation .  (82)
+
+	.  reduce 82
 
 
 state 82
-	Expr : Assignment .  (58)
+	Expr : Assignment .  (59)
 
-	.  reduce 58
+	.  reduce 59
 
 
 state 83
-	SimpleExpr : ParseArgs .  (82)
+	SimpleExpr : ParseArgs .  (83)
 
-	.  reduce 82
+	.  reduce 83
 
 
 state 84
@@ -909,23 +912,23 @@ state 84
 
 
 state 85
-	Expr : SimpleExpr .  (59)
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	Expr : SimpleExpr .  (60)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
@@ -943,10 +946,10 @@ state 85
 	LE  shift 121
 	LT  shift 122
 	NE  shift 123
-	RPAR  reduce 59
-	RSQ  reduce 59
-	SEMICOLON  reduce 59
-	COMMA  reduce 59
+	RPAR  reduce 60
+	RSQ  reduce 60
+	SEMICOLON  reduce 60
+	COMMA  reduce 60
 
 
 state 86
@@ -973,8 +976,8 @@ state 86
 
 
 state 87
-	ParseArgs : PARSEINT LPAR . IDENTIFIER LSQ Expr RSQ RPAR  (56)
-	ParseArgs : PARSEINT LPAR . error RPAR  (57)
+	ParseArgs : PARSEINT LPAR . IDENTIFIER LSQ Expr RSQ RPAR  (57)
+	ParseArgs : PARSEINT LPAR . error RPAR  (58)
 
 	error  shift 126
 	IDENTIFIER  shift 127
@@ -983,8 +986,10 @@ state 87
 
 state 88
 	MethodInvocation : IDENTIFIER LPAR . Args RPAR  (50)
-	Args : .  (52)
+	MethodInvocation : IDENTIFIER LPAR . error RPAR  (51)
+	Args : .  (53)
 
+	error  shift 128
 	LPAR  shift 72
 	PARSEINT  shift 51
 	PLUS  shift 74
@@ -994,18 +999,18 @@ state 88
 	NATURAL  shift 78
 	DECIMAL  shift 79
 	BOOLLIT  shift 80
-	RPAR  reduce 52
+	RPAR  reduce 53
 
 	MethodInvocation  goto 81
-	Args  goto 128
+	Args  goto 129
 	Assignment  goto 82
 	ParseArgs  goto 83
-	Expr  goto 129
+	Expr  goto 130
 	SimpleExpr  goto 85
 
 
 state 89
-	Assignment : IDENTIFIER ASSIGN . Expr  (55)
+	Assignment : IDENTIFIER ASSIGN . Expr  (56)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1021,7 +1026,7 @@ state 89
 	MethodInvocation  goto 81
 	Assignment  goto 82
 	ParseArgs  goto 83
-	Expr  goto 130
+	Expr  goto 131
 	SimpleExpr  goto 85
 
 
@@ -1031,7 +1036,7 @@ state 90
 
 	.  reduce 14
 
-	FieldList  goto 131
+	FieldList  goto 132
 
 
 state 91
@@ -1080,130 +1085,131 @@ state 98
 	Statement : IF LPAR Expr . RPAR Statement  (35)
 	Statement : IF LPAR Expr . RPAR Statement ELSE Statement  (36)
 
-	RPAR  shift 132
+	RPAR  shift 133
 	.  error
 
 
 state 99
 	Statement : WHILE LPAR Expr . RPAR Statement  (37)
 
-	RPAR  shift 133
-	.  error
-
-
-state 100
-	SimpleExpr : LPAR error . RPAR  (80)
-
 	RPAR  shift 134
 	.  error
 
 
-state 101
-	SimpleExpr : LPAR Expr . RPAR  (79)
+state 100
+	SimpleExpr : LPAR error . RPAR  (81)
 
 	RPAR  shift 135
 	.  error
 
 
+state 101
+	SimpleExpr : LPAR Expr . RPAR  (80)
+
+	RPAR  shift 136
+	.  error
+
+
 state 102
 	MethodInvocation : IDENTIFIER . LPAR Args RPAR  (50)
-	SimpleExpr : IDENTIFIER .  (83)
-	SimpleExpr : IDENTIFIER . DOTLENGTH  (84)
+	MethodInvocation : IDENTIFIER . LPAR error RPAR  (51)
+	SimpleExpr : IDENTIFIER .  (84)
+	SimpleExpr : IDENTIFIER . DOTLENGTH  (85)
 
 	LPAR  shift 88
 	DOTLENGTH  shift 106
-	RPAR  reduce 83
-	RSQ  reduce 83
-	SEMICOLON  reduce 83
-	COMMA  reduce 83
-	PLUS  reduce 83
-	MINUS  reduce 83
-	STAR  reduce 83
-	DIV  reduce 83
-	MOD  reduce 83
-	AND  reduce 83
-	OR  reduce 83
-	XOR  reduce 83
-	LSHIFT  reduce 83
-	RSHIFT  reduce 83
-	EQ  reduce 83
-	GE  reduce 83
-	GT  reduce 83
-	LE  reduce 83
-	LT  reduce 83
-	NE  reduce 83
+	RPAR  reduce 84
+	RSQ  reduce 84
+	SEMICOLON  reduce 84
+	COMMA  reduce 84
+	PLUS  reduce 84
+	MINUS  reduce 84
+	STAR  reduce 84
+	DIV  reduce 84
+	MOD  reduce 84
+	AND  reduce 84
+	OR  reduce 84
+	XOR  reduce 84
+	LSHIFT  reduce 84
+	RSHIFT  reduce 84
+	EQ  reduce 84
+	GE  reduce 84
+	GT  reduce 84
+	LE  reduce 84
+	LT  reduce 84
+	NE  reduce 84
 
 
 state 103
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-	SimpleExpr : PLUS SimpleExpr .  (77)
-
-	.  reduce 77
-
-
-state 104
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-	SimpleExpr : MINUS SimpleExpr .  (76)
-
-	.  reduce 76
-
-
-state 105
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-	SimpleExpr : NOT SimpleExpr .  (78)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+	SimpleExpr : PLUS SimpleExpr .  (78)
 
 	.  reduce 78
 
 
-state 106
-	SimpleExpr : IDENTIFIER DOTLENGTH .  (84)
+state 104
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+	SimpleExpr : MINUS SimpleExpr .  (77)
 
-	.  reduce 84
+	.  reduce 77
+
+
+state 105
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+	SimpleExpr : NOT SimpleExpr .  (79)
+
+	.  reduce 79
+
+
+state 106
+	SimpleExpr : IDENTIFIER DOTLENGTH .  (85)
+
+	.  reduce 85
 
 
 state 107
@@ -1213,26 +1219,7 @@ state 107
 
 
 state 108
-	SimpleExpr : SimpleExpr PLUS . SimpleExpr  (60)
-
-	LPAR  shift 72
-	PARSEINT  shift 51
-	PLUS  shift 74
-	MINUS  shift 75
-	NOT  shift 76
-	IDENTIFIER  shift 102
-	NATURAL  shift 78
-	DECIMAL  shift 79
-	BOOLLIT  shift 80
-	.  error
-
-	MethodInvocation  goto 81
-	ParseArgs  goto 83
-	SimpleExpr  goto 136
-
-
-state 109
-	SimpleExpr : SimpleExpr MINUS . SimpleExpr  (61)
+	SimpleExpr : SimpleExpr PLUS . SimpleExpr  (61)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1250,8 +1237,8 @@ state 109
 	SimpleExpr  goto 137
 
 
-state 110
-	SimpleExpr : SimpleExpr STAR . SimpleExpr  (62)
+state 109
+	SimpleExpr : SimpleExpr MINUS . SimpleExpr  (62)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1269,8 +1256,8 @@ state 110
 	SimpleExpr  goto 138
 
 
-state 111
-	SimpleExpr : SimpleExpr DIV . SimpleExpr  (63)
+state 110
+	SimpleExpr : SimpleExpr STAR . SimpleExpr  (63)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1288,8 +1275,8 @@ state 111
 	SimpleExpr  goto 139
 
 
-state 112
-	SimpleExpr : SimpleExpr MOD . SimpleExpr  (64)
+state 111
+	SimpleExpr : SimpleExpr DIV . SimpleExpr  (64)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1307,8 +1294,8 @@ state 112
 	SimpleExpr  goto 140
 
 
-state 113
-	SimpleExpr : SimpleExpr AND . SimpleExpr  (65)
+state 112
+	SimpleExpr : SimpleExpr MOD . SimpleExpr  (65)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1326,8 +1313,8 @@ state 113
 	SimpleExpr  goto 141
 
 
-state 114
-	SimpleExpr : SimpleExpr OR . SimpleExpr  (66)
+state 113
+	SimpleExpr : SimpleExpr AND . SimpleExpr  (66)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1345,8 +1332,8 @@ state 114
 	SimpleExpr  goto 142
 
 
-state 115
-	SimpleExpr : SimpleExpr XOR . SimpleExpr  (67)
+state 114
+	SimpleExpr : SimpleExpr OR . SimpleExpr  (67)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1364,8 +1351,8 @@ state 115
 	SimpleExpr  goto 143
 
 
-state 116
-	SimpleExpr : SimpleExpr LSHIFT . SimpleExpr  (68)
+state 115
+	SimpleExpr : SimpleExpr XOR . SimpleExpr  (68)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1383,8 +1370,8 @@ state 116
 	SimpleExpr  goto 144
 
 
-state 117
-	SimpleExpr : SimpleExpr RSHIFT . SimpleExpr  (69)
+state 116
+	SimpleExpr : SimpleExpr LSHIFT . SimpleExpr  (69)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1402,8 +1389,8 @@ state 117
 	SimpleExpr  goto 145
 
 
-state 118
-	SimpleExpr : SimpleExpr EQ . SimpleExpr  (70)
+state 117
+	SimpleExpr : SimpleExpr RSHIFT . SimpleExpr  (70)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1421,8 +1408,8 @@ state 118
 	SimpleExpr  goto 146
 
 
-state 119
-	SimpleExpr : SimpleExpr GE . SimpleExpr  (73)
+state 118
+	SimpleExpr : SimpleExpr EQ . SimpleExpr  (71)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1440,8 +1427,8 @@ state 119
 	SimpleExpr  goto 147
 
 
-state 120
-	SimpleExpr : SimpleExpr GT . SimpleExpr  (72)
+state 119
+	SimpleExpr : SimpleExpr GE . SimpleExpr  (74)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1459,8 +1446,8 @@ state 120
 	SimpleExpr  goto 148
 
 
-state 121
-	SimpleExpr : SimpleExpr LE . SimpleExpr  (75)
+state 120
+	SimpleExpr : SimpleExpr GT . SimpleExpr  (73)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1478,8 +1465,8 @@ state 121
 	SimpleExpr  goto 149
 
 
-state 122
-	SimpleExpr : SimpleExpr LT . SimpleExpr  (74)
+state 121
+	SimpleExpr : SimpleExpr LE . SimpleExpr  (76)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1497,8 +1484,8 @@ state 122
 	SimpleExpr  goto 150
 
 
-state 123
-	SimpleExpr : SimpleExpr NE . SimpleExpr  (71)
+state 122
+	SimpleExpr : SimpleExpr LT . SimpleExpr  (75)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -1516,66 +1503,92 @@ state 123
 	SimpleExpr  goto 151
 
 
+state 123
+	SimpleExpr : SimpleExpr NE . SimpleExpr  (72)
+
+	LPAR  shift 72
+	PARSEINT  shift 51
+	PLUS  shift 74
+	MINUS  shift 75
+	NOT  shift 76
+	IDENTIFIER  shift 102
+	NATURAL  shift 78
+	DECIMAL  shift 79
+	BOOLLIT  shift 80
+	.  error
+
+	MethodInvocation  goto 81
+	ParseArgs  goto 83
+	SimpleExpr  goto 152
+
+
 state 124
 	Statement : PRINT LPAR STRLIT . RPAR SEMICOLON  (45)
 
-	RPAR  shift 152
+	RPAR  shift 153
 	.  error
 
 
 state 125
 	Statement : PRINT LPAR Expr . RPAR SEMICOLON  (44)
 
-	RPAR  shift 153
-	.  error
-
-
-state 126
-	ParseArgs : PARSEINT LPAR error . RPAR  (57)
-
 	RPAR  shift 154
 	.  error
 
 
-state 127
-	ParseArgs : PARSEINT LPAR IDENTIFIER . LSQ Expr RSQ RPAR  (56)
+state 126
+	ParseArgs : PARSEINT LPAR error . RPAR  (58)
 
-	LSQ  shift 155
+	RPAR  shift 155
+	.  error
+
+
+state 127
+	ParseArgs : PARSEINT LPAR IDENTIFIER . LSQ Expr RSQ RPAR  (57)
+
+	LSQ  shift 156
 	.  error
 
 
 state 128
-	MethodInvocation : IDENTIFIER LPAR Args . RPAR  (50)
+	MethodInvocation : IDENTIFIER LPAR error . RPAR  (51)
 
-	RPAR  shift 156
+	RPAR  shift 157
 	.  error
 
 
 state 129
-	Args : Expr . ExprList  (51)
-	ExprList : .  (54)
+	MethodInvocation : IDENTIFIER LPAR Args . RPAR  (50)
 
-	.  reduce 54
-
-	ExprList  goto 157
+	RPAR  shift 158
+	.  error
 
 
 state 130
-	Assignment : IDENTIFIER ASSIGN Expr .  (55)
+	Args : Expr . ExprList  (52)
+	ExprList : .  (55)
 
 	.  reduce 55
 
+	ExprList  goto 159
+
 
 state 131
+	Assignment : IDENTIFIER ASSIGN Expr .  (56)
+
+	.  reduce 56
+
+
+state 132
 	FieldList : FieldList . COMMA IDENTIFIER  (13)
 	VarDecl : Type IDENTIFIER FieldList . SEMICOLON  (33)
 
-	SEMICOLON  shift 158
+	SEMICOLON  shift 160
 	COMMA  shift 41
 	.  error
 
 
-state 132
+state 133
 	Statement : IF LPAR Expr RPAR . Statement  (35)
 	Statement : IF LPAR Expr RPAR . Statement ELSE Statement  (36)
 
@@ -1590,13 +1603,13 @@ state 132
 	IDENTIFIER  shift 52
 	.  error
 
-	Statement  goto 159
+	Statement  goto 161
 	MethodInvocation  goto 57
 	Assignment  goto 58
 	ParseArgs  goto 59
 
 
-state 133
+state 134
 	Statement : WHILE LPAR Expr RPAR . Statement  (37)
 
 	error  shift 43
@@ -1610,83 +1623,42 @@ state 133
 	IDENTIFIER  shift 52
 	.  error
 
-	Statement  goto 160
+	Statement  goto 162
 	MethodInvocation  goto 57
 	Assignment  goto 58
 	ParseArgs  goto 59
 
 
-state 134
-	SimpleExpr : LPAR error RPAR .  (80)
+state 135
+	SimpleExpr : LPAR error RPAR .  (81)
+
+	.  reduce 81
+
+
+state 136
+	SimpleExpr : LPAR Expr RPAR .  (80)
 
 	.  reduce 80
 
 
-state 135
-	SimpleExpr : LPAR Expr RPAR .  (79)
-
-	.  reduce 79
-
-
-state 136
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr PLUS SimpleExpr .  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-
-	STAR  shift 110
-	DIV  shift 111
-	MOD  shift 112
-	RPAR  reduce 60
-	RSQ  reduce 60
-	SEMICOLON  reduce 60
-	COMMA  reduce 60
-	PLUS  reduce 60
-	MINUS  reduce 60
-	AND  reduce 60
-	OR  reduce 60
-	XOR  reduce 60
-	LSHIFT  reduce 60
-	RSHIFT  reduce 60
-	EQ  reduce 60
-	GE  reduce 60
-	GT  reduce 60
-	LE  reduce 60
-	LT  reduce 60
-	NE  reduce 60
-
-
 state 137
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr MINUS SimpleExpr .  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr PLUS SimpleExpr .  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	STAR  shift 110
 	DIV  shift 111
@@ -1711,95 +1683,137 @@ state 137
 
 
 state 138
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr STAR SimpleExpr .  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr MINUS SimpleExpr .  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
-	.  reduce 62
+	STAR  shift 110
+	DIV  shift 111
+	MOD  shift 112
+	RPAR  reduce 62
+	RSQ  reduce 62
+	SEMICOLON  reduce 62
+	COMMA  reduce 62
+	PLUS  reduce 62
+	MINUS  reduce 62
+	AND  reduce 62
+	OR  reduce 62
+	XOR  reduce 62
+	LSHIFT  reduce 62
+	RSHIFT  reduce 62
+	EQ  reduce 62
+	GE  reduce 62
+	GT  reduce 62
+	LE  reduce 62
+	LT  reduce 62
+	NE  reduce 62
 
 
 state 139
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr DIV SimpleExpr .  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr STAR SimpleExpr .  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	.  reduce 63
 
 
 state 140
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr MOD SimpleExpr .  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr DIV SimpleExpr .  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	.  reduce 64
 
 
 state 141
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr AND SimpleExpr .  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr MOD SimpleExpr .  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+
+	.  reduce 65
+
+
+state 142
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr AND SimpleExpr .  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
 	STAR  shift 110
 	DIV  shift 111
 	MOD  shift 112
+	XOR  shift 115
 	LSHIFT  shift 116
 	RSHIFT  shift 117
 	EQ  shift 118
@@ -1808,33 +1822,32 @@ state 141
 	LE  shift 121
 	LT  shift 122
 	NE  shift 123
-	RPAR  reduce 65
-	RSQ  reduce 65
-	SEMICOLON  reduce 65
-	COMMA  reduce 65
-	AND  reduce 65
-	OR  reduce 65
-	XOR  reduce 65
+	RPAR  reduce 66
+	RSQ  reduce 66
+	SEMICOLON  reduce 66
+	COMMA  reduce 66
+	AND  reduce 66
+	OR  reduce 66
 
 
-state 142
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr OR SimpleExpr .  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+state 143
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr OR SimpleExpr .  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
@@ -1851,38 +1864,37 @@ state 142
 	LE  shift 121
 	LT  shift 122
 	NE  shift 123
-	RPAR  reduce 66
-	RSQ  reduce 66
-	SEMICOLON  reduce 66
-	COMMA  reduce 66
-	OR  reduce 66
+	RPAR  reduce 67
+	RSQ  reduce 67
+	SEMICOLON  reduce 67
+	COMMA  reduce 67
+	OR  reduce 67
 
 
-state 143
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr XOR SimpleExpr .  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+state 144
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr XOR SimpleExpr .  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
 	STAR  shift 110
 	DIV  shift 111
 	MOD  shift 112
-	AND  shift 113
 	LSHIFT  shift 116
 	RSHIFT  shift 117
 	EQ  shift 118
@@ -1891,38 +1903,6 @@ state 143
 	LE  shift 121
 	LT  shift 122
 	NE  shift 123
-	RPAR  reduce 67
-	RSQ  reduce 67
-	SEMICOLON  reduce 67
-	COMMA  reduce 67
-	OR  reduce 67
-	XOR  reduce 67
-
-
-state 144
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr LSHIFT SimpleExpr .  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-
-	PLUS  shift 108
-	MINUS  shift 109
-	STAR  shift 110
-	DIV  shift 111
-	MOD  shift 112
 	RPAR  reduce 68
 	RSQ  reduce 68
 	SEMICOLON  reduce 68
@@ -1930,34 +1910,26 @@ state 144
 	AND  reduce 68
 	OR  reduce 68
 	XOR  reduce 68
-	LSHIFT  reduce 68
-	RSHIFT  reduce 68
-	EQ  reduce 68
-	GE  reduce 68
-	GT  reduce 68
-	LE  reduce 68
-	LT  reduce 68
-	NE  reduce 68
 
 
 state 145
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr RSHIFT SimpleExpr .  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr LSHIFT SimpleExpr .  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
@@ -1982,35 +1954,29 @@ state 145
 
 
 state 146
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr EQ SimpleExpr .  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr RSHIFT SimpleExpr .  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
 	STAR  shift 110
 	DIV  shift 111
 	MOD  shift 112
-	LSHIFT  shift 116
-	RSHIFT  shift 117
-	GE  shift 119
-	GT  shift 120
-	LE  shift 121
-	LT  shift 122
 	RPAR  reduce 70
 	RSQ  reduce 70
 	SEMICOLON  reduce 70
@@ -2018,192 +1984,34 @@ state 146
 	AND  reduce 70
 	OR  reduce 70
 	XOR  reduce 70
+	LSHIFT  reduce 70
+	RSHIFT  reduce 70
 	EQ  reduce 70
+	GE  reduce 70
+	GT  reduce 70
+	LE  reduce 70
+	LT  reduce 70
 	NE  reduce 70
 
 
 state 147
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr GE SimpleExpr .  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-
-	PLUS  shift 108
-	MINUS  shift 109
-	STAR  shift 110
-	DIV  shift 111
-	MOD  shift 112
-	LSHIFT  shift 116
-	RSHIFT  shift 117
-	RPAR  reduce 73
-	RSQ  reduce 73
-	SEMICOLON  reduce 73
-	COMMA  reduce 73
-	AND  reduce 73
-	OR  reduce 73
-	XOR  reduce 73
-	EQ  reduce 73
-	GE  reduce 73
-	GT  reduce 73
-	LE  reduce 73
-	LT  reduce 73
-	NE  reduce 73
-
-
-state 148
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr GT SimpleExpr .  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-
-	PLUS  shift 108
-	MINUS  shift 109
-	STAR  shift 110
-	DIV  shift 111
-	MOD  shift 112
-	LSHIFT  shift 116
-	RSHIFT  shift 117
-	RPAR  reduce 72
-	RSQ  reduce 72
-	SEMICOLON  reduce 72
-	COMMA  reduce 72
-	AND  reduce 72
-	OR  reduce 72
-	XOR  reduce 72
-	EQ  reduce 72
-	GE  reduce 72
-	GT  reduce 72
-	LE  reduce 72
-	LT  reduce 72
-	NE  reduce 72
-
-
-state 149
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-	SimpleExpr : SimpleExpr LE SimpleExpr .  (75)
-
-	PLUS  shift 108
-	MINUS  shift 109
-	STAR  shift 110
-	DIV  shift 111
-	MOD  shift 112
-	LSHIFT  shift 116
-	RSHIFT  shift 117
-	RPAR  reduce 75
-	RSQ  reduce 75
-	SEMICOLON  reduce 75
-	COMMA  reduce 75
-	AND  reduce 75
-	OR  reduce 75
-	XOR  reduce 75
-	EQ  reduce 75
-	GE  reduce 75
-	GT  reduce 75
-	LE  reduce 75
-	LT  reduce 75
-	NE  reduce 75
-
-
-state 150
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr LT SimpleExpr .  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
-
-	PLUS  shift 108
-	MINUS  shift 109
-	STAR  shift 110
-	DIV  shift 111
-	MOD  shift 112
-	LSHIFT  shift 116
-	RSHIFT  shift 117
-	RPAR  reduce 74
-	RSQ  reduce 74
-	SEMICOLON  reduce 74
-	COMMA  reduce 74
-	AND  reduce 74
-	OR  reduce 74
-	XOR  reduce 74
-	EQ  reduce 74
-	GE  reduce 74
-	GT  reduce 74
-	LE  reduce 74
-	LT  reduce 74
-	NE  reduce 74
-
-
-state 151
-	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (60)
-	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (61)
-	SimpleExpr : SimpleExpr . STAR SimpleExpr  (62)
-	SimpleExpr : SimpleExpr . DIV SimpleExpr  (63)
-	SimpleExpr : SimpleExpr . MOD SimpleExpr  (64)
-	SimpleExpr : SimpleExpr . AND SimpleExpr  (65)
-	SimpleExpr : SimpleExpr . OR SimpleExpr  (66)
-	SimpleExpr : SimpleExpr . XOR SimpleExpr  (67)
-	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (68)
-	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (69)
-	SimpleExpr : SimpleExpr . EQ SimpleExpr  (70)
-	SimpleExpr : SimpleExpr . NE SimpleExpr  (71)
-	SimpleExpr : SimpleExpr NE SimpleExpr .  (71)
-	SimpleExpr : SimpleExpr . GT SimpleExpr  (72)
-	SimpleExpr : SimpleExpr . GE SimpleExpr  (73)
-	SimpleExpr : SimpleExpr . LT SimpleExpr  (74)
-	SimpleExpr : SimpleExpr . LE SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr EQ SimpleExpr .  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
 	PLUS  shift 108
 	MINUS  shift 109
@@ -2227,28 +2035,233 @@ state 151
 	NE  reduce 71
 
 
-state 152
-	Statement : PRINT LPAR STRLIT RPAR . SEMICOLON  (45)
+state 148
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr GE SimpleExpr .  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
 
-	SEMICOLON  shift 161
-	.  error
+	PLUS  shift 108
+	MINUS  shift 109
+	STAR  shift 110
+	DIV  shift 111
+	MOD  shift 112
+	LSHIFT  shift 116
+	RSHIFT  shift 117
+	RPAR  reduce 74
+	RSQ  reduce 74
+	SEMICOLON  reduce 74
+	COMMA  reduce 74
+	AND  reduce 74
+	OR  reduce 74
+	XOR  reduce 74
+	EQ  reduce 74
+	GE  reduce 74
+	GT  reduce 74
+	LE  reduce 74
+	LT  reduce 74
+	NE  reduce 74
+
+
+state 149
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr GT SimpleExpr .  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+
+	PLUS  shift 108
+	MINUS  shift 109
+	STAR  shift 110
+	DIV  shift 111
+	MOD  shift 112
+	LSHIFT  shift 116
+	RSHIFT  shift 117
+	RPAR  reduce 73
+	RSQ  reduce 73
+	SEMICOLON  reduce 73
+	COMMA  reduce 73
+	AND  reduce 73
+	OR  reduce 73
+	XOR  reduce 73
+	EQ  reduce 73
+	GE  reduce 73
+	GT  reduce 73
+	LE  reduce 73
+	LT  reduce 73
+	NE  reduce 73
+
+
+state 150
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+	SimpleExpr : SimpleExpr LE SimpleExpr .  (76)
+
+	PLUS  shift 108
+	MINUS  shift 109
+	STAR  shift 110
+	DIV  shift 111
+	MOD  shift 112
+	LSHIFT  shift 116
+	RSHIFT  shift 117
+	RPAR  reduce 76
+	RSQ  reduce 76
+	SEMICOLON  reduce 76
+	COMMA  reduce 76
+	AND  reduce 76
+	OR  reduce 76
+	XOR  reduce 76
+	EQ  reduce 76
+	GE  reduce 76
+	GT  reduce 76
+	LE  reduce 76
+	LT  reduce 76
+	NE  reduce 76
+
+
+state 151
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr LT SimpleExpr .  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+
+	PLUS  shift 108
+	MINUS  shift 109
+	STAR  shift 110
+	DIV  shift 111
+	MOD  shift 112
+	LSHIFT  shift 116
+	RSHIFT  shift 117
+	RPAR  reduce 75
+	RSQ  reduce 75
+	SEMICOLON  reduce 75
+	COMMA  reduce 75
+	AND  reduce 75
+	OR  reduce 75
+	XOR  reduce 75
+	EQ  reduce 75
+	GE  reduce 75
+	GT  reduce 75
+	LE  reduce 75
+	LT  reduce 75
+	NE  reduce 75
+
+
+state 152
+	SimpleExpr : SimpleExpr . PLUS SimpleExpr  (61)
+	SimpleExpr : SimpleExpr . MINUS SimpleExpr  (62)
+	SimpleExpr : SimpleExpr . STAR SimpleExpr  (63)
+	SimpleExpr : SimpleExpr . DIV SimpleExpr  (64)
+	SimpleExpr : SimpleExpr . MOD SimpleExpr  (65)
+	SimpleExpr : SimpleExpr . AND SimpleExpr  (66)
+	SimpleExpr : SimpleExpr . OR SimpleExpr  (67)
+	SimpleExpr : SimpleExpr . XOR SimpleExpr  (68)
+	SimpleExpr : SimpleExpr . LSHIFT SimpleExpr  (69)
+	SimpleExpr : SimpleExpr . RSHIFT SimpleExpr  (70)
+	SimpleExpr : SimpleExpr . EQ SimpleExpr  (71)
+	SimpleExpr : SimpleExpr . NE SimpleExpr  (72)
+	SimpleExpr : SimpleExpr NE SimpleExpr .  (72)
+	SimpleExpr : SimpleExpr . GT SimpleExpr  (73)
+	SimpleExpr : SimpleExpr . GE SimpleExpr  (74)
+	SimpleExpr : SimpleExpr . LT SimpleExpr  (75)
+	SimpleExpr : SimpleExpr . LE SimpleExpr  (76)
+
+	PLUS  shift 108
+	MINUS  shift 109
+	STAR  shift 110
+	DIV  shift 111
+	MOD  shift 112
+	LSHIFT  shift 116
+	RSHIFT  shift 117
+	GE  shift 119
+	GT  shift 120
+	LE  shift 121
+	LT  shift 122
+	RPAR  reduce 72
+	RSQ  reduce 72
+	SEMICOLON  reduce 72
+	COMMA  reduce 72
+	AND  reduce 72
+	OR  reduce 72
+	XOR  reduce 72
+	EQ  reduce 72
+	NE  reduce 72
 
 
 state 153
-	Statement : PRINT LPAR Expr RPAR . SEMICOLON  (44)
+	Statement : PRINT LPAR STRLIT RPAR . SEMICOLON  (45)
 
-	SEMICOLON  shift 162
+	SEMICOLON  shift 163
 	.  error
 
 
 state 154
-	ParseArgs : PARSEINT LPAR error RPAR .  (57)
+	Statement : PRINT LPAR Expr RPAR . SEMICOLON  (44)
 
-	.  reduce 57
+	SEMICOLON  shift 164
+	.  error
 
 
 state 155
-	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ . Expr RSQ RPAR  (56)
+	ParseArgs : PARSEINT LPAR error RPAR .  (58)
+
+	.  reduce 58
+
+
+state 156
+	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ . Expr RSQ RPAR  (57)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -2264,35 +2277,41 @@ state 155
 	MethodInvocation  goto 81
 	Assignment  goto 82
 	ParseArgs  goto 83
-	Expr  goto 163
+	Expr  goto 165
 	SimpleExpr  goto 85
 
 
-state 156
+state 157
+	MethodInvocation : IDENTIFIER LPAR error RPAR .  (51)
+
+	.  reduce 51
+
+
+state 158
 	MethodInvocation : IDENTIFIER LPAR Args RPAR .  (50)
 
 	.  reduce 50
 
 
-state 157
-	Args : Expr ExprList .  (51)
-	ExprList : ExprList . COMMA Expr  (53)
+state 159
+	Args : Expr ExprList .  (52)
+	ExprList : ExprList . COMMA Expr  (54)
 
-	COMMA  shift 164
-	RPAR  reduce 51
+	COMMA  shift 166
+	RPAR  reduce 52
 
 
-state 158
+state 160
 	VarDecl : Type IDENTIFIER FieldList SEMICOLON .  (33)
 
 	.  reduce 33
 
 
-state 159
+state 161
 	Statement : IF LPAR Expr RPAR Statement .  (35)
 	Statement : IF LPAR Expr RPAR Statement . ELSE Statement  (36)
 
-	ELSE  shift 165
+	ELSE  shift 167
 	error  reduce 35
 	LBRACE  reduce 35
 	RBRACE  reduce 35
@@ -2308,33 +2327,33 @@ state 159
 	IDENTIFIER  reduce 35
 
 
-state 160
+state 162
 	Statement : WHILE LPAR Expr RPAR Statement .  (37)
 
 	.  reduce 37
 
 
-state 161
+state 163
 	Statement : PRINT LPAR STRLIT RPAR SEMICOLON .  (45)
 
 	.  reduce 45
 
 
-state 162
+state 164
 	Statement : PRINT LPAR Expr RPAR SEMICOLON .  (44)
 
 	.  reduce 44
 
 
-state 163
-	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr . RSQ RPAR  (56)
+state 165
+	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr . RSQ RPAR  (57)
 
-	RSQ  shift 166
+	RSQ  shift 168
 	.  error
 
 
-state 164
-	ExprList : ExprList COMMA . Expr  (53)
+state 166
+	ExprList : ExprList COMMA . Expr  (54)
 
 	LPAR  shift 72
 	PARSEINT  shift 51
@@ -2350,11 +2369,11 @@ state 164
 	MethodInvocation  goto 81
 	Assignment  goto 82
 	ParseArgs  goto 83
-	Expr  goto 167
+	Expr  goto 169
 	SimpleExpr  goto 85
 
 
-state 165
+state 167
 	Statement : IF LPAR Expr RPAR Statement ELSE . Statement  (36)
 
 	error  shift 43
@@ -2368,39 +2387,39 @@ state 165
 	IDENTIFIER  shift 52
 	.  error
 
-	Statement  goto 168
+	Statement  goto 170
 	MethodInvocation  goto 57
 	Assignment  goto 58
 	ParseArgs  goto 59
 
 
-state 166
-	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr RSQ . RPAR  (56)
+state 168
+	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr RSQ . RPAR  (57)
 
-	RPAR  shift 169
+	RPAR  shift 171
 	.  error
 
 
-state 167
-	ExprList : ExprList COMMA Expr .  (53)
+state 169
+	ExprList : ExprList COMMA Expr .  (54)
 
-	.  reduce 53
+	.  reduce 54
 
 
-state 168
+state 170
 	Statement : IF LPAR Expr RPAR Statement ELSE Statement .  (36)
 
 	.  reduce 36
 
 
-state 169
-	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr RSQ RPAR .  (56)
+state 171
+	ParseArgs : PARSEINT LPAR IDENTIFIER LSQ Expr RSQ RPAR .  (57)
 
-	.  reduce 56
+	.  reduce 57
 
 
-51 terminals, 27 nonterminals
-88 grammar rules, 170 states
+52 terminals, 27 nonterminals
+89 grammar rules, 172 states
 
 grammar parser grammar
 symbol# value# symbol
@@ -2447,38 +2466,39 @@ symbol# value# symbol
     40    295  NOT
     41    296  DOTLENGTH
     42    297  RESERVED
-    43    298  IDENTIFIER
-    44    299  NATURAL
-    45    300  DECIMAL
-    46    301  BOOLLIT
-    47    302  STRLIT
-    48    303  UNARY
-    49    304  IF_PREC
-    50    305  ELSE
-    51    306  $accept
-    52    307  Program
-    53    308  ProgramBody
-    54    309  Element
-    55    310  MethodDecl
-    56    311  FieldDecl
-    57    312  FieldList
-    58    313  Type
-    59    314  TypeArray
-    60    315  TypeVoid
-    61    316  MethodHeader
-    62    317  MethodParams
-    63    318  FormalParams
-    64    319  FormalParamsList
-    65    320  MethodBody
-    66    321  MethodBodyContent
-    67    322  BodyElement
-    68    323  VarDecl
-    69    324  Statement
-    70    325  StmtList
-    71    326  MethodInvocation
-    72    327  Args
-    73    328  ExprList
-    74    329  Assignment
-    75    330  ParseArgs
-    76    331  Expr
-    77    332  SimpleExpr
+    43    298  ARROW
+    44    299  IDENTIFIER
+    45    300  NATURAL
+    46    301  DECIMAL
+    47    302  BOOLLIT
+    48    303  STRLIT
+    49    304  UNARY
+    50    305  IF_PREC
+    51    306  ELSE
+    52    307  $accept
+    53    308  Program
+    54    309  ProgramBody
+    55    310  Element
+    56    311  MethodDecl
+    57    312  FieldDecl
+    58    313  FieldList
+    59    314  Type
+    60    315  TypeArray
+    61    316  TypeVoid
+    62    317  MethodHeader
+    63    318  MethodParams
+    64    319  FormalParams
+    65    320  FormalParamsList
+    66    321  MethodBody
+    67    322  MethodBodyContent
+    68    323  BodyElement
+    69    324  VarDecl
+    70    325  Statement
+    71    326  StmtList
+    72    327  MethodInvocation
+    73    328  Args
+    74    329  ExprList
+    75    330  Assignment
+    76    331  ParseArgs
+    77    332  Expr
+    78    333  SimpleExpr

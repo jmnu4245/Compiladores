@@ -8,7 +8,7 @@ enum category {
     ParamDecl, MethodBody, Block, If, While, Return, Call, Print, ParseArgs,
     Assign, Or, And, Eq, Ne, Lt, Gt, Le, Ge, Add, Sub, Mul, Div, Mod, Lshift,
     Rshift, Xor, Not, Minus, Plus, Length, Bool, BoolLit, Double, Decimal,
-    Identifier, Int, Natural, StrLit, StringArray, VoidNode, Reserved
+    Identifier, Int, Natural, StrLit, StringArray, VoidNode, Reserved, Aux
 };
 struct node {
     enum category category;
@@ -25,6 +25,7 @@ struct node_list {
 };
 
 struct node *newnode(enum category category, char *token , int line, int col);
+int count_children(struct node *n);
 void addchild(struct node *parent, struct node *child);
 void show_annotated(struct node *n, int depth);
 struct node *get_child(struct node *n, int index);
