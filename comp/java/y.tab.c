@@ -27,10 +27,12 @@
 
 
 int yylex(void);
-void yyerror(char *);
+void yyerror(char *s); /* 1. Volvemos a un solo argumento */
+    
+#define YYERROR_CALL(msg) yyerror(msg) 
 struct node *ast;
 
-struct node *create_multiple_decls(enum category decl_type, struct node *type_node, char *first_id_token,  struct node *extra_ids_container);
+struct node *create_multiple_decls(enum category decl_type, struct node *type_node, char *first_id_token,  struct node *extra_ids_container, YYLTYPE decl_pos, YYLTYPE id_pos);
 int count_children(struct node *n);
 void unpack_nodes(struct node *parent, struct node *container);
 #ifdef YYSTYPE
@@ -39,13 +41,27 @@ void unpack_nodes(struct node *parent, struct node *container);
 #endif
 #ifndef YYSTYPE_IS_DECLARED
 #define YYSTYPE_IS_DECLARED 1
-#line 19 "jucompiler.y"
+#line 23 "jucompiler.y"
 typedef union YYSTYPE {
     char *lexeme;
     struct node *node;
 } YYSTYPE;
 #endif /* !YYSTYPE_IS_DECLARED */
-#line 49 "y.tab.c"
+#line 51 "y.tab.c"
+
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+/* Default: YYLTYPE is the text position type. */
+typedef struct YYLTYPE
+{
+    int first_line;
+    int first_column;
+    int last_line;
+    int last_column;
+    unsigned source;
+} YYLTYPE;
+#define YYLTYPE_IS_DECLARED 1
+#endif
+#define YYRHSLOC(rhs, k) ((rhs)[k])
 
 /* compatibility with bison */
 #ifdef YYPARSE_PARAM
@@ -74,10 +90,10 @@ int YYLEX_DECL();
 
 /* Parameters sent to yyerror. */
 #ifndef YYERROR_DECL
-#define YYERROR_DECL() yyerror(const char *s)
+#define YYERROR_DECL() yyerror(YYLTYPE *loc, const char *s)
 #endif
 #ifndef YYERROR_CALL
-#define YYERROR_CALL(msg) yyerror(msg)
+#define YYERROR_CALL(msg) yyerror(&yylloc, msg)
 #endif
 
 extern int YYPARSE_DECL();
@@ -710,31 +726,32 @@ static YYINT  *yylexp = 0;
 
 static YYINT  *yylexemes = 0;
 #endif /* YYBTYACC */
-#line 306 "jucompiler.y"
+#line 300 "jucompiler.y"
 
-struct node *create_multiple_decls(enum category decl_type, struct node *type_node, char *first_id_token, struct node *extra_ids_container) {
-    struct node *wrapper = newnode(MethodBody, NULL, 0, 0); 
+struct node *create_multiple_decls(enum category decl_type, struct node *type_node, char *first_id_token, struct node *extra_ids_container, YYLTYPE decl_pos, YYLTYPE id_pos) {
+    struct node *wrapper = newnode(MethodBody, NULL, decl_pos); 
     
-    struct node *first = newnode(decl_type, NULL, 0, 0);
+    struct node *first = newnode(decl_type, NULL, decl_pos);
     addchild(first, type_node);
-    addchild(first, newnode(Identifier, first_id_token,0,0));
+    addchild(first, newnode(Identifier, first_id_token, id_pos));
     addchild(wrapper, first);
 
     if (extra_ids_container != NULL) {
         struct node_list *curr = extra_ids_container->children;
         while (curr != NULL ) {
             if (curr->node != NULL) {
-            struct node *extra = newnode(decl_type, NULL, 0, 0);
-            addchild(extra, newnode(type_node->category, NULL, 0, 0)); 
-            addchild(extra, curr->node);
-            addchild(wrapper, extra);
-        }
-        curr = curr->next;
+                struct node *extra = newnode(decl_type, NULL, decl_pos);
+                addchild(extra, newnode(type_node->category, NULL, decl_pos)); 
+                addchild(extra, curr->node);
+                addchild(wrapper, extra);
+            }
+            curr = curr->next;
         }
     }
     return wrapper;
 }
-#line 738 "y.tab.c"
+
+#line 755 "y.tab.c"
 
 /* For use in generated program */
 #define yydepth (int)(yystack.s_mark - yystack.s_base)
@@ -1405,16 +1422,16 @@ yyreduce:
     switch (yyn)
     {
 case 1:
-#line 55 "jucompiler.y"
+#line 56 "jucompiler.y"
 	{
-yyval.node = ast = newnode(Program, NULL, 0, 0);
-addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme,0,0));
-unpack_nodes(ast, yystack.l_mark[-1].node);
+    yyval.node = ast = newnode(Program, NULL, yyloc);
+    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme, yystack.p_mark[-3]));
+    unpack_nodes(ast, yystack.l_mark[-1].node);
 }
-#line 1415 "y.tab.c"
+#line 1432 "y.tab.c"
 break;
 case 2:
-#line 61 "jucompiler.y"
+#line 62 "jucompiler.y"
 	{  
         yyval.node = yystack.l_mark[-1].node;
         if (yystack.l_mark[0].node != NULL) {
@@ -1422,526 +1439,525 @@ case 2:
             else { addchild(yyval.node, yystack.l_mark[0].node); }
         }
     }
-#line 1426 "y.tab.c"
+#line 1443 "y.tab.c"
 break;
 case 3:
-#line 68 "jucompiler.y"
-	{ yyval.node = newnode(MethodBody, NULL, 0, 0); }
-#line 1431 "y.tab.c"
+#line 69 "jucompiler.y"
+	{ yyval.node = newnode(MethodBody, NULL, yyloc); }
+#line 1448 "y.tab.c"
 break;
 case 4:
-#line 71 "jucompiler.y"
-	{ yyval.node = yystack.l_mark[0].node; }
-#line 1436 "y.tab.c"
-break;
-case 5:
 #line 72 "jucompiler.y"
 	{ yyval.node = yystack.l_mark[0].node; }
-#line 1441 "y.tab.c"
+#line 1453 "y.tab.c"
+break;
+case 5:
+#line 73 "jucompiler.y"
+	{ yyval.node = yystack.l_mark[0].node; }
+#line 1458 "y.tab.c"
 break;
 case 6:
-#line 73 "jucompiler.y"
+#line 74 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1446 "y.tab.c"
+#line 1463 "y.tab.c"
 break;
 case 7:
-#line 75 "jucompiler.y"
+#line 77 "jucompiler.y"
 	{
-    yyval.node = newnode(MethodDecl, NULL, 0, 0);
+    yyval.node = newnode(MethodDecl, NULL, yyloc);
     addchild(yyval.node, yystack.l_mark[-1].node);
     addchild(yyval.node, yystack.l_mark[0].node);
 }
-#line 1455 "y.tab.c"
+#line 1472 "y.tab.c"
 break;
 case 8:
-#line 81 "jucompiler.y"
+#line 83 "jucompiler.y"
 	{
-    yyval.node = create_multiple_decls(FieldDecl, yystack.l_mark[-3].node, yystack.l_mark[-2].lexeme, yystack.l_mark[-1].node);
+    yyval.node = create_multiple_decls(FieldDecl, yystack.l_mark[-3].node, yystack.l_mark[-2].lexeme, yystack.l_mark[-1].node, yyloc, yystack.p_mark[-2]);
 }
-#line 1462 "y.tab.c"
+#line 1479 "y.tab.c"
 break;
 case 9:
-#line 84 "jucompiler.y"
-	{yyval.node=NULL;}
-#line 1467 "y.tab.c"
+#line 86 "jucompiler.y"
+	{ yyval.node = NULL; }
+#line 1484 "y.tab.c"
 break;
 case 10:
-#line 86 "jucompiler.y"
+#line 88 "jucompiler.y"
 	{
-    if (yystack.l_mark[-2].node == NULL) yyval.node = newnode(FieldDecl, NULL, 0, 0);
+    if (yystack.l_mark[-2].node == NULL) yyval.node = newnode(FieldDecl, NULL, yyloc);
     else yyval.node = yystack.l_mark[-2].node;
-    addchild(yyval.node, newnode(Identifier, yystack.l_mark[0].lexeme,0,0));
+    addchild(yyval.node, newnode(Identifier, yystack.l_mark[0].lexeme, yystack.p_mark[0]));
 }
-#line 1476 "y.tab.c"
+#line 1493 "y.tab.c"
 break;
 case 11:
-#line 91 "jucompiler.y"
-	{yyval.node = NULL;}
-#line 1481 "y.tab.c"
+#line 93 "jucompiler.y"
+	{ yyval.node = NULL; }
+#line 1498 "y.tab.c"
 break;
 case 12:
-#line 94 "jucompiler.y"
-	{ yyval.node = newnode(Bool,NULL, 0, 0); }
-#line 1486 "y.tab.c"
+#line 95 "jucompiler.y"
+	{ yyval.node = newnode(Bool, NULL, yystack.p_mark[0]); }
+#line 1503 "y.tab.c"
 break;
 case 13:
-#line 95 "jucompiler.y"
-	{ yyval.node = newnode(Int,NULL, 0, 0); }
-#line 1491 "y.tab.c"
+#line 96 "jucompiler.y"
+	{ yyval.node = newnode(Int, NULL, yystack.p_mark[0]); }
+#line 1508 "y.tab.c"
 break;
 case 14:
-#line 96 "jucompiler.y"
-	{ yyval.node = newnode(Double,NULL, 0, 0); }
-#line 1496 "y.tab.c"
+#line 97 "jucompiler.y"
+	{ yyval.node = newnode(Double, NULL, yystack.p_mark[0]); }
+#line 1513 "y.tab.c"
 break;
 case 15:
-#line 98 "jucompiler.y"
-	{ yyval.node = newnode(StringArray, NULL, 0, 0); }
-#line 1501 "y.tab.c"
+#line 99 "jucompiler.y"
+	{ yyval.node = newnode(StringArray, NULL, yystack.p_mark[-2]); }
+#line 1518 "y.tab.c"
 break;
 case 16:
-#line 100 "jucompiler.y"
-	{ yyval.node = newnode(VoidNode, NULL, 0, 0); }
-#line 1506 "y.tab.c"
+#line 101 "jucompiler.y"
+	{ yyval.node = newnode(VoidNode, NULL, yystack.p_mark[0]); }
+#line 1523 "y.tab.c"
 break;
 case 17:
 #line 103 "jucompiler.y"
 	{
-    yyval.node = newnode(MethodHeader, NULL, 0, 0);
+    yyval.node = newnode(MethodHeader, NULL, yyloc);
     addchild(yyval.node, yystack.l_mark[-4].node);
-    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme,0,0));
+    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme, yystack.p_mark[-3]));
     addchild(yyval.node, yystack.l_mark[-1].node);
-    }
-#line 1516 "y.tab.c"
+}
+#line 1533 "y.tab.c"
 break;
 case 18:
 #line 109 "jucompiler.y"
 	{
-    yyval.node = newnode(MethodHeader, NULL, 0, 0);
+    yyval.node = newnode(MethodHeader, NULL, yyloc);
     addchild(yyval.node, yystack.l_mark[-4].node);
-    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme,0,0));
+    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme, yystack.p_mark[-3]));
     addchild(yyval.node, yystack.l_mark[-1].node);
-    }
-#line 1526 "y.tab.c"
+}
+#line 1543 "y.tab.c"
 break;
 case 19:
-#line 119 "jucompiler.y"
+#line 116 "jucompiler.y"
 	{ yyval.node = yystack.l_mark[0].node; }
-#line 1531 "y.tab.c"
+#line 1548 "y.tab.c"
 break;
 case 20:
-#line 120 "jucompiler.y"
+#line 117 "jucompiler.y"
 	{
-                yyval.node = newnode(MethodParams, NULL,0,0);
-                struct node *p = newnode(ParamDecl, NULL,0,0);
+                yyval.node = newnode(MethodParams, NULL, yyloc);
+                struct node *p = newnode(ParamDecl, NULL, yyloc);
                 addchild(p, yystack.l_mark[-1].node);
-                addchild(p, newnode(Identifier, yystack.l_mark[0].lexeme,0,0));
+                addchild(p, newnode(Identifier, yystack.l_mark[0].lexeme, yystack.p_mark[0]));
                 addchild(yyval.node, p);
             }
-#line 1542 "y.tab.c"
+#line 1559 "y.tab.c"
 break;
 case 21:
-#line 127 "jucompiler.y"
-	{ yyval.node = newnode(MethodParams, NULL,0,0); }
-#line 1547 "y.tab.c"
+#line 124 "jucompiler.y"
+	{ yyval.node = newnode(MethodParams, NULL, yyloc); }
+#line 1564 "y.tab.c"
 break;
 case 22:
-#line 130 "jucompiler.y"
+#line 127 "jucompiler.y"
 	{ 
                 yyval.node = yystack.l_mark[-3].node;
-                struct node *p = newnode(ParamDecl, NULL,0,0);
+                struct node *p = newnode(ParamDecl, NULL, yyloc);
                 addchild(p, yystack.l_mark[-1].node);
-                addchild(p, newnode(Identifier, yystack.l_mark[0].lexeme,0,0));
+                addchild(p, newnode(Identifier, yystack.l_mark[0].lexeme, yystack.p_mark[0]));
                 addchild(yyval.node, p);
             }
-#line 1558 "y.tab.c"
+#line 1575 "y.tab.c"
 break;
 case 23:
-#line 137 "jucompiler.y"
+#line 134 "jucompiler.y"
 	{
-                yyval.node = newnode(MethodParams, NULL,0,0);
-                struct node *p = newnode(ParamDecl, NULL, 0, 0);
+                yyval.node = newnode(MethodParams, NULL, yyloc);
+                struct node *p = newnode(ParamDecl, NULL, yyloc);
                 addchild(p, yystack.l_mark[-1].node);
-                addchild(p, newnode(Identifier, yystack.l_mark[0].lexeme, 0, 0));
+                addchild(p, newnode(Identifier, yystack.l_mark[0].lexeme, yystack.p_mark[0]));
                 addchild(yyval.node, p);
             }
-#line 1569 "y.tab.c"
+#line 1586 "y.tab.c"
 break;
 case 24:
+#line 143 "jucompiler.y"
+	{
+    yyval.node = yystack.l_mark[-1].node;
+}
+#line 1593 "y.tab.c"
+break;
+case 25:
 #line 147 "jucompiler.y"
 	{
     yyval.node = yystack.l_mark[-1].node;
-}
-#line 1576 "y.tab.c"
-break;
-case 25:
-#line 151 "jucompiler.y"
-	{
-    yyval.node = yystack.l_mark[-1].node;
     if (yystack.l_mark[0].node != NULL) {
-        if (yystack.l_mark[0].node->category == MethodBody) { unpack_nodes(yyval.node, yystack.l_mark[0].node); } /* Si es un VarDecl múltiple */
+        if (yystack.l_mark[0].node->category == MethodBody) { unpack_nodes(yyval.node, yystack.l_mark[0].node); }
         else { addchild(yyval.node, yystack.l_mark[0].node); }
     }
 }
-#line 1587 "y.tab.c"
+#line 1604 "y.tab.c"
 break;
 case 26:
-#line 158 "jucompiler.y"
-	{ yyval.node = newnode(MethodBody, NULL, 0, 0); }
-#line 1592 "y.tab.c"
-break;
-case 27:
-#line 161 "jucompiler.y"
-	{yyval.node = yystack.l_mark[0].node;}
-#line 1597 "y.tab.c"
-break;
-case 28:
-#line 162 "jucompiler.y"
-	{yyval.node = yystack.l_mark[0].node;}
-#line 1602 "y.tab.c"
-break;
-case 29:
-#line 165 "jucompiler.y"
-	{
-    yyval.node = create_multiple_decls(VarDecl, yystack.l_mark[-3].node, yystack.l_mark[-2].lexeme, yystack.l_mark[-1].node);
-}
+#line 154 "jucompiler.y"
+	{ yyval.node = newnode(MethodBody, NULL, yyloc); }
 #line 1609 "y.tab.c"
 break;
+case 27:
+#line 157 "jucompiler.y"
+	{yyval.node = yystack.l_mark[0].node;}
+#line 1614 "y.tab.c"
+break;
+case 28:
+#line 158 "jucompiler.y"
+	{yyval.node = yystack.l_mark[0].node;}
+#line 1619 "y.tab.c"
+break;
+case 29:
+#line 161 "jucompiler.y"
+	{
+    yyval.node = create_multiple_decls(VarDecl, yystack.l_mark[-3].node, yystack.l_mark[-2].lexeme, yystack.l_mark[-1].node, yyloc, yystack.p_mark[-2]);
+}
+#line 1626 "y.tab.c"
+break;
 case 30:
-#line 171 "jucompiler.y"
+#line 166 "jucompiler.y"
 	{ 
     yyval.node = yystack.l_mark[-1].node; 
     if (yystack.l_mark[0].node != NULL) addchild(yyval.node, yystack.l_mark[0].node); 
 }
-#line 1617 "y.tab.c"
+#line 1634 "y.tab.c"
 break;
 case 31:
-#line 175 "jucompiler.y"
-	{ yyval.node = newnode(Aux, NULL,0,0);}
-#line 1622 "y.tab.c"
+#line 170 "jucompiler.y"
+	{ yyval.node = newnode(Aux, NULL, yyloc); }
+#line 1639 "y.tab.c"
 break;
 case 32:
-#line 178 "jucompiler.y"
+#line 173 "jucompiler.y"
 	{
-                                            int count = count_children(yystack.l_mark[-1].node);
-                                            if (count == 0) {
-                                                yyval.node = NULL;
-                                            } else if (count == 1) {
-                                                struct node_list *curr = yystack.l_mark[-1].node->children;
-                                                while (curr != NULL && curr->node == NULL) curr = curr->next;
-                                                yyval.node = curr->node;
-
-                                            } else {
-                                                yyval.node = newnode(Block, NULL, 0, 0);
-                                                unpack_nodes(yyval.node, yystack.l_mark[-1].node);
-                                            }
-                                        }
-#line 1640 "y.tab.c"
+               int count = count_children(yystack.l_mark[-1].node);
+               if (count == 0) {
+                   yyval.node = NULL;
+               } else if (count == 1) {
+                   struct node_list *curr = yystack.l_mark[-1].node->children;
+                   while (curr != NULL && curr->node == NULL) curr = curr->next;
+                   yyval.node = curr->node;
+               } else {
+                   yyval.node = newnode(Block, NULL, yyloc);
+                   unpack_nodes(yyval.node, yystack.l_mark[-1].node);
+               }
+           }
+#line 1656 "y.tab.c"
 break;
 case 33:
-#line 192 "jucompiler.y"
+#line 186 "jucompiler.y"
 	{
-                                                yyval.node = newnode(If, NULL, 0, 0);
-                                                addchild(yyval.node, yystack.l_mark[-2].node);
-                                                    addchild(yyval.node, yystack.l_mark[0].node ? yystack.l_mark[0].node : newnode(Block, NULL, 0, 0));
-                                                addchild(yyval.node, newnode(Block, NULL, 0, 0)); /* else branch vacio*/
-                                            }
-#line 1650 "y.tab.c"
+               yyval.node = newnode(If, NULL, yystack.p_mark[-4]);
+               addchild(yyval.node, yystack.l_mark[-2].node);
+               addchild(yyval.node, yystack.l_mark[0].node ? yystack.l_mark[0].node : newnode(Block, NULL, yyloc));
+               addchild(yyval.node, newnode(Block, NULL, yyloc)); 
+           }
+#line 1666 "y.tab.c"
 break;
 case 34:
-#line 198 "jucompiler.y"
+#line 192 "jucompiler.y"
 	{
-                                                yyval.node = newnode(If, NULL, 0, 0);
-                                                addchild(yyval.node, yystack.l_mark[-4].node);
-                                                addchild(yyval.node, yystack.l_mark[-2].node ? yystack.l_mark[-2].node : newnode(Block, NULL, 0, 0));
-                                        addchild(yyval.node, yystack.l_mark[0].node ? yystack.l_mark[0].node : newnode(Block, NULL, 0, 0));
-                                            }
-#line 1660 "y.tab.c"
-break;
-case 35:
-#line 204 "jucompiler.y"
-	{
-                                            yyval.node = newnode(While, NULL, 0, 0);
-                                            addchild(yyval.node, yystack.l_mark[-2].node);
-                                                addchild(yyval.node, yystack.l_mark[0].node ? yystack.l_mark[0].node : newnode(Block, NULL, 0, 0));
-                                                }
-#line 1669 "y.tab.c"
-break;
-case 36:
-#line 209 "jucompiler.y"
-	{
-    yyval.node = newnode(Return, NULL, 0, 0);
-         }
+               yyval.node = newnode(If, NULL, yystack.p_mark[-6]);
+               addchild(yyval.node, yystack.l_mark[-4].node);
+               addchild(yyval.node, yystack.l_mark[-2].node ? yystack.l_mark[-2].node : newnode(Block, NULL, yyloc));
+               addchild(yyval.node, yystack.l_mark[0].node ? yystack.l_mark[0].node : newnode(Block, NULL, yyloc));
+           }
 #line 1676 "y.tab.c"
 break;
-case 37:
-#line 212 "jucompiler.y"
+case 35:
+#line 198 "jucompiler.y"
 	{
-    yyval.node = newnode(Return, NULL, 0, 0);
-    addchild(yyval.node, yystack.l_mark[-1].node);
-         }
-#line 1684 "y.tab.c"
+               yyval.node = newnode(While, NULL, yystack.p_mark[-4]);
+               addchild(yyval.node, yystack.l_mark[-2].node);
+               addchild(yyval.node, yystack.l_mark[0].node ? yystack.l_mark[0].node : newnode(Block, NULL, yyloc));
+           }
+#line 1685 "y.tab.c"
+break;
+case 36:
+#line 203 "jucompiler.y"
+	{
+               yyval.node = newnode(Return, NULL, yystack.p_mark[-1]);
+           }
+#line 1692 "y.tab.c"
+break;
+case 37:
+#line 206 "jucompiler.y"
+	{
+               yyval.node = newnode(Return, NULL, yystack.p_mark[-2]);
+               addchild(yyval.node, yystack.l_mark[-1].node);
+           }
+#line 1700 "y.tab.c"
 break;
 case 38:
-#line 216 "jucompiler.y"
+#line 210 "jucompiler.y"
 	{yyval.node = yystack.l_mark[-1].node;}
-#line 1689 "y.tab.c"
+#line 1705 "y.tab.c"
 break;
 case 39:
-#line 217 "jucompiler.y"
-	{  yyval.node = yystack.l_mark[-1].node;    }
-#line 1694 "y.tab.c"
+#line 211 "jucompiler.y"
+	{ yyval.node = yystack.l_mark[-1].node; }
+#line 1710 "y.tab.c"
 break;
 case 40:
-#line 218 "jucompiler.y"
+#line 212 "jucompiler.y"
 	{yyval.node = yystack.l_mark[-1].node; }
-#line 1699 "y.tab.c"
+#line 1715 "y.tab.c"
 break;
 case 41:
-#line 219 "jucompiler.y"
+#line 213 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1704 "y.tab.c"
-break;
-case 42:
-#line 220 "jucompiler.y"
-	{
-    yyval.node = newnode(Print, NULL, 0, 0);
-    addchild(yyval.node, yystack.l_mark[-2].node);
-         }
-#line 1712 "y.tab.c"
-break;
-case 43:
-#line 224 "jucompiler.y"
-	{
-    yyval.node = newnode(Print, NULL, 0, 0);
-    addchild(yyval.node, newnode(StrLit, yystack.l_mark[-2].lexeme,0,0));
-         }
 #line 1720 "y.tab.c"
 break;
+case 42:
+#line 214 "jucompiler.y"
+	{
+               yyval.node = newnode(Print, NULL, yystack.p_mark[-4]);
+               addchild(yyval.node, yystack.l_mark[-2].node);
+           }
+#line 1728 "y.tab.c"
+break;
+case 43:
+#line 218 "jucompiler.y"
+	{
+               yyval.node = newnode(Print, NULL, yystack.p_mark[-4]);
+               addchild(yyval.node, newnode(StrLit, yystack.l_mark[-2].lexeme, yystack.p_mark[-2]));
+           }
+#line 1736 "y.tab.c"
+break;
 case 44:
-#line 228 "jucompiler.y"
+#line 222 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1725 "y.tab.c"
+#line 1741 "y.tab.c"
 break;
 case 45:
-#line 231 "jucompiler.y"
+#line 225 "jucompiler.y"
 	{
-        yyval.node = newnode(Call, NULL, 0, 0);
-        addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme,0,0));
+        yyval.node = newnode(Call, NULL, yystack.p_mark[-3]);
+        addchild(yyval.node, newnode(Identifier, yystack.l_mark[-3].lexeme, yystack.p_mark[-3]));
         unpack_nodes(yyval.node, yystack.l_mark[-1].node);
     }
-#line 1734 "y.tab.c"
+#line 1750 "y.tab.c"
 break;
 case 46:
-#line 236 "jucompiler.y"
+#line 230 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1739 "y.tab.c"
+#line 1755 "y.tab.c"
 break;
 case 47:
-#line 239 "jucompiler.y"
+#line 233 "jucompiler.y"
 	{
-        yyval.node = newnode(Aux, NULL,0,0); /*Temporal*/
+        yyval.node = newnode(Aux, NULL, yyloc);
         addchild(yyval.node, yystack.l_mark[-1].node);
         unpack_nodes(yyval.node, yystack.l_mark[0].node);
     }
-#line 1748 "y.tab.c"
+#line 1764 "y.tab.c"
 break;
 case 48:
-#line 244 "jucompiler.y"
+#line 238 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1753 "y.tab.c"
+#line 1769 "y.tab.c"
 break;
 case 49:
-#line 247 "jucompiler.y"
+#line 241 "jucompiler.y"
 	{
-        if (yystack.l_mark[-2].node == NULL) yyval.node = newnode(Aux, NULL,0,0);
+        if (yystack.l_mark[-2].node == NULL) yyval.node = newnode(Aux, NULL, yyloc);
         else yyval.node = yystack.l_mark[-2].node;
         addchild(yyval.node, yystack.l_mark[0].node);
     }
-#line 1762 "y.tab.c"
+#line 1778 "y.tab.c"
 break;
 case 50:
-#line 252 "jucompiler.y"
+#line 246 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1767 "y.tab.c"
+#line 1783 "y.tab.c"
 break;
 case 51:
-#line 254 "jucompiler.y"
+#line 249 "jucompiler.y"
 	{
-    yyval.node = newnode(Assign, NULL, 0, 0);
-    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-2].lexeme,0,0));
+    yyval.node = newnode(Assign, NULL, yystack.p_mark[-1]);
+    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-2].lexeme, yystack.p_mark[-2]));
     addchild(yyval.node, yystack.l_mark[0].node);
 }
-#line 1776 "y.tab.c"
+#line 1792 "y.tab.c"
 break;
 case 52:
-#line 261 "jucompiler.y"
+#line 255 "jucompiler.y"
 	{
-    yyval.node = newnode(ParseArgs, NULL, 0, 0);
-    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-4].lexeme,0,0));
-     addchild(yyval.node, yystack.l_mark[-2].node);
+    yyval.node = newnode(ParseArgs, NULL, yystack.p_mark[-6]);
+    addchild(yyval.node, newnode(Identifier, yystack.l_mark[-4].lexeme, yystack.p_mark[-4]));
+    addchild(yyval.node, yystack.l_mark[-2].node);
 }
-#line 1785 "y.tab.c"
+#line 1801 "y.tab.c"
 break;
 case 53:
-#line 266 "jucompiler.y"
+#line 260 "jucompiler.y"
 	{yyval.node = NULL;}
-#line 1790 "y.tab.c"
+#line 1806 "y.tab.c"
 break;
 case 54:
-#line 269 "jucompiler.y"
+#line 263 "jucompiler.y"
 	{yyval.node = yystack.l_mark[0].node;}
-#line 1795 "y.tab.c"
+#line 1811 "y.tab.c"
 break;
 case 55:
-#line 270 "jucompiler.y"
+#line 264 "jucompiler.y"
 	{yyval.node = yystack.l_mark[0].node;}
-#line 1800 "y.tab.c"
+#line 1816 "y.tab.c"
 break;
 case 56:
-#line 273 "jucompiler.y"
-	{ yyval.node = newnode(Add, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1805 "y.tab.c"
+#line 267 "jucompiler.y"
+	{ yyval.node = newnode(Add, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1821 "y.tab.c"
 break;
 case 57:
-#line 274 "jucompiler.y"
-	{ yyval.node = newnode(Sub, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1810 "y.tab.c"
+#line 268 "jucompiler.y"
+	{ yyval.node = newnode(Sub, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1826 "y.tab.c"
 break;
 case 58:
-#line 275 "jucompiler.y"
-	{ yyval.node = newnode(Mul, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1815 "y.tab.c"
+#line 269 "jucompiler.y"
+	{ yyval.node = newnode(Mul, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1831 "y.tab.c"
 break;
 case 59:
-#line 276 "jucompiler.y"
-	{ yyval.node = newnode(Div, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1820 "y.tab.c"
+#line 270 "jucompiler.y"
+	{ yyval.node = newnode(Div, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1836 "y.tab.c"
 break;
 case 60:
-#line 277 "jucompiler.y"
-	{ yyval.node = newnode(Mod, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1825 "y.tab.c"
+#line 271 "jucompiler.y"
+	{ yyval.node = newnode(Mod, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1841 "y.tab.c"
 break;
 case 61:
-#line 278 "jucompiler.y"
-	{ yyval.node = newnode(And, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1830 "y.tab.c"
+#line 272 "jucompiler.y"
+	{ yyval.node = newnode(And, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1846 "y.tab.c"
 break;
 case 62:
-#line 279 "jucompiler.y"
-	{ yyval.node = newnode(Or, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1835 "y.tab.c"
+#line 273 "jucompiler.y"
+	{ yyval.node = newnode(Or, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1851 "y.tab.c"
 break;
 case 63:
-#line 280 "jucompiler.y"
-	{ yyval.node = newnode(Xor, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1840 "y.tab.c"
+#line 274 "jucompiler.y"
+	{ yyval.node = newnode(Xor, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1856 "y.tab.c"
 break;
 case 64:
-#line 281 "jucompiler.y"
-	{ yyval.node = newnode(Lshift, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1845 "y.tab.c"
+#line 275 "jucompiler.y"
+	{ yyval.node = newnode(Lshift, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1861 "y.tab.c"
 break;
 case 65:
-#line 282 "jucompiler.y"
-	{ yyval.node = newnode(Rshift, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1850 "y.tab.c"
+#line 276 "jucompiler.y"
+	{ yyval.node = newnode(Rshift, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1866 "y.tab.c"
 break;
 case 66:
-#line 283 "jucompiler.y"
-	{ yyval.node = newnode(Eq, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1855 "y.tab.c"
+#line 277 "jucompiler.y"
+	{ yyval.node = newnode(Eq, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1871 "y.tab.c"
 break;
 case 67:
-#line 284 "jucompiler.y"
-	{ yyval.node = newnode(Ne, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1860 "y.tab.c"
+#line 278 "jucompiler.y"
+	{ yyval.node = newnode(Ne, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1876 "y.tab.c"
 break;
 case 68:
-#line 285 "jucompiler.y"
-	{ yyval.node = newnode(Gt, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1865 "y.tab.c"
+#line 279 "jucompiler.y"
+	{ yyval.node = newnode(Gt, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1881 "y.tab.c"
 break;
 case 69:
-#line 286 "jucompiler.y"
-	{ yyval.node = newnode(Ge, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1870 "y.tab.c"
+#line 280 "jucompiler.y"
+	{ yyval.node = newnode(Ge, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1886 "y.tab.c"
 break;
 case 70:
-#line 287 "jucompiler.y"
-	{ yyval.node = newnode(Lt, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1875 "y.tab.c"
+#line 281 "jucompiler.y"
+	{ yyval.node = newnode(Lt, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1891 "y.tab.c"
 break;
 case 71:
-#line 288 "jucompiler.y"
-	{ yyval.node = newnode(Le, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1880 "y.tab.c"
+#line 282 "jucompiler.y"
+	{ yyval.node = newnode(Le, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[-2].node); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1896 "y.tab.c"
 break;
 case 72:
-#line 289 "jucompiler.y"
-	{ yyval.node = newnode(Minus, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1885 "y.tab.c"
+#line 283 "jucompiler.y"
+	{ yyval.node = newnode(Minus, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1901 "y.tab.c"
 break;
 case 73:
-#line 290 "jucompiler.y"
-	{ yyval.node = newnode(Plus, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1890 "y.tab.c"
+#line 284 "jucompiler.y"
+	{ yyval.node = newnode(Plus, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1906 "y.tab.c"
 break;
 case 74:
-#line 291 "jucompiler.y"
-	{ yyval.node = newnode(Not, NULL, 0, 0); addchild(yyval.node, yystack.l_mark[0].node); }
-#line 1895 "y.tab.c"
+#line 285 "jucompiler.y"
+	{ yyval.node = newnode(Not, NULL, yystack.p_mark[-1]); addchild(yyval.node, yystack.l_mark[0].node); }
+#line 1911 "y.tab.c"
 break;
 case 75:
-#line 292 "jucompiler.y"
+#line 286 "jucompiler.y"
 	{ yyval.node = yystack.l_mark[-1].node; }
-#line 1900 "y.tab.c"
+#line 1916 "y.tab.c"
 break;
 case 76:
-#line 293 "jucompiler.y"
+#line 287 "jucompiler.y"
 	{ yyval.node = NULL; }
-#line 1905 "y.tab.c"
+#line 1921 "y.tab.c"
 break;
 case 77:
-#line 294 "jucompiler.y"
+#line 288 "jucompiler.y"
 	{ yyval.node = yystack.l_mark[0].node; }
-#line 1910 "y.tab.c"
+#line 1926 "y.tab.c"
 break;
 case 78:
-#line 295 "jucompiler.y"
+#line 289 "jucompiler.y"
 	{ yyval.node = yystack.l_mark[0].node; }
-#line 1915 "y.tab.c"
+#line 1931 "y.tab.c"
 break;
 case 79:
-#line 296 "jucompiler.y"
-	{ yyval.node = newnode(Identifier, yystack.l_mark[0].lexeme,0,0); }
-#line 1920 "y.tab.c"
+#line 290 "jucompiler.y"
+	{ yyval.node = newnode(Identifier, yystack.l_mark[0].lexeme, yystack.p_mark[0]); }
+#line 1936 "y.tab.c"
 break;
 case 80:
-#line 297 "jucompiler.y"
+#line 291 "jucompiler.y"
 	{
-              yyval.node = newnode(Length, NULL, 0, 0);
-              addchild(yyval.node, newnode(Identifier, yystack.l_mark[-1].lexeme,0,0));
+              yyval.node = newnode(Length, NULL, yystack.p_mark[0]);
+              addchild(yyval.node, newnode(Identifier, yystack.l_mark[-1].lexeme, yystack.p_mark[-1]));
             }
-#line 1928 "y.tab.c"
+#line 1944 "y.tab.c"
 break;
 case 81:
-#line 301 "jucompiler.y"
-	{ yyval.node = newnode(Natural, yystack.l_mark[0].lexeme,0,0); }
-#line 1933 "y.tab.c"
+#line 295 "jucompiler.y"
+	{ yyval.node = newnode(Natural, yystack.l_mark[0].lexeme, yystack.p_mark[0]); }
+#line 1949 "y.tab.c"
 break;
 case 82:
-#line 302 "jucompiler.y"
-	{ yyval.node = newnode(Decimal, yystack.l_mark[0].lexeme,0,0); }
-#line 1938 "y.tab.c"
+#line 296 "jucompiler.y"
+	{ yyval.node = newnode(Decimal, yystack.l_mark[0].lexeme, yystack.p_mark[0]); }
+#line 1954 "y.tab.c"
 break;
 case 83:
-#line 303 "jucompiler.y"
-	{ yyval.node = newnode(BoolLit, yystack.l_mark[0].lexeme,0,0); }
-#line 1943 "y.tab.c"
+#line 297 "jucompiler.y"
+	{ yyval.node = newnode(BoolLit, yystack.l_mark[0].lexeme, yystack.p_mark[0]); }
+#line 1959 "y.tab.c"
 break;
-#line 1945 "y.tab.c"
+#line 1961 "y.tab.c"
     default:
         break;
     }

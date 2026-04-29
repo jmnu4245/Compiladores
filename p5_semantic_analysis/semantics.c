@@ -7,7 +7,6 @@
 int semantic_errors = 0;
 
 struct symbol_list *symbol_table;
-struct 
 void check_parameters(struct node *parameters,struct symbol_list *scope) {
     int n = countchildren(parameters);
     for(int i=0;i<n;i++){

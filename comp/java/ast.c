@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "ast.h"
 
+
 //He puesto todas las que he encontrado, vamos adaptando
 const char* category_names[] = {
     "Program", "FieldDecl", "VarDecl", "MethodDecl", "MethodHeader", "MethodParams",
@@ -12,12 +13,12 @@ const char* category_names[] = {
 };
 
 // create a node of a given category with a given lexical symbol
-struct node *newnode(enum category category, char *token, int line, int col) {
+struct node *newnode(enum category category, char *token, YYLTYPE position) {
     struct node *new = malloc(sizeof(struct node));
     new->category = category;
     new->token = token;
-    new->line = line;
-    new->col = col;
+    new->line = position.first_line;
+    new->col = position.first_column;
     new->children = malloc(sizeof(struct node_list));
     new->children->node = NULL;
     new->children->next = NULL;

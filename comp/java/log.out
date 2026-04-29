@@ -6,7 +6,6 @@
 === meta1/Comments5.java ===
 === meta1/errorsAndOthers.java ===
 === meta1/errors_e1.java ===
-FAIL: meta1/errors_e1.java
 === meta1/escape_sequences.java ===
 === meta1/EsteEPuxado.java ===
 === meta1/Factorial.java ===
@@ -15,7 +14,6 @@ FAIL: meta1/errors_e1.java
 === meta1/IdentifiersAndKeywords2.java ===
 === meta1/ids.java ===
 === meta1/InsertionSort_e1.java ===
-FAIL: meta1/InsertionSort_e1.java
 === meta1/INTLIT2.java ===
 === meta1/INTLIT.java ===
 === meta1/literals.java ===

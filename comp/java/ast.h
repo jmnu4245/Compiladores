@@ -1,3 +1,4 @@
+#include "y.tab.h"
 #ifndef _AST_H
 #define _AST_H
 
@@ -20,7 +21,7 @@ struct node_list {
     struct node_list *next;
 };
 
-struct node *newnode(enum category category, char *token , int line, int col);
+struct node *newnode(enum category category, char *token , YYLTYPE position);
 void addchild(struct node *parent, struct node *child);
 void show(struct node *n, int depth);
 void check_node(struct node *n);
