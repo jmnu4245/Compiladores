@@ -2441,7 +2441,7 @@ int main(int argc, char *argv[]) {
                     print_sym_table(curr);
                     curr = curr->next;
                 }
-
+            show_annotated(ast,0);
             }
         }
     }
@@ -2456,8 +2456,8 @@ int main(int argc, char *argv[]) {
 void yyerror(char *s) {
     syntax_error++;
     const char *tok;
-    if (yytext && yytext[0] == '"' && yylval.node != NULL)
-        tok = yylval.node->token;
+    if (yytext && yytext[0] == '"' && yylval.lexeme != NULL)
+        tok = yylval.lexeme;
     else
         tok = (yytext && yytext[0]) ? yytext : "";
         

@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
                     print_sym_table(curr);
                     curr = curr->next;
                 }
-
+            show_annotated(ast,0);
             }
         }
     }

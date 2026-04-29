@@ -1443,7 +1443,7 @@ case 2:
 break;
 case 3:
 #line 70 "jucompiler.y"
-	{ yyval.node = newnode(MethodBody, NULL, yyloc); }
+	{ yyval.node = newnode(Aux, NULL, yyloc); }
 #line 1448 "y.tab.c"
 break;
 case 4:

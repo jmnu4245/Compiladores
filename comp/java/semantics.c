@@ -28,6 +28,20 @@ void check_semantics_pass2(struct node *n);
     }
     return NULL;
 }
+const char* get_op_str(struct node *n) {
+    switch(n->category) {
+        case Add: return "+"; case Sub: return "-";
+        case Mul: return "*"; case Div: return "/";
+        case Mod: return "%"; case Assign: return "=";
+        case Eq: return "=="; case Ne: return "!=";
+        case Lt: return "<";  case Gt: return ">";
+        case Le: return "<="; case Ge: return ">=";
+        case And: return "&&"; case Or: return "||";
+        case Xor: return "^"; case Not: return "!";
+        case Lshift: return "<<"; case Rshift: return ">>";
+        default: return NULL;
+    }
+}
 
 BasicType get_type_from_node(struct node *n) {
     if (n == NULL) return T_Undef;
@@ -142,7 +156,7 @@ static void check_math_operator(struct node *n) {
 
     if (!is_numeric(left->annot_type) || !is_numeric(right->annot_type)) {
         printf("Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-               n->line, n->col, n->token,
+               n->line, n->col, get_op_str(n),
                type_to_str(left->annot_type), type_to_str(right->annot_type));
         n->annot_type = T_Undef;
     } else {
@@ -253,9 +267,11 @@ static void check_assignment(struct node *n) {
     if (types_compatible(left->annot_type, right->annot_type)) {
         n->annot_type = left->annot_type;
     } else {
-        printf("Line %d, col %d: Incompatible type %s in assign statement\n",
-               n->line, n->col, type_to_str(right->annot_type));
-        n->annot_type = left->annot_type; /* keep LHS type to continue */
+        printf("Line %d, col %d: Operator = cannot be applied to types %s, %s\n",
+               n->line, n->col, 
+               type_to_str(left->annot_type), type_to_str(right->annot_type));
+        
+        n->annot_type = left->annot_type; 
     }
 }
 
@@ -266,11 +282,23 @@ static void check_return(struct node *n, SymTable *local) {
     BasicType expected = ret  ? ret->type         : T_Void;
     BasicType actual   = expr ? expr->annot_type  : T_Void;
 
-    if (!types_compatible(expected, actual)) {
+    int err_line = expr ? expr->line : n->line;
+    int err_col  = expr ? expr->col  : n->col;
+
+    if (expr != NULL && expected == T_Void) {
         printf("Line %d, col %d: Incompatible type %s in return statement\n",
-               n->line, n->col, type_to_str(actual));
+               err_line, err_col, type_to_str(actual));
+    } 
+    else if (expr == NULL && expected != T_Void) {
+        printf("Line %d, col %d: Incompatible type void in return statement\n",
+               err_line, err_col);
+    } 
+    else if (expr != NULL && !types_compatible(expected, actual)) {
+        printf("Line %d, col %d: Incompatible type %s in return statement\n",
+               err_line, err_col, type_to_str(actual));
     }
-    n->annot_type = T_None; /* return is a statement */
+    
+    n->annot_type = T_None;
 }
 
 /* ---- Print: statement, no expression type ---- */
@@ -283,41 +311,26 @@ static void check_print(struct node *n) {
 
 /* ---- ParseArgs: Integer.parseInt(id[expr]) → int ---- */
 static void check_parse_args(struct node *n, SymTable *global, SymTable *local) {
-    /* ParseArgs(2): children = (Identifier, Expr_index) */
     struct node *id_node  = get_child(n, 0);
-    /* idx_node already validated as expression by the recursive descent */
+    struct node *expr_node = get_child(n, 1);
 
-    if (id_node) {
-        Symbol *sym = lookup_symbol(global, local, id_node->token);
-        if (!sym) {
-            printf("Line %d, col %d: Cannot find symbol %s\n",
-                   id_node->line, id_node->col, id_node->token);
-            id_node->annot_type = T_Undef;
-        } else {
-            id_node->annot_type = sym->type;
-            /* Note: the spec says Integer.parseInt is an operator that yields int;
-             * type of the array operand is implicitly String[] — enforced at syntax level. */
-        }
+    BasicType id_type = id_node ? id_node->annot_type : T_Undef;
+    BasicType expr_type = expr_node ? expr_node->annot_type : T_Undef;
+
+    if (id_type != T_StringArray || expr_type != T_Int) {
+        printf("Line %d, col %d: Operator Integer.parseInt cannot be applied to types %s, %s\n",
+               n->line, n->col, type_to_str(id_type), type_to_str(expr_type));
     }
-    n->annot_type = T_Int; /* always int per spec */
+    n->annot_type = T_Int;
 }
 
 /* ---- Length: id.length → int ---- */
 static void check_length(struct node *n, SymTable *global, SymTable *local) {
-    /* Length(1): single Identifier child */
     struct node *id_node = get_child(n, 0);
     if (id_node) {
-        Symbol *sym = lookup_symbol(global, local, id_node->token);
-        if (!sym) {
-            printf("Line %d, col %d: Cannot find symbol %s\n",
-                   id_node->line, id_node->col, id_node->token);
-            id_node->annot_type = T_Undef;
-        } else {
-            id_node->annot_type = sym->type;
-            if (sym->type != T_StringArray) {
-                printf("Line %d, col %d: Operator .length cannot be applied to type %s\n",
-                       id_node->line, id_node->col, type_to_str(sym->type));
-            }
+        if (id_node->annot_type != T_StringArray && id_node->annot_type != T_Undef) {
+            printf("Line %d, col %d: Operator .length cannot be applied to type %s\n",
+                   n->line, n->col , type_to_str(id_node->annot_type));
         }
     }
     n->annot_type = T_Int;
@@ -348,6 +361,8 @@ static void check_method_call(struct node *n, SymTable *global, SymTable *local)
     int n_actual = 0;
     BasicType actual_types[64];
     struct node_list *arg = n->children ? n->children->next : NULL;
+
+    if (arg) arg = arg->next;
     while (arg && n_actual < 64) {
         if (arg->node) actual_types[n_actual++] = arg->node->annot_type;
         arg = arg->next;
@@ -385,7 +400,7 @@ for (Symbol *sym = global->first; sym && !exact_match; sym = sym->next) {
     if (exact_match) {
          n->annot_type         = exact_match->type;
     id_node->annot_type   = T_None;
-    //id_node->annot_params = exact_match->params_list;
+    id_node->annot_params = exact_match->params_list;
     } else if (ambiguous) {
         printf("Line %d, col %d: Reference to method %s is ambiguous\n",
                id_node->line, id_node->col, method_name);
@@ -395,10 +410,16 @@ for (Symbol *sym = global->first; sym && !exact_match; sym = sym->next) {
     id_node->annot_type   = T_None;
     id_node->annot_params = compat_match->params_list;
     } else {
-        printf("Line %d, col %d: Cannot find symbol %s\n",
-               id_node->line, id_node->col, method_name);
-        n->annot_type = id_node->annot_type = T_Undef;
+        char actual_str[256] = "(";
+        for (int i = 0; i < n_actual; i++) {
+            if (i > 0) strcat(actual_str, ",");
+            strcat(actual_str, type_to_str(actual_types[i]));
         }
+        strcat(actual_str, ")");
+        printf("Line %d, col %d: Cannot find symbol %s%s\n",
+               id_node->line, id_node->col, method_name, actual_str);
+        n->annot_type = id_node->annot_type = T_Undef;
+    }
 }
 
 /* ================================================================
@@ -409,9 +430,12 @@ void check_expression(struct node *n, SymTable *global, SymTable *local) {
     if (!n) return;
 
     /* 1. Post-order: resolve children before the parent */
-    for (struct node_list *c = n->children; c; c = c->next)
+    struct node_list *c = n->children ? n->children->next : NULL;
+    int child_idx = 0;
+    for (; c; c = c->next, child_idx++) {
+        if (n->category == Call && child_idx == 0) continue; 
         check_expression(c->node, global, local);
-
+    }
     /* 2. Delegate to the appropriate helper */
     switch (n->category) {
         case Natural: case Decimal: case BoolLit:
@@ -625,6 +649,20 @@ void check_semantics_pass2(struct node *n) {
             break;
 
         /* Structural nodes (If, While, Block, MethodBody, …): recurse */
+        case If:
+        case While: {
+            for (struct node_list *cur = n->children ? n->children->next : NULL; cur; cur = cur->next) {
+                check_semantics_pass2(cur->node);
+            }
+            
+            struct node *cond = get_child(n, 0);
+            if (cond && cond->annot_type != T_Bool ) {
+                printf("Line %d, col %d: Incompatible type %s in %s statement\n",
+                       cond->line, cond->col, type_to_str(cond->annot_type),
+                       n->category == If ? "if" : "while");
+            }
+            break;
+        }
         default: {
             for (struct node_list *cur = n->children; cur; cur = cur->next)
                 check_semantics_pass2(cur->node);
