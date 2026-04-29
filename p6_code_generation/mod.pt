@@ -1,0 +1,2 @@
+mod(integer a, integer b) = a-a/b*b
+main(integer i) = write(mod(read(0),read(0)))

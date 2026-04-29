@@ -41,13 +41,13 @@
 #define NE 294
 #define NOT 295
 #define DOTLENGTH 296
-#define RESERVED 297
-#define ARROW 298
-#define IDENTIFIER 299
-#define NATURAL 300
-#define DECIMAL 301
-#define BOOLLIT 302
-#define STRLIT 303
+#define ARROW 297
+#define IDENTIFIER 298
+#define NATURAL 299
+#define DECIMAL 300
+#define BOOLLIT 301
+#define STRLIT 302
+#define RESERVED 303
 #define UNARY 304
 #define IF_PREC 305
 #define ELSE 306
@@ -63,5 +63,20 @@ typedef union YYSTYPE {
 } YYSTYPE;
 #endif /* !YYSTYPE_IS_DECLARED */
 extern YYSTYPE yylval;
+
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+/* Default: YYLTYPE is the text position type. */
+typedef struct YYLTYPE
+{
+    int first_line;
+    int first_column;
+    int last_line;
+    int last_column;
+    unsigned source;
+} YYLTYPE;
+#define YYLTYPE_IS_DECLARED 1
+#endif
+#define YYRHSLOC(rhs, k) ((rhs)[k])
+extern YYLTYPE yylloc;
 
 #endif /* _yy_defines_h_ */

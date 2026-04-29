@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 === meta2/aitest1.java ===
 FAIL: meta2/aitest1.java
 === meta2/aitest2.java ===
@@ -40,3 +41,40 @@ FAIL: meta2/all.java
 === meta2/TypesFieldVar.java ===
 === meta2/varios_testes.java ===
 === meta2/various.java ===
+=======
+=== meta1/Blank.java ===
+=== meta1/Comments1.java ===
+=== meta1/Comments2.java ===
+=== meta1/Comments3.java ===
+=== meta1/Comments4.java ===
+=== meta1/Comments5.java ===
+=== meta1/errorsAndOthers.java ===
+=== meta1/errors_e1.java ===
+=== meta1/escape_sequences.java ===
+=== meta1/EsteEPuxado.java ===
+=== meta1/Factorial.java ===
+=== meta1/HyperSuperMegaTest.java ===
+=== meta1/IdentifiersAndKeywords1.java ===
+=== meta1/IdentifiersAndKeywords2.java ===
+=== meta1/ids.java ===
+=== meta1/InsertionSort_e1.java ===
+=== meta1/INTLIT2.java ===
+=== meta1/INTLIT.java ===
+=== meta1/literals.java ===
+=== meta1/Missing_Reserved.java ===
+=== meta1/newlines.java ===
+=== meta1/Num.java ===
+=== meta1/PoucoDeTudo.java ===
+=== meta1/REALLIT_2.java ===
+=== meta1/REALLIT.java ===
+=== meta1/Reserved_All.java ===
+=== meta1/Reserved_Blank.java ===
+=== meta1/SimpleClass.java ===
+=== meta1/Sopa.java ===
+=== meta1/SRTLIT_AND_ERRORS.java ===
+=== meta1/Stats.java ===
+=== meta1/StringsAndComments.java ===
+=== meta1/strlit_win.java ===
+=== meta1/TestesExtra.java ===
+=== meta1/UnterminatedComment.java ===
+>>>>>>> JM
