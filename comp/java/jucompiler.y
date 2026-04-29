@@ -67,7 +67,7 @@ ProgramBody: ProgramBody Element {
             else { addchild($$, $2); }
         }
     }
-    | /* empty */ { $$ = newnode(MethodBody, NULL, @$); }
+    | /* empty */ { $$ = newnode(Aux, NULL, @$); }
 ;
 
 Element: MethodDecl { $$ = $1; }
@@ -300,7 +300,7 @@ SimpleExpr: SimpleExpr PLUS SimpleExpr   { $$ = newnode(Add, NULL, @2); addchild
 %%
 
 struct node *create_multiple_decls(enum category decl_type, struct node *type_node, char *first_id_token, struct node *extra_ids_container, YYLTYPE decl_pos, YYLTYPE id_pos) {
-    struct node *wrapper = newnode(MethodBody, NULL, decl_pos); 
+    struct node *wrapper = newnode(Aux, NULL, decl_pos); 
     
     struct node *first = newnode(decl_type, NULL, decl_pos);
     addchild(first, type_node);

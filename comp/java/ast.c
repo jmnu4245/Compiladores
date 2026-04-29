@@ -88,7 +88,7 @@ void show_annotated(struct node *n, int depth) {
 
 struct node *get_child(struct node *n, int index) {
     if (n == NULL || n->children == NULL) return NULL;
-    struct node_list *curr = n->children;
+    struct node_list *curr = n->children->next;//Hay un nodo centinela
     int i = 0;
     while (curr != NULL && i < index) {
         curr = curr->next;

@@ -89,7 +89,7 @@ static void build_params_str(struct node *params_node, char *buf, int bufsz) {
         while (cur) {
             if (cur->node && cur->node->children) {
                 if (!first) strncat(buf, ",", bufsz - strlen(buf) - 1);
-                BasicType t = get_type_from_node(cur->node->children->node);
+                BasicType t = get_type_from_node(get_child(cur->node, 0));
                 strncat(buf, type_to_str(t), bufsz - strlen(buf) - 1);
                 first = 0;
             }
@@ -514,7 +514,7 @@ static void register_method_header(struct node *method) {
 void check_semantics_pass1(struct node *n) {
     if (!n || n->category != Program) return;
 
-    struct node *class_id = n->children ? n->children->node : NULL;
+    struct node *class_id = get_identifier(n);
     char title[256];
     sprintf(title, "Class %s",
             (class_id && class_id->token) ? class_id->token : "Unknown");
@@ -578,10 +578,11 @@ void check_semantics_pass2(struct node *n) {
     switch (n->category) {
 
         case Program: {
-            /* Skip the first child (class Identifier), process the rest */
-            struct node_list *cur = n->children ? n->children->next : NULL;
-            for (; cur; cur = cur->next)
-                check_semantics_pass2(cur->node);
+            for (struct node_list *cur = n->children; cur; cur = cur->next) {
+                if (cur->node && cur->node->category != Identifier) {
+                    check_semantics_pass2(cur->node);
+                }
+            }
             break;
         }
 
@@ -608,6 +609,8 @@ void check_semantics_pass2(struct node *n) {
                 insert_symbol(current_table, id_node->token, get_type_from_node(type_node), 0, NULL, id_node->line, id_node->col);
             break;
         }
+        case FieldDecl:
+            break;
 
         /* All expression / statement nodes: delegate to check_expression */
         case Assign:
@@ -635,6 +638,6 @@ void check_semantics_pass2(struct node *n) {
  * ================================================================ */
 
 void check_semantics(struct node *n) {
-    check_semantics_pass1(n);   /* global symbol table */
+    check_semantics_pass1(n);   /* global sdymbol table */
     check_semantics_pass2(n);   /* local tables + type checking */
 }
