@@ -1,0 +1,543 @@
+   0  $accept : program $end
+
+   1  program : functions
+
+   2  functions : function
+   3            | functions function
+
+   4  function : IDENTIFIER '(' parameters ')' '=' expression
+
+   5  parameters : parameter
+   6             | parameters ',' parameter
+
+   7  parameter : INTEGER IDENTIFIER
+   8            | DOUBLE IDENTIFIER
+
+   9  arguments : expression
+  10            | arguments ',' expression
+
+  11  expression : IDENTIFIER
+  12             | NATURAL
+  13             | DECIMAL
+  14             | IDENTIFIER '(' arguments ')'
+  15             | IF expression THEN expression ELSE expression
+  16             | expression '+' expression
+  17             | expression '-' expression
+  18             | expression '*' expression
+  19             | expression '/' expression
+  20             | '(' expression ')'
+
+state 0
+	$accept : . program $end  (0)
+
+	IDENTIFIER  shift 1
+	.  error
+
+	program  goto 2
+	function  goto 3
+	functions  goto 4
+
+
+state 1
+	function : IDENTIFIER . '(' parameters ')' '=' expression  (4)
+
+	'('  shift 5
+	.  error
+
+
+state 2
+	$accept : program . $end  (0)
+
+	$end  accept
+
+
+state 3
+	functions : function .  (2)
+
+	.  reduce 2
+
+
+state 4
+	program : functions .  (1)
+	functions : functions . function  (3)
+
+	IDENTIFIER  shift 1
+	$end  reduce 1
+
+	function  goto 6
+
+
+state 5
+	function : IDENTIFIER '(' . parameters ')' '=' expression  (4)
+
+	INTEGER  shift 7
+	DOUBLE  shift 8
+	.  error
+
+	parameters  goto 9
+	parameter  goto 10
+
+
+state 6
+	functions : functions function .  (3)
+
+	.  reduce 3
+
+
+state 7
+	parameter : INTEGER . IDENTIFIER  (7)
+
+	IDENTIFIER  shift 11
+	.  error
+
+
+state 8
+	parameter : DOUBLE . IDENTIFIER  (8)
+
+	IDENTIFIER  shift 12
+	.  error
+
+
+state 9
+	function : IDENTIFIER '(' parameters . ')' '=' expression  (4)
+	parameters : parameters . ',' parameter  (6)
+
+	')'  shift 13
+	','  shift 14
+	.  error
+
+
+state 10
+	parameters : parameter .  (5)
+
+	.  reduce 5
+
+
+state 11
+	parameter : INTEGER IDENTIFIER .  (7)
+
+	.  reduce 7
+
+
+state 12
+	parameter : DOUBLE IDENTIFIER .  (8)
+
+	.  reduce 8
+
+
+state 13
+	function : IDENTIFIER '(' parameters ')' . '=' expression  (4)
+
+	'='  shift 15
+	.  error
+
+
+state 14
+	parameters : parameters ',' . parameter  (6)
+
+	INTEGER  shift 7
+	DOUBLE  shift 8
+	.  error
+
+	parameter  goto 16
+
+
+state 15
+	function : IDENTIFIER '(' parameters ')' '=' . expression  (4)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 22
+
+
+state 16
+	parameters : parameters ',' parameter .  (6)
+
+	.  reduce 6
+
+
+state 17
+	expression : IF . expression THEN expression ELSE expression  (15)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 23
+
+
+state 18
+	expression : IDENTIFIER .  (11)
+	expression : IDENTIFIER . '(' arguments ')'  (14)
+
+	'('  shift 24
+	$end  reduce 11
+	THEN  reduce 11
+	ELSE  reduce 11
+	IDENTIFIER  reduce 11
+	'+'  reduce 11
+	'-'  reduce 11
+	'*'  reduce 11
+	'/'  reduce 11
+	')'  reduce 11
+	','  reduce 11
+
+
+state 19
+	expression : NATURAL .  (12)
+
+	.  reduce 12
+
+
+state 20
+	expression : DECIMAL .  (13)
+
+	.  reduce 13
+
+
+state 21
+	expression : '(' . expression ')'  (20)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 25
+
+
+state 22
+	function : IDENTIFIER '(' parameters ')' '=' expression .  (4)
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	$end  reduce 4
+	IDENTIFIER  reduce 4
+
+
+state 23
+	expression : IF expression . THEN expression ELSE expression  (15)
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	THEN  shift 30
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	.  error
+
+
+state 24
+	expression : IDENTIFIER '(' . arguments ')'  (14)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	arguments  goto 31
+	expression  goto 32
+
+
+state 25
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+	expression : '(' expression . ')'  (20)
+
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	')'  shift 33
+	.  error
+
+
+state 26
+	expression : expression '+' . expression  (16)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 34
+
+
+state 27
+	expression : expression '-' . expression  (17)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 35
+
+
+state 28
+	expression : expression '*' . expression  (18)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 36
+
+
+state 29
+	expression : expression '/' . expression  (19)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 37
+
+
+state 30
+	expression : IF expression THEN . expression ELSE expression  (15)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 38
+
+
+state 31
+	arguments : arguments . ',' expression  (10)
+	expression : IDENTIFIER '(' arguments . ')'  (14)
+
+	')'  shift 39
+	','  shift 40
+	.  error
+
+
+state 32
+	arguments : expression .  (9)
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	')'  reduce 9
+	','  reduce 9
+
+
+state 33
+	expression : '(' expression ')' .  (20)
+
+	.  reduce 20
+
+
+state 34
+	expression : expression . '+' expression  (16)
+	expression : expression '+' expression .  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	'*'  shift 28
+	'/'  shift 29
+	$end  reduce 16
+	THEN  reduce 16
+	ELSE  reduce 16
+	IDENTIFIER  reduce 16
+	'+'  reduce 16
+	'-'  reduce 16
+	')'  reduce 16
+	','  reduce 16
+
+
+state 35
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression '-' expression .  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	'*'  shift 28
+	'/'  shift 29
+	$end  reduce 17
+	THEN  reduce 17
+	ELSE  reduce 17
+	IDENTIFIER  reduce 17
+	'+'  reduce 17
+	'-'  reduce 17
+	')'  reduce 17
+	','  reduce 17
+
+
+state 36
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression '*' expression .  (18)
+	expression : expression . '/' expression  (19)
+
+	.  reduce 18
+
+
+state 37
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+	expression : expression '/' expression .  (19)
+
+	.  reduce 19
+
+
+state 38
+	expression : IF expression THEN expression . ELSE expression  (15)
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	ELSE  shift 41
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	.  error
+
+
+state 39
+	expression : IDENTIFIER '(' arguments ')' .  (14)
+
+	.  reduce 14
+
+
+state 40
+	arguments : arguments ',' . expression  (10)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 42
+
+
+state 41
+	expression : IF expression THEN expression ELSE . expression  (15)
+
+	IF  shift 17
+	IDENTIFIER  shift 18
+	NATURAL  shift 19
+	DECIMAL  shift 20
+	'('  shift 21
+	.  error
+
+	expression  goto 43
+
+
+state 42
+	arguments : arguments ',' expression .  (10)
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	')'  reduce 10
+	','  reduce 10
+
+
+state 43
+	expression : IF expression THEN expression ELSE expression .  (15)
+	expression : expression . '+' expression  (16)
+	expression : expression . '-' expression  (17)
+	expression : expression . '*' expression  (18)
+	expression : expression . '/' expression  (19)
+
+	'+'  shift 26
+	'-'  shift 27
+	'*'  shift 28
+	'/'  shift 29
+	$end  reduce 15
+	THEN  reduce 15
+	ELSE  reduce 15
+	IDENTIFIER  reduce 15
+	')'  reduce 15
+	','  reduce 15
+
+
+19 terminals, 8 nonterminals
+21 grammar rules, 44 states
+
+grammar parser grammar
+symbol# value# symbol
+     0      0  $end
+     1    256  error
+     2    257  INTEGER
+     3    258  DOUBLE
+     4    259  IF
+     5    260  THEN
+     6    261  ELSE
+     7    262  IDENTIFIER
+     8    263  NATURAL
+     9    264  DECIMAL
+    10    265  LOW
+    11     43  '+'
+    12     45  '-'
+    13     42  '*'
+    14     47  '/'
+    15     40  '('
+    16     41  ')'
+    17     61  '='
+    18     44  ','
+    19    266  $accept
+    20    267  program
+    21    268  function
+    22    269  parameters
+    23    270  parameter
+    24    271  arguments
+    25    272  expression
+    26    273  functions

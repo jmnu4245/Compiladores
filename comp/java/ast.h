@@ -11,6 +11,7 @@ enum category {
 struct node {
     enum category category;
     char *token;
+    int line, col;
     struct node_list *children;
 };
 
@@ -19,7 +20,7 @@ struct node_list {
     struct node_list *next;
 };
 
-struct node *newnode(enum category category, char *token);
+struct node *newnode(enum category category, char *token , int line, int col);
 void addchild(struct node *parent, struct node *child);
 void show(struct node *n, int depth);
 void check_node(struct node *n);

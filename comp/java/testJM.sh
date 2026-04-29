@@ -3,16 +3,19 @@
 # ./test.sh -t meta2
 for i in $2/*.java; do
     echo "=== $i ==="
-    #comprobamos si continene _e1 en ese caso lo lanzamos sin -l, solo sirve para meta1
+    
     if [[ "$i" == *_e1* ]]; then
-        ./jucompiler < "$i" | diff "${i/%.java}.out" -
-    #de forma similar si contiene _e2 lo lanzamos sin -t, solo sirve para meta2
+        ./jucompiler -e1 < "$i" | diff -u --color "${i/.java/.out}" -
+    
     elif [[ "$i" == *_e2* ]]; then
-        ./jucompiler < "$i" | diff "${i/%.java}.out" -
+        ./jucompiler -e2 < "$i" | diff -u --color "${i/_e2.java/.out}" -
+    
+    # caso por defecto
     else
-        ./jucompiler $1 < "$i" | diff "${i/%.java}.out" -
+        ./jucompiler $1 < "$i" | diff -u --color "${i/%.java}.out" -
     fi
+    
     if [ ${PIPESTATUS[1]} -ne 0 ]; then
-        echo "FAIL: $i"
+        echo "--> FAIL: Las salidas no coinciden en $i"
     fi
 done

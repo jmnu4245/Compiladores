@@ -8,11 +8,15 @@
     #include <string.h>
     #include <stdlib.h>
 
+    #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
 
-#define PASS_TOKEN() yylval.lexeme = strdup(yytext);
-int yyparse(void);
+    void check_semantics(struct node *n);
+    void print_sym_table(SymTable *table);
+
+    #define PASS_TOKEN() yylval.lexeme = strdup(yytext);
+    int yyparse(void);
 
     int LineCounter = 1;
     int ColumnCounter = 1;
@@ -225,6 +229,7 @@ int main(int argc, char *argv[]) {
     LineCounter = 1;
     ColumnCounter = 1;
     int flag_t = 0;
+    int flag_s =0;
 
     if (argc > 1) {
         if (strcmp(argv[1], "-l") == 0) {
@@ -239,17 +244,31 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[1], "-t") == 0) {
             flag_t = 1;
         }
+        if (strcmp(argv[1], "-s") == 0) flag_s = 1;
     }
 
     yyparse();
-    if (flag_t && syntax_error == 0) {
-            show(ast, 0);
 
-    }
+    if (syntax_error == 0) {
+        if (flag_t) {
+            show(ast, 0); 
+        } else {
 
-    if (str) {
-        free(str);
-        str = NULL;
+            check_semantics(ast); 
+
+            if (flag_s) {
+
+                extern SymTable *global_table;
+                if (global_table == NULL) {
+                }
+                SymTable *curr = global_table;
+                while (curr) {
+                    print_sym_table(curr);
+                    curr = curr->next;
+                }
+
+            }
+        }
     }
     
     return 0;

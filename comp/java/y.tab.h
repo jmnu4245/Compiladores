@@ -41,14 +41,16 @@
 #define NE 294
 #define NOT 295
 #define DOTLENGTH 296
-#define IDENTIFIER 297
-#define NATURAL 298
-#define DECIMAL 299
-#define BOOLLIT 300
-#define STRLIT 301
-#define UNARY 302
-#define IF_PREC 303
-#define ELSE 304
+#define ARROW 297
+#define IDENTIFIER 298
+#define NATURAL 299
+#define DECIMAL 300
+#define BOOLLIT 301
+#define STRLIT 302
+#define RESERVED 303
+#define UNARY 304
+#define IF_PREC 305
+#define ELSE 306
 #ifdef YYSTYPE
 #undef  YYSTYPE_IS_DECLARED
 #define YYSTYPE_IS_DECLARED 1

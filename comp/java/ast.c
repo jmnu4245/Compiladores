@@ -12,10 +12,12 @@ const char* category_names[] = {
 };
 
 // create a node of a given category with a given lexical symbol
-struct node *newnode(enum category category, char *token) {
+struct node *newnode(enum category category, char *token, int line, int col) {
     struct node *new = malloc(sizeof(struct node));
     new->category = category;
     new->token = token;
+    new->line = line;
+    new->col = col;
     new->children = malloc(sizeof(struct node_list));
     new->children->node = NULL;
     new->children->next = NULL;
