@@ -9,6 +9,7 @@ const char* type_to_str(BasicType type) {
         case T_Bool: return "boolean";
         case T_Double: return "double";
         case T_StringArray: return "String[]";
+        case T_String: return "String";
         case T_Void: return "void";
         default: return "undef";
     }
@@ -45,11 +46,6 @@ Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
 void insert_symbol(SymTable *table, const char *name, BasicType type, int is_param, char *params_list, int line, int col) {
 
     if (!table || !name) return;
-
-    if (search_symbol(table, name)) {
-        printf("Line %d, col %d: Symbol %s already defined\n", line, col, name);
-        return;
-    }
 
     Symbol *new_sym = (Symbol*)malloc(sizeof(Symbol));
     new_sym->name = strdup(name);

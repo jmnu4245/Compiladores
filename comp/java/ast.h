@@ -30,7 +30,6 @@ void addchild(struct node *parent, struct node *child);
 void show_annotated(struct node *n, int depth);
 struct node *get_child(struct node *n, int index);
 void show(struct node *n, int depth);
-void check_node(struct node *n);
 int count_children(struct node *n);
 void unpack_nodes(struct node *parent, struct node *container);
 #endif

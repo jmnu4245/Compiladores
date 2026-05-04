@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum { 
-    T_Int, T_Bool, T_Double, T_StringArray, T_Void, T_Undef, T_None 
-} BasicType;
+typedef enum { T_Int, T_Bool, T_Double, T_StringArray, T_String, T_Void, T_Undef, T_None } BasicType;
 
 typedef struct symbol {
     char *name;
