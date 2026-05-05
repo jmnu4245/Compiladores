@@ -36,24 +36,24 @@ static ErrorNode *error_list_head = NULL;
 
 /* Inserta el error ordenado por línea y columna. Ignora duplicados exactos. */
 static void add_error(int line, int col, const char *msg) {
-    /* Dedup: rechaza duplicados exactos */
     for (ErrorNode *cur = error_list_head; cur; cur = cur->next)
         if (cur->line == line && cur->col == col && strcmp(cur->msg, msg) == 0)
             return;
 
-    ErrorNode *new_err = (ErrorNode *)malloc(sizeof(ErrorNode));
+    ErrorNode *new_err = malloc(sizeof(ErrorNode));
     new_err->line = line;
     new_err->col  = col;
     strncpy(new_err->msg, msg, sizeof(new_err->msg) - 1);
     new_err->msg[sizeof(new_err->msg) - 1] = '\0';
     new_err->next = NULL;
 
-    /* Append al final — preserva orden de traversal */
     if (!error_list_head) { error_list_head = new_err; return; }
     ErrorNode *tail = error_list_head;
     while (tail->next) tail = tail->next;
     tail->next = new_err;
 }
+
+
 
 void print_semantic_errors() {
     ErrorNode *curr = error_list_head;
@@ -261,7 +261,16 @@ static void check_literal(struct node *n) {
 }
 
 static void check_identifier(struct node *n, SymTable *global, SymTable *local) {
-    Symbol *sym = lookup_symbol(global, local, n->token);
+    Symbol *sym = NULL;
+
+    for (SymTable *tbl = local; tbl && !sym; tbl = tbl->next) {
+        for (Symbol *s = tbl->first; s; s = s->next)
+            if (!s->params_list && strcmp(s->name, n->token) == 0) { sym = s; break; }
+    }
+    if (!sym) {
+        for (Symbol *s = global->first; s; s = s->next)
+            if (!s->params_list && strcmp(s->name, n->token) == 0) { sym = s; break; }
+    }
     if (!sym) { err_cannot_find(n->line, n->col, n->token); n->annot_type = T_Undef; }
     else        n->annot_type = sym->type;
 }
@@ -384,7 +393,7 @@ static void check_print(struct node *n) {
     struct node *child = get_child(n, 0);
     if (child) {
         if (child->annot_type == T_Void) {
-            err_incompatible_void(n->line, n->col, "System.out.print");
+            err_incompatible_void(child->line, child->col, "System.out.print");
         } else if (child->annot_type == T_StringArray || child->annot_type == T_Undef) {
             // Imprime error para String[] y undef
             err_incompatible_type(child->line, child->col, child->annot_type, "System.out.print");
@@ -585,6 +594,20 @@ static void register_method_header(struct node *method) {
 
     char params_str[256];
     build_params_str(params, params_str, sizeof(params_str));
+
+    SymTable *tmp_params = create_table("param_check");
+    if (params) {
+        for (struct node_list *c = params->children ? params->children->next : NULL;
+             c; c = c->next) {
+            if (!c->node) continue;
+            struct node *id  = get_identifier(c->node);
+            struct node *typ = get_child(c->node, 0);
+            if (!id) continue;
+            if (!check_declaration_valid(id->token, id->line, id->col, tmp_params, NULL))
+                insert_symbol(tmp_params, id->token, type_from_node(typ),
+                              1, NULL, id->line, id->col);
+        }
+    }
 
     // Silencioso (0)
     if (!check_declaration_valid(method_id->token, method_id->line, method_id->col, global_table, params_str)) {
