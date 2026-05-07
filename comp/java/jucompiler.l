@@ -11,6 +11,7 @@
     #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
+    #include "codegen.h"
 
     void check_semantics(struct node *n);
     void print_sym_table(SymTable *table);
@@ -103,7 +104,7 @@ tab "\t"
 "/*" { 
     BEGIN(COMMENT); 
     str_start_line = LineCounter; 
-    str_start_col = LastColumnCounter; /* MODIFICADO: Guardamos la columna de inicio real */
+    str_start_col = LastColumnCounter; 
 }
 <COMMENT>"*/" { 
     BEGIN(0); 
@@ -149,11 +150,11 @@ tab "\t"
 <STR_STATE>\\(.|[\n]|[\r]) {  
     string_erro = 1;
     if(yytext[1] == '\n' || yytext[1] == '\r') {
-        printf("Line %d, col %d: invalid escape sequence (\\)\n", LineCounter, LastColumnCounter); /* MODIFICADO */
+        printf("Line %d, col %d: invalid escape sequence (\\)\n", LineCounter, LastColumnCounter);
         yyless(1);
         ColumnCounter--; /* Compensar el yyless */
     } else {
-        printf("Line %d, col %d: invalid escape sequence (%s)\n", LineCounter, LastColumnCounter, yytext); /* MODIFICADO */
+        printf("Line %d, col %d: invalid escape sequence (%s)\n", LineCounter, LastColumnCounter, yytext);
     }
 }
 <STR_STATE>\n|\r\n|\r { 
@@ -231,15 +232,20 @@ tab "\t"
 {natural}       { if(print_tokens) printf("NATURAL(%s)\n",yytext); PASS_TOKEN(); return NATURAL; }
 {identifier}    { if(print_tokens) printf("IDENTIFIER(%s)\n",yytext); PASS_TOKEN(); return IDENTIFIER; }
 
-"."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, LastColumnCounter); /* MODIFICADO */ }
-.               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, LastColumnCounter, yytext); /* MODIFICADO */ }
+"."             { printf("Line %d, col %d: illegal character (.)\n", LineCounter, LastColumnCounter);}
+.               { printf("Line %d, col %d: illegal character (%s)\n", LineCounter, LastColumnCounter, yytext);}
 %%
 extern int yylex();
+extern int semantic_errors;
+
 int main(int argc, char *argv[]) {
     LineCounter = 1;
     ColumnCounter = 1;
+    
     int flag_t = 0;
-    int flag_s =0;
+    int flag_e2 = 0;
+    int flag_s = 0;
+    int flag_e3 = 0;
 
     if (argc > 1) {
         if (strcmp(argv[1], "-l") == 0) {
@@ -251,10 +257,10 @@ int main(int argc, char *argv[]) {
             while(yylex());
             return 0;
         }
-        if (strcmp(argv[1], "-t") == 0) {
-            flag_t = 1;
-        }
+        if (strcmp(argv[1], "-t") == 0) flag_t = 1;
+        if (strcmp(argv[1], "-e2") == 0) flag_e2 = 1;
         if (strcmp(argv[1], "-s") == 0) flag_s = 1;
+        if (strcmp(argv[1], "-e3") == 0) flag_e3 = 1;
     }
 
     yyparse();
@@ -262,29 +268,28 @@ int main(int argc, char *argv[]) {
     if (syntax_error == 0) {
         if (flag_t) {
             show(ast, 0); 
+        } else if (flag_e2) {
         } else {
-
             check_semantics(ast); 
-
+            extern SymTable *global_table;
             if (flag_s) {
-
-                extern SymTable *global_table;
-                if (global_table == NULL) {
-                }
                 SymTable *curr = global_table;
                 while (curr) {
                     print_sym_table(curr);
                     curr = curr->next;
                 }
-            show_annotated(ast,0);
+                show_annotated(ast, 0);
+            } else if (flag_e3) {
+                
+            } else if (semantic_errors == 0) {
+                codegen_program(ast, global_table);
             }
         }
     }
-    
     if (str) {
-    free(str);
-    str = NULL;
-}
+        free(str);
+        str = NULL;
+    }
     return 0;
 }
 

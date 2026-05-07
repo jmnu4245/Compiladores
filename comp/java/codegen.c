@@ -11,6 +11,7 @@
  * ========================================================================= */
 static int tmp_counter = 1;   /* SSA register / label counter, reset per method */
 static BasicType current_ret_type = T_Void;
+static int main_emitted = 0;
 
 /* =========================================================================
  * Type helpers
@@ -381,11 +382,12 @@ else
 
         /* ---- Method call ---- */
         case Call: {
-            struct node *name_node = get_child(expr, 0);
+            struct node *name_node = get_identifier(expr);
             if (!name_node) return -1;
 
             int arg_regs[64];
             BasicType arg_types[64];
+            BasicType param_types[64];
             int nargs = 0;
             struct node *a;
             
@@ -396,11 +398,29 @@ else
                 nargs++;
             }
 
+            SymTable *method_table = search_table_name(global, name_node->token);
+                int n_params = 0;
+                for (Symbol *s = method_table->first; s != NULL; s = s->next) {
+                    if (s->is_param) {
+                        param_types[n_params++] = s->type;
+                    }
+                }
             BasicType ret = expr->annot_type;
+            int r=-1;
+
+            int final_arg_regs[64];
+            
+            for (int i = 0; i < nargs; i++) {
+                final_arg_regs[i] = arg_regs[i]; 
+
+                if (arg_types[i] == T_Int && param_types[i] == T_Double) {
+                    final_arg_regs[i] = tmp_counter++;
+                    printf("  %%%d = sitofp i32 %%%d to double\n", final_arg_regs[i], arg_regs[i]);
+                }
+            }
 
             char mangled[128];
-            build_mangled_suffix(arg_types, nargs, mangled);
-            int r = -1;
+            build_mangled_suffix(param_types, nargs, mangled);
             if (ret == T_Void) {
                 printf("  call void @_%s%s(", name_node->token, mangled);
             } else {
@@ -410,7 +430,7 @@ else
             
             for (int i = 0; i < nargs; i++) {
                 if (i > 0) printf(", ");
-                printf("%s %%%d", type_to_llvm(arg_types[i]), arg_regs[i]);
+                printf("%s %%%d", type_to_llvm(param_types[i]), final_arg_regs[i]);
             }
             printf(")\n");
             return r;
@@ -419,27 +439,24 @@ else
         /* ---- Integer.parseInt(args[expr]) ---- */
 
         case ParseArgs: {
-            struct node *id_node  = get_child(expr, 0);  /* args identifier */
-            struct node *idx_expr = get_child(expr, 1);  /* index expression */
+            struct node *id_node  = get_child(expr, 0);
+            struct node *idx_expr = get_child(expr, 1);
 
             int idx_r = codegen_expression(idx_expr, global, local);
+            int real_idx_r = tmp_counter++;
+            printf("  %%%d = add i32 %%%d, 1\n", real_idx_r, idx_r);
+
             const char *pfx = get_var_prefix(global, local, id_node->token);
 
-            /* Load the i8** value stored in the alloca for 'args' */
             int arr_r  = tmp_counter++;
-            printf("  %%%d = load i8**, i8*** %s%s\n",
-                   arr_r, pfx, id_node->token);
+            printf("  %%%d = load i8**, i8*** %s%s\n", arr_r, pfx, id_node->token);
 
-            /* GEP: pointer to args[idx] */
             int eptr_r = tmp_counter++;
-            printf("  %%%d = getelementptr i8*, i8** %%%d, i32 %%%d\n",
-                   eptr_r, arr_r, idx_r);
+            printf("  %%%d = getelementptr i8*, i8** %%%d, i32 %%%d\n", eptr_r, arr_r, real_idx_r);
 
-            /* Load: the i8* string at that index */
             int elem_r = tmp_counter++;
             printf("  %%%d = load i8*, i8** %%%d\n", elem_r, eptr_r);
 
-            /* atoi(str) → i32 */
             int r = tmp_counter++;
             printf("  %%%d = call i32 @atoi(i8* %%%d)\n", r, elem_r);
             return r;
@@ -634,7 +651,13 @@ static int codegen_statement(struct node *stmt, SymTable *global,
         val_r = coerce_to(val_r, expr->annot_type, current_ret_type);
         printf("  ret %s %%%d\n", type_to_llvm(current_ret_type), val_r);
     } else {
-        printf("  ret void\n");
+        if (current_ret_type == T_Void) {
+                    printf("  ret void\n");
+                } else {
+                    printf("  ret %s %s\n", 
+                           type_to_llvm(current_ret_type), 
+                           default_val_llvm(current_ret_type));
+                }
     }
     return 1;
 }
@@ -687,11 +710,19 @@ static void codegen_method(struct node *method, SymTable *global) {
     char title[512];
     snprintf(title, sizeof(title), "Method %s%s", id_node->token, params_str);
     SymTable *local_table = search_table(global, title);
+    int is_main = 0;
+    if (strcmp(id_node->token, "main") == 0) {
+        if (main_emitted == 0) {
+            is_main = 1;
+            main_emitted = 1;
+        }
+    }
 
-    int is_main = (strcmp(id_node->token, "main") == 0);
     tmp_counter = 1;
 
     /* ---- 1. Function signature ---- */
+
+    current_ret_type = is_main ? T_Int : type_from_node(ret_type); //main needs i32 as return
     BasicType param_types[64]; int npt = 0;
     { int pi = 0; struct node *p;
     while ((p = get_child(params, pi++)) != NULL) {
@@ -701,11 +732,31 @@ static void codegen_method(struct node *method, SymTable *global) {
     }
     char mangled[128]; build_mangled_suffix(param_types, npt, mangled);
 
-    printf("define %s @_%s%s(", type_to_llvm(type_from_node(ret_type)),
-       id_node->token, mangled);
-    printf(") {\n");
-    printf("entry:\n");
 
+
+if (is_main) {
+    /* main siempre con firma estándar C */
+    printf("define i32 @main(i32 %%argc, i8** %%argv) {\n");
+} else {
+    printf("define %s @_%s%s(",
+           type_to_llvm(type_from_node(ret_type)),
+           id_node->token, mangled);
+
+    /* Imprimir parámetros formales */
+    int first = 1, pi = 0;
+    struct node *p;
+    while ((p = get_child(params, pi++)) != NULL) {
+        struct node *p_type = get_child(p, 0);
+        struct node *p_id   = get_child(p, 1);
+        if (!p_id || !p_id->token) continue;
+        if (!first) printf(", ");
+        printf("%s %%_arg_%s",
+               type_to_llvm(type_from_node(p_type)), p_id->token);
+        first = 0;
+    }
+    printf(") {\n");
+}
+printf("entry:\n");
     /* ---- 2. Alloca + store for parameters ---- */
     if (is_main) {
         int i = 0;
@@ -719,7 +770,9 @@ static void codegen_method(struct node *method, SymTable *global) {
                 printf("  %%%s = alloca i8**\n", p_id->token);
                 printf("  store i8** %%argv, i8*** %%%s\n", p_id->token);
                 printf("  %%__%s_len = alloca i32\n", p_id->token);
-                printf("  store i32 %%argc, i32* %%__%s_len\n", p_id->token);
+                int r_argc = tmp_counter++;
+                printf("  %%%d = sub i32 %%argc, 1\n", r_argc);
+                printf("  store i32 %%%d, i32* %%__%s_len\n", r_argc, p_id->token);
             }
         }
     } else {
@@ -730,9 +783,18 @@ static void codegen_method(struct node *method, SymTable *global) {
             struct node *p_id   = get_child(p, 1);
             if (!p_id || !p_id->token) continue;
 
-            const char *ll_t = type_to_llvm(type_from_node(p_type));
-            printf("  %%%s = alloca %s\n", p_id->token, ll_t);
-            printf("  store %s %%_arg_%s, %s* %%%s\n", ll_t, p_id->token, ll_t, p_id->token);
+            if (type_from_node(p_type) == T_StringArray) {
+                printf("  %%%s = alloca i8**\n", p_id->token);
+                printf("  store i8** %%_arg_%s, i8*** %%%s\n", p_id->token, p_id->token);
+                
+                printf("  %%__%s_len = alloca i32\n", p_id->token);
+                printf("  store i32 0, i32* %%__%s_len\n", p_id->token);
+                
+            } else {
+                const char *ll_t = type_to_llvm(type_from_node(p_type));
+                printf("  %%%s = alloca %s\n", p_id->token, ll_t);
+                printf("  store %s %%_arg_%s, %s* %%%s\n", ll_t, p_id->token, ll_t, p_id->token);
+            }
         }
     }
 
@@ -788,10 +850,10 @@ void codegen_program(struct node *program, SymTable *global_table) {
     /* 2. Static format strings
      *    Sizes (bytes, including \n and \0):
      *      %d\n\0      → 4   [4 x i8]
-     *      %.16e\n\0   → 7   [7 x i8]   (was incorrectly 8 before — fixed)
+     *      %.16e\n\0   → 7   [7 x i8]   
      *      true\n\0    → 6   [6 x i8]
      *      false\n\0   → 7   [7 x i8]
-     *      %s\0        → 3   [3 x i8]   (no extra newline for strings)
+     *      %s\0        → 3   [3 x i8]   
      */
     printf("@.str.int    = private unnamed_addr constant "
            "[4 x i8] c\"%%d\\0A\\00\"\n");

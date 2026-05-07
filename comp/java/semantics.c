@@ -12,6 +12,7 @@
 SymTable *global_table  = NULL;
 SymTable *current_table = NULL;
 int print_errors = 0;
+int semantic_errors=0;
 
 /* Forward declarations */
 static void check_node(struct node *n, SymTable *global, SymTable *local);
@@ -39,7 +40,7 @@ static void add_error(int line, int col, const char *msg) {
     for (ErrorNode *cur = error_list_head; cur; cur = cur->next)
         if (cur->line == line && cur->col == col && strcmp(cur->msg, msg) == 0)
             return;
-
+    semantic_errors++;
     ErrorNode *new_err = malloc(sizeof(ErrorNode));
     new_err->line = line;
     new_err->col  = col;

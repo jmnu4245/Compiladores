@@ -27,6 +27,7 @@ void insert_symbol(SymTable *table, const char *name, BasicType type, int is_par
 Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name);
 Symbol* search_symbol(SymTable *table, const char *name);
 SymTable* search_table(SymTable *global, const char *title);
+SymTable* search_table_name(SymTable *global, const char *name);
 const char* type_to_str(BasicType type);
 void print_sym_table(SymTable *table);
 

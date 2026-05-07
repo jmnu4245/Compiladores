@@ -15,7 +15,6 @@ const char* type_to_str(BasicType type) {
     }
 }
 
-
 SymTable* create_table(const char *title) {
     SymTable *st = (SymTable*)malloc(sizeof(SymTable));
     if (st == NULL) return NULL;
@@ -43,9 +42,27 @@ SymTable* search_table(SymTable *global, const char *title) {
             return curr;
         }
         curr = curr->next;
+        
     }
     return NULL;
 }
+
+SymTable* search_table_name(SymTable *global, const char *name) {
+    char prefix[256];
+    snprintf(prefix, sizeof(prefix), "Method %s(", name);
+    size_t len = strlen(prefix);
+
+    SymTable *curr = global;
+    while (curr != NULL) {
+        // Compara solo el inicio del título ("Method nombre(")
+        if (curr->title != NULL && strncmp(curr->title, prefix, len) == 0) {
+            return curr;
+        }
+        curr = curr->next;
+    }
+    return NULL;
+}
+
 Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
     Symbol *sym = NULL;
     if (local != NULL) sym = search_symbol(local, name);

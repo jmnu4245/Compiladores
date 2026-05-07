@@ -17,22 +17,33 @@ for i in "$DIR"/*.java; do
     elif [[ "$i" == *_e2* ]]; then
         ./jucompiler -e2 < "$i" | diff "${i/.java/.out}" -
     
-    else
-        if [ -z "$FLAG" ]; then
-            # Sin flag (Meta 4): Generar LLVM IR, ejecutarlo y comparar su salida
-            ./jucompiler < "$i" > tmp.ll
+   if [ -z "$FLAG" ]; then
+            # Sin flag (Meta 4): Compilamos y guardamos la salida inicial
+            ./jucompiler < "$i" > tmp_comp.out
             
-            # Si existe un archivo de entrada (.in) para el test, se lo pasamos por stdin a lli
-            if [ -f "${i/.java/.in}" ]; then
-                lli tmp.ll < "${i/.java/.in}" > tmp.out
+            # Comprobamos si la salida generó LLVM IR (buscando la declaración de printf)
+            if grep -q "declare i32 @printf" tmp_comp.out; then
+                # Es código válido, lo renombramos a .ll y lo ejecutamos
+                mv tmp_comp.out tmp.ll
+                
+                if [ -f "${i/.java/.in}" ]; then
+                    lli tmp.ll < "${i/.java/.in}" > tmp.out
+
+                else
+                    lli tmp.ll > tmp.out
+
+                fi
+                rm -f tmp.ll
             else
-                lli tmp.ll > tmp.out
+                # Hubo errores semánticos, no hay LLVM. La salida son los errores.
+                mv tmp_comp.out tmp.out
             fi
             
+            # Comparamos (ya sea el resultado de lli o los errores impresos)
             diff "${i/.java/.out}" tmp.out
             DIFF_STATUS=$?
             
-            rm -f tmp.ll tmp.out
+            rm -f tmp.out tmp_comp.out
             
             if [ $DIFF_STATUS -ne 0 ]; then
                 echo "--> FAIL: Las salidas no coinciden en $i"
