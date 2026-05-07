@@ -2,4 +2,4 @@
 rm -f jucompiler lex.yy.c y.tab.c y.tab.h
 yacc -d -v -t -g jucompiler.y
 lex jucompiler.l
-cc -o jucompiler lex.yy.c y.tab.c ast.c semantics.c sym_table.c -Wall -Wno-unused-function
+gcc -g lex.yy.c y.tab.c ast.c sym_table.c semantics.c codegen.c -o jucompiler

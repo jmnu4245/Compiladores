@@ -35,6 +35,17 @@ Symbol* search_symbol(SymTable *table, const char *name) {
     return NULL;
 }
 
+
+SymTable* search_table(SymTable *global, const char *title) {
+    SymTable *curr = global;
+    while (curr != NULL) {
+        if (curr->title != NULL && strcmp(curr->title, title) == 0) {
+            return curr;
+        }
+        curr = curr->next;
+    }
+    return NULL;
+}
 Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
     Symbol *sym = NULL;
     if (local != NULL) sym = search_symbol(local, name);

@@ -53,18 +53,17 @@ static void add_error(int line, int col, const char *msg) {
     tail->next = new_err;
 }
 
-
-
 void print_semantic_errors() {
     ErrorNode *curr = error_list_head;
     while (curr != NULL) {
-        printf("%s", curr->msg);
+        fprintf(stderr,"%s", curr->msg);
         ErrorNode *temp = curr;
         curr = curr->next;
         free(temp);
     }
     error_list_head = NULL;
 }
+
 static void err_already_defined(int line, int col, const char *name, const char *params) {
     char buf[512];
     if (params)
@@ -140,7 +139,7 @@ static int types_compatible(BasicType formal, BasicType actual) {
 }
 
 /* Maps a type AST node (Int, Double, Bool, VoidNode, StringArray) to BasicType. */
-static BasicType type_from_node(struct node *n) {
+BasicType type_from_node(struct node *n) {
     if (!n) return T_Undef;
     switch (n->category) {
         case Int:         return T_Int;
@@ -165,18 +164,10 @@ static const char* get_op_str(int category) {
     }
 }
 
-/* Finds the first Identifier child of a node (used for declarations). */
-static struct node *get_identifier(struct node *parent) {
-    if (!parent) return NULL;
-    /* children->next skips the sentinel node at the head of the list */
-    for (struct node_list *c = parent->children ? parent->children->next : NULL;
-         c; c = c->next)
-        if (c->node && c->node->category == Identifier) return c->node;
-    return NULL;
-}
+
 
 /* Serialises a MethodParams node into a "(type1,type2)" string. */
-static void build_params_str(struct node *params, char *buf, int bufsz) {
+void build_params_str(struct node *params, char *buf, int bufsz) {
     strncpy(buf, "(", bufsz);
     int first = 1;
     if (params) {

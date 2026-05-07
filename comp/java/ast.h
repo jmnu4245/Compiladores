@@ -29,6 +29,7 @@ int count_children(struct node *n);
 void addchild(struct node *parent, struct node *child);
 void show_annotated(struct node *n, int depth);
 struct node *get_child(struct node *n, int index);
+struct node *get_identifier(struct node *n);
 void show(struct node *n, int depth);
 int count_children(struct node *n);
 void unpack_nodes(struct node *parent, struct node *container);
