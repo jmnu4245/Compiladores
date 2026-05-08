@@ -16,16 +16,35 @@ const char* type_to_str(BasicType type) {
     }
 }
 
-
-void params_to_str(ParamType *p, char *buf, int bufsz) {
-    strncpy(buf, "(", bufsz);
-    int first = 1;
-    for (; p; p = p->next) {
-        if (!first) strncat(buf, ",", bufsz - strlen(buf) - 1);
-        strncat(buf, type_to_str(p->type), bufsz - strlen(buf) - 1);
-        first = 0;
+char* params_to_str(ParamType *p) {
+    int len = 3;
+    ParamType *curr = p;
+    while (curr) {
+        len += strlen(type_to_str(curr->type));
+        if (curr->next) len += 1; // Para la coma
+        curr = curr->next;
     }
-    strncat(buf, ")", bufsz - strlen(buf) - 1);
+    char *buf = (char*)malloc(len);
+    if (!buf) return NULL;
+    int offset = sprintf(buf, "(");
+    curr = p;
+    int first = 1;
+    while (curr) {
+        if (!first) offset += sprintf(buf + offset, ",");
+        offset += sprintf(buf + offset, "%s", type_to_str(curr->type));
+        first = 0;
+        curr = curr->next;
+    }
+    sprintf(buf + offset, ")");
+    
+    return buf;
+}
+
+int params_equal(ParamType *a, ParamType *b) {
+    for (; a && b; a = a->next, b = b->next) {
+        if (a->type != b->type) return 0;
+    }
+    return a == NULL && b == NULL;
 }
 
 SymTable* create_table(const char *title) {
@@ -33,10 +52,8 @@ SymTable* create_table(const char *title) {
     if (st == NULL) return NULL;
     st->title = strdup(title);
     st->first = NULL;
-    st->next = NULL;
     return st;
 }
-
 
 Symbol* search_symbol(SymTable *table, const char *name) {
     Symbol *curr = table->first;
@@ -47,29 +64,13 @@ Symbol* search_symbol(SymTable *table, const char *name) {
     return NULL;
 }
 
-
-SymTable* search_table(SymTable *global, const char *title) {
-    SymTable *curr = global;
-    while (curr != NULL) {
-        if (curr->title != NULL && strcmp(curr->title, title) == 0) {
-            return curr;
-        }
-        curr = curr->next;
-        
-    }
-    return NULL;
-}
-
-SymTable* search_table_name(SymTable *global, const char *name) {
-    char prefix[256];
-    snprintf(prefix, sizeof(prefix), "Method %s(", name);
-    size_t len = strlen(prefix);
-
-    SymTable *curr = global;
-    while (curr != NULL) {
-        // Compara solo el inicio del título ("Method nombre(")
-        if (curr->title != NULL && strncmp(curr->title, prefix, len) == 0) {
-            return curr;
+Symbol* search_exact_method(SymTable *table, const char *name, ParamType *params) {
+    Symbol *curr = table->first;
+    while (curr) {
+        if (strcmp(curr->name, name) == 0 && curr->kind == SYM_METHOD) {
+            if (params_equal(curr->params, params)) {
+                return curr;
+            }
         }
         curr = curr->next;
     }
@@ -83,17 +84,14 @@ Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
     return sym;
 }
 
-void insert_symbol(SymTable *table, const char *name, BasicType type,SymbolKind kind, ParamType *params, int line, int col) {
-
-    if (!table || !name) return;
-
+void insert_symbol(SymTable *table, char *name, BasicType type,SymbolKind kind, ParamType *params) {
     Symbol *new_sym = (Symbol*)malloc(sizeof(Symbol));
-    new_sym->name = strdup(name);
+    new_sym->name = name;
     new_sym->type = type;
     new_sym->kind = kind;
     new_sym->params = params;
     new_sym->next = NULL;
-
+    new_sym->nested_table = NULL;
 
     if (table->first == NULL) {
         table->first = new_sym;
@@ -113,20 +111,36 @@ void print_sym_table(SymTable *table) {
     while (curr) {
         printf("%s\t", curr->name);
         
-
-        if (curr->params != NULL) {
-            char parambuf[256];
-            params_to_str(curr->params, parambuf, sizeof(parambuf));
-            printf("%s\t", parambuf);
-        } else printf("\t");
+        // Formateo especial dependiendo de si es un método o una variable
+        if (curr->kind == SYM_METHOD) {
+            if (curr->params != NULL) {
+                char *parambuf = params_to_str(curr->params);
+                printf("%s\t", parambuf);
+            } else {
+                // Si es un método pero no tiene parámetros, imprime ()
+                printf("()\t");
+            }
+            printf("%s", type_to_str(curr->type));
+        } else {
+            // Si es una variable, solo ponemos tabulador para alinear el tipo
+            printf("\t%s", type_to_str(curr->type));
+        }
         
-        printf("%s", type_to_str(curr->type));
-        
-
         if (curr->kind == SYM_PARAM) printf("\tparam");
         
         printf("\n");
         curr = curr->next;
     }
     printf("\n");
+}
+
+void print_all_tables(SymTable *global) {
+    print_sym_table(global);
+    Symbol *curr = global->first;
+    while (curr) {
+        if (curr->nested_table) {
+            print_sym_table(curr->nested_table);
+        }
+        curr = curr->next;
+    }
 }

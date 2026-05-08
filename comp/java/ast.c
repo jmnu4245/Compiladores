@@ -73,9 +73,7 @@ void show_annotated(struct node *n, int depth) {
     if (n->token != NULL) printf("(%s)", n->token);
     
     if (n->annot_params != NULL) {
-        char pbuf[256];
-        params_to_str(n->annot_params, pbuf, sizeof(pbuf));
-        printf(" - %s", pbuf);
+        printf(" - %s", n->annot_params);
     } else if (n->annot_type != T_None) {
         printf(" - %s", type_to_str(n->annot_type));
     }

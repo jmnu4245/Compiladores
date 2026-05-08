@@ -686,7 +686,7 @@ char *yytext;
     #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
-    #include "codegen.h"
+    //#include "codegen.h"
 
     void check_semantics(struct node *n);
     void print_sym_table(SymTable *table);
@@ -2438,16 +2438,12 @@ int main(int argc, char *argv[]) {
             check_semantics(ast); 
             extern SymTable *global_table;
             if (flag_s) {
-                SymTable *curr = global_table;
-                while (curr) {
-                    print_sym_table(curr);
-                    curr = curr->next;
-                }
+                print_all_tables(global_table);
                 show_annotated(ast, 0);
             } else if (flag_e3) {
                 
             } else if (semantic_errors == 0) {
-                codegen_program(ast, global_table);
+                //codegen_program(ast, global_table);
             }
         }
     }

@@ -1,17 +1,17 @@
 /* semantic.c — Semantic analysis for the Juc compiler */
 
 #include "ast.h"
-#include "sym_table.h"
 #include "y.tab.h"
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+#include "sym_table.h"
 
 SymTable *global_table  = NULL;
 SymTable *current_table = NULL;
-int print_errors = 0;
 int semantic_errors=0;
 
 /* Forward declarations */
@@ -29,7 +29,7 @@ void check_semantics_pass2(struct node *n);
 typedef struct ErrorNode {
     int line;
     int col;
-    char msg[512];
+    char *msg;
     struct ErrorNode *next;
 } ErrorNode;
 
@@ -44,8 +44,9 @@ static void add_error(int line, int col, const char *msg) {
     ErrorNode *new_err = malloc(sizeof(ErrorNode));
     new_err->line = line;
     new_err->col  = col;
-    strncpy(new_err->msg, msg, sizeof(new_err->msg) - 1);
-    new_err->msg[sizeof(new_err->msg) - 1] = '\0';
+    new_err->msg = (char*)malloc(strlen(msg) + 1);
+    strcpy(new_err->msg, msg);
+
     new_err->next = NULL;
 
     if (!error_list_head) { error_list_head = new_err; return; }
@@ -60,69 +61,63 @@ void print_semantic_errors() {
         printf("%s", curr->msg);
         ErrorNode *temp = curr;
         curr = curr->next;
+        free(temp->msg);
         free(temp);
     }
     error_list_head = NULL;
 }
+//Strings dinamicos
+static void report_error_fmt(int line, int col, const char *fmt,...) {
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(NULL, 0, fmt, args) + 1;
+    va_end(args);
+
+    char *buf = (char*)malloc(len);
+    
+    va_start(args, fmt);
+    vsnprintf(buf, len, fmt, args);
+    va_end(args);
+
+    add_error(line, col, buf);
+    free(buf);
+}
 
 static void err_already_defined(int line, int col, const char *name, const char *params) {
-    char buf[512];
-    if (params)
-        snprintf(buf, sizeof(buf), "Line %d, col %d: Symbol %s%s already defined\n", line, col, name, params);
-    else
-        snprintf(buf, sizeof(buf), "Line %d, col %d: Symbol %s already defined\n", line, col, name);
-    add_error(line, col, buf);
+    if (params) report_error_fmt(line, col, "Line %d, col %d: Symbol %s%s already defined\n", line, col, name, params);
+    else        report_error_fmt(line, col, "Line %d, col %d: Symbol %s already defined\n", line, col, name);
 }
 
 static void err_reserved(int line, int col) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Symbol _ is reserved\n", line, col);
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Symbol _ is reserved\n", line, col);
 }
 
 static void err_cannot_find(int line, int col, const char *name) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Cannot find symbol %s\n", line, col, name);
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Cannot find symbol %s\n", line, col, name);
 }
 
 static void err_op_unary(int line, int col, const char *op, BasicType t) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Operator %s cannot be applied to type %s\n",
-             line, col, op, type_to_str(t));
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Operator %s cannot be applied to type %s\n", line, col, op, type_to_str(t));
 }
 
 static void err_op_binary(int line, int col, const char *op, BasicType t1, BasicType t2) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Operator %s cannot be applied to types %s, %s\n",
-             line, col, op, type_to_str(t1), type_to_str(t2));
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Operator %s cannot be applied to types %s, %s\n", line, col, op, type_to_str(t1), type_to_str(t2));
 }
 
 static void err_incompatible_type(int line, int col, BasicType t, const char *stmt) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Incompatible type %s in %s statement\n",
-             line, col, type_to_str(t), stmt);
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Incompatible type %s in %s statement\n", line, col, type_to_str(t), stmt);
 }
 
 static void err_incompatible_void(int line, int col, const char *stmt) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Incompatible type void in %s statement\n", line, col, stmt);
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Incompatible type void in %s statement\n", line, col, stmt);
 }
 
 static void err_number_out_of_bounds(int line, int col, const char *token) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Number %s out of bounds\n", line, col, token);
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Number %s out of bounds\n", line, col, token);
 }
 
 static void err_ambiguous(int line, int col, const char *name) {
-    char buf[512];
-    snprintf(buf, sizeof(buf), "Line %d, col %d: Reference to method %s is ambiguous\n", line, col, name);
-    add_error(line, col, buf);
+    report_error_fmt(line, col, "Line %d, col %d: Reference to method %s is ambiguous\n", line, col, name);
 }
 
 /* ================================================================
@@ -179,40 +174,32 @@ ParamType *build_params_list(struct node *params_node) {
     return head;
 }
 
-
-static int params_equal(ParamType *a, ParamType *b) {
-    for (; a && b; a = a->next, b = b->next)
-        if (a->type != b->type) return 0;
-    return !a && !b;   // ambas deben terminar a la vez
-}
-
 /* ================================================================
  * INDIVIDUAL NODE CHECKS
  * Each function assumes its children have already been annotated.
  * ================================================================ */
 
 static void check_literal(struct node *n) {
+
+    char *stripped = (char*)malloc(strlen(n->token) + 1);
+    int j = 0;
+    
+    // Limpiamos los '_' dinámicamente
+    for (int k = 0; n->token[k]; k++) {
+        if (n->token[k] != '_') stripped[j++] = n->token[k];
+    }
+    stripped[j] = '\0';
+
     switch (n->category) {
         case Natural: {
-            char stripped[256]; int j = 0;
-            for (int k = 0; n->token[k] && j < 255; k++)
-                if (n->token[k] != '_') stripped[j++] = n->token[k];
-            stripped[j] = '\0';
-            
             long long val = atoll(stripped);
             if (val > 2147483647LL) err_number_out_of_bounds(n->line, n->col, n->token);
             n->annot_type = T_Int;
             break;
         }
         case Decimal: {
-            char stripped[1024]; int j = 0;
-            for (int k = 0; n->token[k] && j < 1023; k++)
-                if (n->token[k] != '_') stripped[j++] = n->token[k];
-            stripped[j] = '\0';
-            
             errno = 0;
             double val = strtod(stripped, NULL);
-            // Atrapa Infinito (overflow) y 0.0 (underflow real)
             if (isinf(val) || (val == 0.0 && errno == ERANGE)) 
                 err_number_out_of_bounds(n->line, n->col, n->token);
             n->annot_type = T_Double;
@@ -222,21 +209,37 @@ static void check_literal(struct node *n) {
         case StrLit:  n->annot_type = T_String; break;
         default:      n->annot_type = T_Undef;  break;
     }
+    free(stripped);
 }
 
 static void check_identifier(struct node *n, SymTable *global, SymTable *local) {
     Symbol *sym = NULL;
 
-    for (SymTable *tbl = local; tbl && !sym; tbl = tbl->next) {
-        for (Symbol *s = tbl->first; s; s = s->next)
-            if (s->kind != SYM_METHOD && strcmp(s->name, n->token) == 0) { sym = s; break; }
+    if (local) {
+        for (Symbol *s = local->first; s; s = s->next) {
+            // Ignoramos métodos activamente para encontrar la variable
+            if (s->kind != SYM_METHOD && strcmp(s->name, n->token) == 0) { 
+                sym = s; 
+                break; 
+            }
+        }
     }
-    if (!sym) {
-        for (Symbol *s = global->first; s; s = s->next)
-            if (s->kind != SYM_METHOD && strcmp(s->name, n->token) == 0) { sym = s; break; }
+
+    if (!sym && global) {
+        for (Symbol *s = global->first; s; s = s->next) {
+            if (s->kind != SYM_METHOD && strcmp(s->name, n->token) == 0) { 
+                sym = s; 
+                break; 
+            }
+        }
     }
-    if (!sym) { err_cannot_find(n->line, n->col, n->token); n->annot_type = T_Undef; }
-    else        n->annot_type = sym->type;
+
+    if (!sym) { 
+        err_cannot_find(n->line, n->col, n->token); 
+        n->annot_type = T_Undef; 
+    } else {        
+        n->annot_type = sym->type;
+    }
 }
 
 /* Add, Sub, Mul, Div, Mod */
@@ -392,17 +395,25 @@ static void check_length(struct node *n) {
  *   4. No compatible match                   → cannot-find error. */
 static void check_call(struct node *n, SymTable *global) {
     struct node *id_node = get_child(n, 0);
+    if (!id_node || !id_node->token) return;
     const char *name = id_node->token;
 
-    /* Collect actual argument types from children[1..] */
-    int n_actual = 0;
-    BasicType actual[64];
-    for (int i = 1; n_actual < 64; i++) {
+    /* 1. Construir lista enlazada temporal de parámetros reales para poder usar las utilidades */
+    ParamType *actual_list = NULL, *actual_tail = NULL;
+    
+    for (int i = 1; ; i++) {
         struct node *arg = get_child(n, i);
         if (!arg) break;
-        actual[n_actual++] = arg->annot_type;
+        
+        ParamType *p = malloc(sizeof(ParamType));
+        p->type = arg->annot_type;
+        p->next = NULL;
+        
+        if (!actual_list) actual_list = actual_tail = p;
+        else { actual_tail->next = p; actual_tail = p; }
     }
 
+    /* 2. Resolución de sobrecarga: Se mantiene el bucle porque 'search_exact_method' no evalúa tipos compatibles (promoción implícita) */
     Symbol *exact   = NULL;
     Symbol *compat  = NULL;
     int     n_compat = 0;
@@ -410,15 +421,17 @@ static void check_call(struct node *n, SymTable *global) {
     for (Symbol *sym = global->first; sym && !exact; sym = sym->next) {
         if (sym->kind != SYM_METHOD || strcmp(sym->name, name) != 0) continue;
 
-        int is_exact = 1, is_compat = 1, n_formal = 0;
-        ParamType *p = sym->params;
-        for (int i = 0; i < n_actual; i++, p = p ? p->next : NULL) {
-            if (!p) { is_exact = is_compat = 0; break; }
-            if (p->type != actual[i])                  is_exact  = 0;
-            if (!types_compatible(p->type, actual[i])) is_compat = 0;
-            n_formal++;
+        int is_exact = 1, is_compat = 1;
+        ParamType *p_formal = sym->params;
+        ParamType *p_actual = actual_list;
+        
+        while (p_formal && p_actual) {
+            if (p_formal->type != p_actual->type)                  is_exact  = 0;
+            if (!types_compatible(p_formal->type, p_actual->type)) is_compat = 0;
+            p_formal = p_formal->next;
+            p_actual = p_actual->next;
         }
-        if (p || n_formal != n_actual) is_exact = is_compat = 0;
+        if (p_formal || p_actual) is_exact = is_compat = 0;
 
         if      (is_exact)  { exact = sym; }
         else if (is_compat) { n_compat++; if (n_compat == 1) compat = sym; }
@@ -426,27 +439,39 @@ static void check_call(struct node *n, SymTable *global) {
 
     Symbol *chosen = exact ? exact : (n_compat == 1 ? compat : NULL);
 
-    /* Construir string de parámetros para el reporte de errores */
-    char params_str[256] = "(";
-    for (int i = 0; i < n_actual; i++) {
-        if (i > 0) strncat(params_str, ",", sizeof(params_str) - strlen(params_str) - 1);
-        strncat(params_str, type_to_str(actual[i]), sizeof(params_str) - strlen(params_str) - 1);
+    /* 3. Utilizar la utilidad 'params_to_str' para generar la firma (elimina buffer overflows de strncat) */
+    if (actual_list) {
+        params_to_str(actual_list);
     }
-    strncat(params_str, ")", sizeof(params_str) - strlen(params_str) - 1);
 
-    char full_name[512];
-    snprintf(full_name, sizeof(full_name), "%s%s", name, params_str);
+    char *params_str = actual_list ? params_to_str(actual_list) : strdup("()");
+
+    int name_len = snprintf(NULL, 0, "%s%s", name, params_str) + 1;
+    char *full_name = (char*)malloc(name_len);
+    snprintf(full_name, name_len, "%s%s", name, params_str);
 
     if (chosen) {
         n->annot_type         = chosen->type;
         id_node->annot_type   = T_None;
-        id_node->annot_params = chosen->params;
+        
+        id_node->annot_params = chosen->params ? params_to_str(chosen->params) : strdup("()");
     } else if (n_compat > 1) {
         err_ambiguous(id_node->line, id_node->col, full_name);
         n->annot_type = id_node->annot_type = T_Undef;
     } else {
         err_cannot_find(id_node->line, id_node->col, full_name);
         n->annot_type = id_node->annot_type = T_Undef;
+    }
+
+    free(params_str);
+    free(full_name);
+
+    /* 4. Liberar la lista temporal de parámetros reales */
+    ParamType *curr = actual_list;
+    while (curr) {
+        ParamType *next = curr->next;
+        free(curr);
+        curr = next;
     }
 }
 
@@ -516,81 +541,121 @@ static void check_node(struct node *n, SymTable *global, SymTable *local) {
  * ================================================================ */
 
 static int check_declaration_valid(const char *name, int line, int col,
-                                   SymTable *table,ParamType *params) {
-    if (!name) return 0;
+                                   SymTable *table, SymbolKind kind, ParamType *params) {
     if (!strcmp(name, "_")) { 
         err_reserved(line, col); 
         return 1; 
     }
-    for (Symbol *s = table->first; s; s = s->next) {
-        if (strcmp(s->name, name) != 0) continue;
-        if (!params && s->kind != SYM_METHOD) {
-            err_already_defined(line, col, name, NULL);  
-            return 1;
+    if (kind != SYM_METHOD) {
+        for (Symbol *s = table->first; s; s = s->next) {
+            if (s->kind != SYM_METHOD && strcmp(s->name, name) == 0) {
+                err_already_defined(line, col, name, NULL);
+                return 1;
+            }
         }
-        if (params && s->kind == SYM_METHOD &&params_equal(s->params, params)) {
-            char pbuf[256]; params_to_str(params, pbuf, sizeof(pbuf));
-            err_already_defined(line, col, name, pbuf);
-            return 1;
+        return 0;
+    } else {
+        for (Symbol *s = table->first; s; s = s->next) {
+            if (s->kind == SYM_METHOD && strcmp(s->name, name) == 0) {
+                if (params_equal(s->params, params)) {
+                    char *pbuf = params_to_str(params);
+                    err_already_defined(line, col, name, pbuf);
+                    return 1;
+                }
+            }
         }
+        return 0;
     }
-    return 0;
+    
 }
 
-static void register_global_field(struct node *field) {
-    struct node *type_node = get_child(field, 0);
-    struct node *id_node   = get_identifier(field);
-    if (!id_node) return;
-    
-    // Lo guardamos siempre y cuando no exista ya. Silencioso (print_errors = 0)
-    if (!check_declaration_valid(id_node->token, id_node->line, id_node->col, global_table, NULL)) {
-        insert_symbol(global_table, id_node->token, type_from_node(type_node), SYM_FIELD, NULL, id_node->line, id_node->col);
+static void register_global_field(struct node *FieldDecl) {
+    struct node *type_node = get_child(FieldDecl, 0);
+    struct node *id_node   = get_child(FieldDecl, 1);  
+
+    if (!check_declaration_valid(id_node->token, id_node->line, id_node->col, global_table,SYM_FIELD, NULL)) {
+        insert_symbol(global_table, id_node->token, type_from_node(type_node), SYM_FIELD, NULL);
     }
 }
 
 static void register_method_header(struct node *method) {
     struct node *header    = get_child(method, 0);
-    struct node *method_id = get_identifier(header);
     struct node *ret_type  = get_child(header, 0);
+    struct node *method_id = get_child(header, 1);
     struct node *params    = get_child(header, 2);
-    if (!method_id || !method_id->token) return;
 
     ParamType *params_list = build_params_list(params);
-    char params_str[256];           
-    params_to_str(params_list, params_str, sizeof(params_str));
-
+    //char params_str[512];
+    //params_to_str(params_list, params_str, sizeof(params_str));
+    
     SymTable *tmp_params = create_table("param_check");
     if (params) {
         struct node *param_child;
         for (int i = 0; (param_child = get_child(params, i)) != NULL; i++) {
-            struct node *id  = get_identifier(param_child);
-            struct node *typ = get_child(param_child, 0);
+            struct node *typ = get_child(param_child, 0);   
+            struct node *id  = get_child(param_child, 1);
+            if (!id || !id->token) continue;
             
-            if (!id) continue;
-            
-            if (!check_declaration_valid(id->token, id->line, id->col, tmp_params, NULL)) {
-                insert_symbol(tmp_params, id->token, type_from_node(typ), SYM_PARAM, NULL, id->line, id->col);
+            if (!check_declaration_valid(id->token, id->line, id->col, tmp_params, SYM_PARAM, NULL)) {
+                insert_symbol(tmp_params, id->token, type_from_node(typ), SYM_PARAM, NULL);
             }
         }
     }
-    if (!check_declaration_valid(method_id->token, method_id->line, method_id->col, global_table, params_list)) {
-        insert_symbol(global_table, method_id->token, type_from_node(ret_type), SYM_METHOD, params_list, method_id->line, method_id->col);
+
+    int is_method_valid = !check_declaration_valid(method_id->token, method_id->line, method_id->col, global_table, SYM_METHOD, params_list);
+
+    if (is_method_valid) {
+        insert_symbol(global_table, method_id->token, type_from_node(ret_type), SYM_METHOD, params_list);
+        Symbol *method_sym = search_exact_method(global_table, method_id->token, params_list);
+        
+        if (method_sym != NULL) {
+            char *pbuf = params_to_str(params_list);
+            int title_len = snprintf(NULL, 0, "Method %s%s", method_id->token, pbuf) + 1;
+            char *title = (char*)malloc(title_len);
+            snprintf(title, title_len, "Method %s%s", method_id->token, pbuf);
+            
+            method_sym->nested_table = create_table(title);
+
+            free(title);
+            free(pbuf);
+            
+            insert_symbol(method_sym->nested_table, "return", type_from_node(ret_type), SYM_RETURN, NULL);
+            // Copiar los parámetros válidos desde tmp_params a la tabla del método
+            for (Symbol *s = tmp_params->first; s; s = s->next) {
+                insert_symbol(method_sym->nested_table, s->name, s->type, SYM_PARAM, NULL);
+            }
+        }
     } else {
         method_id->annot_type = T_Undef;
     }
+
+    Symbol *curr = tmp_params->first;
+    while (curr) {
+        Symbol *next = curr->next;
+        free(curr);
+        curr = next;
+    }
+    free(tmp_params->title);
+    free(tmp_params);
 }
 
-void check_semantics_pass1(struct node *n) {
-    struct node *class_id = get_identifier(n);
-    char class_name[256];
-    snprintf(class_name, sizeof(class_name), "Class %s",
-             (class_id && class_id->token) ? class_id->token : "Unknown");
+void check_semantics_pass1(struct node *program) {
+    struct node *class_id = get_child(program,0);
+
+
+    const char *token_str = class_id->token;
+    int len = snprintf(NULL, 0, "Class %s", token_str) + 1;
+    
+    char *class_name = (char*)malloc(len);
+    snprintf(class_name, len, "Class %s", token_str);
 
     global_table  = create_table(class_name);
     current_table = global_table;
 
+    free(class_name);
+
     struct node *child;
-    for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
+    for (int i = 1; (child = get_child(program, i)) != NULL; i++) {
         if      (child->category == FieldDecl)  register_global_field(child);
         else if (child->category == MethodDecl) register_method_header(child);
     }
@@ -604,31 +669,20 @@ static void process_method_body(struct node *method) {
     struct node *header   = get_child(method, 0);
     struct node *body     = get_child(method, 1);
 
-    struct node *ret_type  = get_child(header, 0);
-    struct node *method_id = get_identifier(header);
+    struct node *method_id = get_child(header, 1);
     struct node *params    = get_child(header, 2);
-    if (!method_id || !method_id->token) return;
 
     ParamType *params_list = build_params_list(params);
-    char params_str[256];
-    params_to_str(params_list, params_str, sizeof(params_str));
 
-    char title[512];
-    snprintf(title, sizeof(title), "Method %s%s", method_id->token, params_str);
-
-    SymTable *method_table = create_table(title);
-    SymTable *tmp = global_table;
-    while (tmp->next) tmp = tmp->next;
-    tmp->next = method_table;
-
-    /* "return" pseudo-symbol stores the expected return type for this method */
-    insert_symbol(method_table, "return", type_from_node(ret_type), 0, NULL, 0, 0);
+    Symbol *method_sym = search_exact_method(global_table, method_id->token, params_list);
+    
+    if (!method_sym || !method_sym->nested_table) return;
 
     SymTable *saved = current_table;
-    current_table   = method_table;
 
-    check_semantics_pass2(params);   /* register formal parameters */
-    check_semantics_pass2(body);     /* type-check the body        */
+    current_table = method_sym->nested_table;
+
+    check_semantics_pass2(body);
 
     current_table = saved;
 }
@@ -646,12 +700,6 @@ void check_semantics_pass2(struct node *n) {
             break;
         }
         case ParamDecl: {
-            struct node *type_node = get_child(n, 0);
-            struct node *id_node   = get_identifier(n);
-            if (!check_declaration_valid(id_node->token, id_node->line, id_node->col,
-                                         current_table, NULL))
-                insert_symbol(current_table, id_node->token, type_from_node(type_node),
-                              SYM_PARAM, NULL, id_node->line, id_node->col);
             break;
         }
 
@@ -660,16 +708,15 @@ void check_semantics_pass2(struct node *n) {
             struct node *id_node   = get_identifier(n);
             if (!type_node || !id_node || !id_node->token) break;
             if (!check_declaration_valid(id_node->token, id_node->line, id_node->col,
-                                         current_table, NULL))
+                                         current_table, SYM_LOCAL,NULL))
                 insert_symbol(current_table, id_node->token, type_from_node(type_node),
-                              SYM_LOCAL, NULL, id_node->line, id_node->col);
+                              SYM_LOCAL, NULL);
             break;
         }
 
         case FieldDecl: {
             break;
         }
-
         case MethodDecl: {
             struct node *header = get_child(n, 0);
             struct node *method_id = get_identifier(header);
@@ -719,8 +766,8 @@ void check_semantics_pass2(struct node *n) {
  * ENTRY POINT
  * ================================================================ */
 
-void check_semantics(struct node *n) {
-    check_semantics_pass1(n); 
-    check_semantics_pass2(n); 
+void check_semantics(struct node *ast) {
+    check_semantics_pass1(ast); 
+    check_semantics_pass2(ast); 
     print_semantic_errors();
 }
