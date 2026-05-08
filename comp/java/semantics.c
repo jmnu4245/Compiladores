@@ -698,11 +698,10 @@ void check_semantics_pass2(struct node *n) {
             struct node *header = get_child(n, 0);
             struct node *method_id = get_identifier(header);
             /* Si Pass 1 NO lo marcó como inválido, procesamos su interior */
-            if (method_id && method_id->annot_type != T_Undef) {
-                process_method_body(n);
-            } else if (method_id && method_id->annot_type == T_Undef) {
+            if (method_id && method_id->annot_type == T_Undef) {
                 method_id->annot_type = T_None; 
             }
+            process_method_body(n);
             break;
         }
 
