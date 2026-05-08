@@ -1,0 +1,14 @@
+*.txt
+*.out
+*.ll
+
+jucompiler
+lex.yy.c
+lex.yy.cc
+log.out
+y.tab.c
+y.tab.h
+y.output
+
+*.tab.c
+*.tab.h
