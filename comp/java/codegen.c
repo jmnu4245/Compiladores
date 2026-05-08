@@ -16,6 +16,8 @@ static int main_emitted = 0;
 /* =========================================================================
  * Type helpers
  * ========================================================================= */
+
+
 static const char *type_to_llvm(BasicType t) {
     switch (t) {
         case T_Int:         return "i32";
@@ -68,6 +70,12 @@ static char  strlit_llvm_content[MAX_STRLITS][1024];  /* LLVM c"..." body  */
 static int   strlit_byte_count[MAX_STRLITS];           /* bytes incl. \00   */
 static int   strlit_count = 0;
 
+
+ static void free_strlits(void) {
+    for (int i = 0; i < strlit_count; i++) {
+        free(strlit_tokens[i]);
+    }
+}
 /*
  * Convert a Juc STRLIT token (with surrounding quotes) to an LLVM constant
  * string body.  Juc escape sequences are translated to \XX hex escapes that
@@ -196,7 +204,7 @@ static int codegen_expression(struct node *expr, SymTable *global,
         /* ---- Literals ---- */
 
         case Natural: {
-            char clean[64];
+            char clean[256];
             strip_underscores(expr->token, clean);
             int r = tmp_counter++;
             printf("  %%%d = add i32 0, %s\n", r, clean);
@@ -419,7 +427,7 @@ else
                 }
             }
 
-            char mangled[128];
+            char mangled[256];
             build_mangled_suffix(param_types, nargs, mangled);
             if (ret == T_Void) {
                 printf("  call void @_%s%s(", name_node->token, mangled);
@@ -690,8 +698,6 @@ static int codegen_statement(struct node *stmt, SymTable *global,
 /* =========================================================================
  * MethodGen
  * ========================================================================= */
-
-
 static void codegen_method(struct node *method, SymTable *global) {
     struct node *header   = get_child(method, 0);
     struct node *body     = get_child(method, 1);
@@ -897,4 +903,5 @@ void codegen_program(struct node *program, SymTable *global_table) {
             }
         }
     }
+    free_strlits();
 }

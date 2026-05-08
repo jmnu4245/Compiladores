@@ -57,7 +57,7 @@ static void add_error(int line, int col, const char *msg) {
 void print_semantic_errors() {
     ErrorNode *curr = error_list_head;
     while (curr != NULL) {
-        fprintf(stderr,"%s", curr->msg);
+        printf("%s", curr->msg);
         ErrorNode *temp = curr;
         curr = curr->next;
         free(temp);
@@ -172,12 +172,10 @@ void build_params_str(struct node *params, char *buf, int bufsz) {
     strncpy(buf, "(", bufsz);
     int first = 1;
     if (params) {
-        for (struct node_list *c = params->children ? params->children->next : NULL;
-             c; c = c->next) {
-            if (!c->node) continue;
+        struct node *param_child;
+        for (int i = 0; (param_child = get_child(params, i)) != NULL; i++) {
             if (!first) strncat(buf, ",", bufsz - strlen(buf) - 1);
-            strncat(buf, type_to_str(type_from_node(get_child(c->node, 0))),
-                    bufsz - strlen(buf) - 1);
+            strncat(buf, type_to_str(type_from_node(get_child(param_child, 0))), bufsz - strlen(buf) - 1);
             first = 0;
         }
     }
@@ -284,7 +282,6 @@ static void check_math_op(struct node *n) {
 /* Eq, Ne, Lt, Gt, Le, Ge */
 static void check_relational_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
-    
     int ok = 0;
     if (n->category == Eq || n->category == Ne) {
         if ((l->annot_type == r->annot_type && l->annot_type != T_StringArray && l->annot_type != T_Undef) ||
@@ -500,10 +497,10 @@ static void check_node(struct node *n, SymTable *global, SymTable *local) {
     /* Post-order: process children first.
      * For Call, skip child[0] (the method-name Identifier) — it is
      * resolved by check_call after argument types are known. */
-    struct node_list *c = n->children ? n->children->next : NULL;
-    for (int idx = 0; c; c = c->next, idx++) {
+    struct node *child;
+    for (int idx = 0; (child = get_child(n, idx)) != NULL; idx++) {
         if (n->category == Call && idx == 0) continue;
-        check_node(c->node, global, local);
+        check_node(child, global, local);
     }
 
     switch (n->category) {
@@ -589,19 +586,18 @@ static void register_method_header(struct node *method) {
 
     SymTable *tmp_params = create_table("param_check");
     if (params) {
-        for (struct node_list *c = params->children ? params->children->next : NULL;
-             c; c = c->next) {
-            if (!c->node) continue;
-            struct node *id  = get_identifier(c->node);
-            struct node *typ = get_child(c->node, 0);
+        struct node *param_child;
+        for (int i = 0; (param_child = get_child(params, i)) != NULL; i++) {
+            struct node *id  = get_identifier(param_child);
+            struct node *typ = get_child(param_child, 0);
+            
             if (!id) continue;
-            if (!check_declaration_valid(id->token, id->line, id->col, tmp_params, NULL))
-                insert_symbol(tmp_params, id->token, type_from_node(typ),
-                              1, NULL, id->line, id->col);
+            
+            if (!check_declaration_valid(id->token, id->line, id->col, tmp_params, NULL)) {
+                insert_symbol(tmp_params, id->token, type_from_node(typ), 1, NULL, id->line, id->col);
+            }
         }
     }
-
-    // Silencioso (0)
     if (!check_declaration_valid(method_id->token, method_id->line, method_id->col, global_table, params_str)) {
         insert_symbol(global_table, method_id->token, type_from_node(ret_type), 0, params_str, method_id->line, method_id->col);
     } else {
@@ -618,10 +614,10 @@ void check_semantics_pass1(struct node *n) {
     global_table  = create_table(class_name);
     current_table = global_table;
 
-    for (struct node_list *cur = n->children; cur; cur = cur->next) {
-        if (!cur->node) continue;
-        if      (cur->node->category == FieldDecl)  register_global_field(cur->node);
-        else if (cur->node->category == MethodDecl) register_method_header(cur->node);
+    struct node *child;
+    for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
+        if      (child->category == FieldDecl)  register_global_field(child);
+        else if (child->category == MethodDecl) register_method_header(child);
     }
 }
 
@@ -666,12 +662,13 @@ void check_semantics_pass2(struct node *n) {
 
     switch (n->category) {
 
-        case Program:
-            for (struct node_list *cur = n->children; cur; cur = cur->next)
-                if (cur->node && cur->node->category != Identifier)
-                    check_semantics_pass2(cur->node);
+        case Program: {
+            struct node *child;
+            for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
+                if (child->category != Identifier) check_semantics_pass2(child);
+            }
             break;
-
+        }
         case ParamDecl: {
             struct node *type_node = get_child(n, 0);
             struct node *id_node   = get_identifier(n);
@@ -710,12 +707,14 @@ void check_semantics_pass2(struct node *n) {
         }
 
         case If:
-        case While:
-            for (struct node_list *cur = n->children ? n->children->next : NULL;
-                 cur; cur = cur->next)
-                check_semantics_pass2(cur->node);
+        case While:{
+            struct node *child;
+            for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
+                check_semantics_pass2(child);
+            }
             check_condition(n);
             break;
+        }
 
         /* Expressions and expression-statements: delegate to check_node */
         case Assign:
@@ -730,10 +729,13 @@ void check_semantics_pass2(struct node *n) {
             break;
 
         /* Structural nodes (Block, MethodBody, MethodParams, …): just recurse */
-        default:
-            for (struct node_list *cur = n->children; cur; cur = cur->next)
-                check_semantics_pass2(cur->node);
+        default:{
+            struct node *child;
+            for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
+                check_semantics_pass2(child);
+            }
             break;
+        }
     }
 }
 
