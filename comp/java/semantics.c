@@ -165,51 +165,25 @@ static const char* get_op_str(int category) {
     }
 }
 
-
-
-/* Serialises a MethodParams node into a "(type1,type2)" string. */
-void build_params_str(struct node *params, char *buf, int bufsz) {
-    strncpy(buf, "(", bufsz);
-    int first = 1;
-    if (params) {
-        struct node *param_child;
-        for (int i = 0; (param_child = get_child(params, i)) != NULL; i++) {
-            if (!first) strncat(buf, ",", bufsz - strlen(buf) - 1);
-            strncat(buf, type_to_str(type_from_node(get_child(param_child, 0))), bufsz - strlen(buf) - 1);
-            first = 0;
-        }
+ParamType *build_params_list(struct node *params_node) {
+    ParamType *head = NULL, *tail = NULL;
+    if (!params_node) return NULL;
+    struct node *child;
+    for (int i = 0; (child = get_child(params_node, i)) != NULL; i++) {
+        ParamType *p = malloc(sizeof(ParamType));
+        p->type = type_from_node(get_child(child, 0));
+        p->next = NULL;
+        if (!head) head = tail = p;
+        else { tail->next = p; tail = p; }
     }
-    strncat(buf, ")", bufsz - strlen(buf) - 1);
+    return head;
 }
 
-/* Returns the number of comma-separated types inside "(int,double)".
- * An empty parameter list "()" returns 0. */
-static int count_formal_params(const char *p) {
-    if (!p || strcmp(p, "()") == 0) return 0;
-    int n = 1;
-    for (p++; *p && *p != ')'; p++)
-        if (*p == ',') n++;
-    return n;
-}
 
-/* Parses "(int,double)" into a heap-allocated BasicType[]. Caller must free(). */
-static BasicType *parse_formal_types(const char *params_str, int *count) {
-    *count = count_formal_params(params_str);
-    if (*count == 0) return NULL;
-    BasicType *types = malloc(*count * sizeof(BasicType));
-    const char *p = params_str + 1;   /* skip '(' */
-    for (int i = 0; i < *count; i++) {
-        char buf[64]; int j = 0;
-        while (*p && *p != ',' && *p != ')') buf[j++] = *p++;
-        buf[j] = '\0';
-        if (*p == ',') p++;
-        if      (!strcmp(buf, "int"))      types[i] = T_Int;
-        else if (!strcmp(buf, "double"))   types[i] = T_Double;
-        else if (!strcmp(buf, "boolean"))  types[i] = T_Bool;
-        else if (!strcmp(buf, "String[]")) types[i] = T_StringArray;
-        else                               types[i] = T_Undef;
-    }
-    return types;
+static int params_equal(ParamType *a, ParamType *b) {
+    for (; a && b; a = a->next, b = b->next)
+        if (a->type != b->type) return 0;
+    return !a && !b;   // ambas deben terminar a la vez
 }
 
 /* ================================================================
@@ -255,11 +229,11 @@ static void check_identifier(struct node *n, SymTable *global, SymTable *local) 
 
     for (SymTable *tbl = local; tbl && !sym; tbl = tbl->next) {
         for (Symbol *s = tbl->first; s; s = s->next)
-            if (!s->params_list && strcmp(s->name, n->token) == 0) { sym = s; break; }
+            if (s->kind != SYM_METHOD && strcmp(s->name, n->token) == 0) { sym = s; break; }
     }
     if (!sym) {
         for (Symbol *s = global->first; s; s = s->next)
-            if (!s->params_list && strcmp(s->name, n->token) == 0) { sym = s; break; }
+            if (s->kind != SYM_METHOD && strcmp(s->name, n->token) == 0) { sym = s; break; }
     }
     if (!sym) { err_cannot_find(n->line, n->col, n->token); n->annot_type = T_Undef; }
     else        n->annot_type = sym->type;
@@ -434,18 +408,17 @@ static void check_call(struct node *n, SymTable *global) {
     int     n_compat = 0;
 
     for (Symbol *sym = global->first; sym && !exact; sym = sym->next) {
-        if (!sym->params_list || strcmp(sym->name, name) != 0) continue;
+        if (sym->kind != SYM_METHOD || strcmp(sym->name, name) != 0) continue;
 
-        int n_formal;
-        BasicType *formal = parse_formal_types(sym->params_list, &n_formal);
-        if (n_formal != n_actual) { free(formal); continue; }
-
-        int is_exact = 1, is_compat = 1;
-        for (int i = 0; i < n_actual; i++) {
-            if (formal[i] != actual[i])                    is_exact  = 0;
-            if (!types_compatible(formal[i], actual[i]))   is_compat = 0;
+        int is_exact = 1, is_compat = 1, n_formal = 0;
+        ParamType *p = sym->params;
+        for (int i = 0; i < n_actual; i++, p = p ? p->next : NULL) {
+            if (!p) { is_exact = is_compat = 0; break; }
+            if (p->type != actual[i])                  is_exact  = 0;
+            if (!types_compatible(p->type, actual[i])) is_compat = 0;
+            n_formal++;
         }
-        free(formal);
+        if (p || n_formal != n_actual) is_exact = is_compat = 0;
 
         if      (is_exact)  { exact = sym; }
         else if (is_compat) { n_compat++; if (n_compat == 1) compat = sym; }
@@ -467,7 +440,7 @@ static void check_call(struct node *n, SymTable *global) {
     if (chosen) {
         n->annot_type         = chosen->type;
         id_node->annot_type   = T_None;
-        id_node->annot_params = chosen->params_list;
+        id_node->annot_params = chosen->params;
     } else if (n_compat > 1) {
         err_ambiguous(id_node->line, id_node->col, full_name);
         n->annot_type = id_node->annot_type = T_Undef;
@@ -543,7 +516,7 @@ static void check_node(struct node *n, SymTable *global, SymTable *local) {
  * ================================================================ */
 
 static int check_declaration_valid(const char *name, int line, int col,
-                                   SymTable *table, const char *params) {
+                                   SymTable *table,ParamType *params) {
     if (!name) return 0;
     if (!strcmp(name, "_")) { 
         err_reserved(line, col); 
@@ -551,12 +524,13 @@ static int check_declaration_valid(const char *name, int line, int col,
     }
     for (Symbol *s = table->first; s; s = s->next) {
         if (strcmp(s->name, name) != 0) continue;
-        if (!params && !s->params_list) {
+        if (!params && s->kind != SYM_METHOD) {
             err_already_defined(line, col, name, NULL);  
             return 1;
         }
-        if (params && s->params_list && !strcmp(s->params_list, params)) {
-            err_already_defined(line, col, name, params); 
+        if (params && s->kind == SYM_METHOD &&params_equal(s->params, params)) {
+            char pbuf[256]; params_to_str(params, pbuf, sizeof(pbuf));
+            err_already_defined(line, col, name, pbuf);
             return 1;
         }
     }
@@ -570,7 +544,7 @@ static void register_global_field(struct node *field) {
     
     // Lo guardamos siempre y cuando no exista ya. Silencioso (print_errors = 0)
     if (!check_declaration_valid(id_node->token, id_node->line, id_node->col, global_table, NULL)) {
-        insert_symbol(global_table, id_node->token, type_from_node(type_node), 0, NULL, id_node->line, id_node->col);
+        insert_symbol(global_table, id_node->token, type_from_node(type_node), SYM_FIELD, NULL, id_node->line, id_node->col);
     }
 }
 
@@ -581,8 +555,9 @@ static void register_method_header(struct node *method) {
     struct node *params    = get_child(header, 2);
     if (!method_id || !method_id->token) return;
 
-    char params_str[256];
-    build_params_str(params, params_str, sizeof(params_str));
+    ParamType *params_list = build_params_list(params);
+    char params_str[256];           
+    params_to_str(params_list, params_str, sizeof(params_str));
 
     SymTable *tmp_params = create_table("param_check");
     if (params) {
@@ -594,12 +569,12 @@ static void register_method_header(struct node *method) {
             if (!id) continue;
             
             if (!check_declaration_valid(id->token, id->line, id->col, tmp_params, NULL)) {
-                insert_symbol(tmp_params, id->token, type_from_node(typ), 1, NULL, id->line, id->col);
+                insert_symbol(tmp_params, id->token, type_from_node(typ), SYM_PARAM, NULL, id->line, id->col);
             }
         }
     }
-    if (!check_declaration_valid(method_id->token, method_id->line, method_id->col, global_table, params_str)) {
-        insert_symbol(global_table, method_id->token, type_from_node(ret_type), 0, params_str, method_id->line, method_id->col);
+    if (!check_declaration_valid(method_id->token, method_id->line, method_id->col, global_table, params_list)) {
+        insert_symbol(global_table, method_id->token, type_from_node(ret_type), SYM_METHOD, params_list, method_id->line, method_id->col);
     } else {
         method_id->annot_type = T_Undef;
     }
@@ -634,8 +609,9 @@ static void process_method_body(struct node *method) {
     struct node *params    = get_child(header, 2);
     if (!method_id || !method_id->token) return;
 
+    ParamType *params_list = build_params_list(params);
     char params_str[256];
-    build_params_str(params, params_str, sizeof(params_str));
+    params_to_str(params_list, params_str, sizeof(params_str));
 
     char title[512];
     snprintf(title, sizeof(title), "Method %s%s", method_id->token, params_str);
@@ -675,7 +651,7 @@ void check_semantics_pass2(struct node *n) {
             if (!check_declaration_valid(id_node->token, id_node->line, id_node->col,
                                          current_table, NULL))
                 insert_symbol(current_table, id_node->token, type_from_node(type_node),
-                              1, NULL, id_node->line, id_node->col);
+                              SYM_PARAM, NULL, id_node->line, id_node->col);
             break;
         }
 
@@ -686,7 +662,7 @@ void check_semantics_pass2(struct node *n) {
             if (!check_declaration_valid(id_node->token, id_node->line, id_node->col,
                                          current_table, NULL))
                 insert_symbol(current_table, id_node->token, type_from_node(type_node),
-                              0, NULL, id_node->line, id_node->col);
+                              SYM_LOCAL, NULL, id_node->line, id_node->col);
             break;
         }
 

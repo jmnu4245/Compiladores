@@ -15,7 +15,7 @@ struct node {
     char *token;
     int line, col;
     BasicType annot_type;
-    char     *annot_params; 
+    ParamType  *annot_params; 
     struct node_list *children;
 };
 

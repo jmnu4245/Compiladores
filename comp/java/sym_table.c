@@ -1,4 +1,5 @@
 #include "sym_table.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,18 @@ const char* type_to_str(BasicType type) {
         case T_Void: return "void";
         default: return "undef";
     }
+}
+
+
+void params_to_str(ParamType *p, char *buf, int bufsz) {
+    strncpy(buf, "(", bufsz);
+    int first = 1;
+    for (; p; p = p->next) {
+        if (!first) strncat(buf, ",", bufsz - strlen(buf) - 1);
+        strncat(buf, type_to_str(p->type), bufsz - strlen(buf) - 1);
+        first = 0;
+    }
+    strncat(buf, ")", bufsz - strlen(buf) - 1);
 }
 
 SymTable* create_table(const char *title) {
@@ -70,16 +83,15 @@ Symbol* lookup_symbol(SymTable *global, SymTable *local, const char *name) {
     return sym;
 }
 
-
-void insert_symbol(SymTable *table, const char *name, BasicType type, int is_param, char *params_list, int line, int col) {
+void insert_symbol(SymTable *table, const char *name, BasicType type,SymbolKind kind, ParamType *params, int line, int col) {
 
     if (!table || !name) return;
 
     Symbol *new_sym = (Symbol*)malloc(sizeof(Symbol));
     new_sym->name = strdup(name);
     new_sym->type = type;
-    new_sym->is_param = is_param;
-    new_sym->params_list = params_list ? strdup(params_list) : NULL;
+    new_sym->kind = kind;
+    new_sym->params = params;
     new_sym->next = NULL;
 
 
@@ -102,18 +114,16 @@ void print_sym_table(SymTable *table) {
         printf("%s\t", curr->name);
         
 
-        if (curr->params_list != NULL) {
-            printf("%s\t", curr->params_list);
-        } else { 
-            printf("\t");
-        }
+        if (curr->params != NULL) {
+            char parambuf[256];
+            params_to_str(curr->params, parambuf, sizeof(parambuf));
+            printf("%s\t", parambuf);
+        } else printf("\t");
         
         printf("%s", type_to_str(curr->type));
         
 
-        if (curr->is_param) {
-            printf("\tparam");
-        }
+        if (curr->kind == SYM_PARAM) printf("\tparam");
         
         printf("\n");
         curr = curr->next;

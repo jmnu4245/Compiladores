@@ -409,7 +409,7 @@ else
             SymTable *method_table = search_table_name(global, name_node->token);
                 int n_params = 0;
                 for (Symbol *s = method_table->first; s != NULL; s = s->next) {
-                    if (s->is_param) {
+                    if (s->kind==SYM_PARAM) {
                         param_types[n_params++] = s->type;
                     }
                 }
@@ -710,8 +710,9 @@ static void codegen_method(struct node *method, SymTable *global) {
 
     if (!id_node || !id_node->token) return;
 
-    char params_str[256] = "()";
-    if (params) build_params_str(params, params_str, sizeof(params_str));
+    ParamType *params_list = build_params_list(params);
+    char params_str[256];
+    params_to_str(params_list, params_str, sizeof(params_str));
     
     char title[512];
     snprintf(title, sizeof(title), "Method %s%s", id_node->token, params_str);
