@@ -1,37 +1,60 @@
-=== meta3/additive_tests.java ===
-=== meta3/AindaSemErros.java ===
-=== meta3/algunsErros.java ===
-=== meta3/boolean_and_xor_ops.java ===
-=== meta3/CallError.java ===
-=== meta3/Call_me_maybe.java ===
-=== meta3/declarationErrors.java ===
-=== meta3/declit_out_bounds.java ===
-=== meta3/divide.java ===
-=== meta3/DoublePrecisionErros.java ===
-=== meta3/e_dot_length.java ===
-=== meta3/equality_ops_tests.java ===
-=== meta3/Factorial.java ===
-=== meta3/FieldDecErrors.java ===
-=== meta3/if_tests.java ===
-=== meta3/ifwhile.java ===
-=== meta3/invalid_parse_int.java ===
-=== meta3/LongNamesOperatorsAndPriority.java ===
-=== meta3/MethodInvocation.java ===
-=== meta3/methodsAndFields.java ===
-=== meta3/MultipleArguments.java ===
-=== meta3/mult_op.java ===
-=== meta3/NoFlags.java ===
-=== meta3/Operators2.java ===
-=== meta3/Operators3.java ===
-=== meta3/operator_single.java ===
-=== meta3/Operators.java ===
-=== meta3/params_in_redefined_method.java ===
-=== meta3/printing_void.java ===
-=== meta3/Problema_H.java ===
-=== meta3/relational_op_tests.java ===
-=== meta3/shift_errors.java ===
-=== meta3/simpleTest.java ===
-=== meta3/testeProblemaE.java ===
-=== meta3/testsMethods.java ===
-=== meta3/while_errors.java ===
-=== meta3/widening.java ===
+=== A.java ===
+✅ A.java
+=== C_e_D.java ===
+❌ C_e_D.java
+4,5c4
+< Teste	de string\"
+< %%
+---
+> Teste	de string\"%%
+=== complex.java ===
+✅ complex.java
+=== DiferentTypes.java ===
+✅ DiferentTypes.java
+=== divisions.java ===
+✅ divisions.java
+=== DoubleAndInt2.java ===
+✅ DoubleAndInt2.java
+=== DoubleAndInt3.java ===
+✅ DoubleAndInt3.java
+=== DoubleAndInt.java ===
+✅ DoubleAndInt.java
+=== Factorial.java ===
+✅ Factorial.java
+=== fluxControl1.java ===
+✅ fluxControl1.java
+=== fluxControl2.java ===
+✅ fluxControl2.java
+=== fluxControl3.java ===
+✅ fluxControl3.java
+=== length.java ===
+✅ length.java
+=== minus&per_cent.java ===
+✅ minus&per_cent.java
+=== MultipleParametersCommandLine.java ===
+✅ MultipleParametersCommandLine.java
+=== noMain.java ===
+❌ noMain.java
+0a1
+> lli: Symbols not found: [ main ]
+=== onlyClass.java ===
+❌ onlyClass.java
+0a1
+> lli: Symbols not found: [ main ]
+=== Overload.java ===
+✅ Overload.java
+=== prueba2.java ===
+⚠️ prueba2.java (Sin .out)
+999=== prueba3.java ===
+⚠️ prueba3.java (Sin .out)
+1.0000000000000000e+011.2345678901234568e+10line1
+line2
+line3
+alphabetagamma99true=== prueba.java ===
+⚠️ prueba.java (Sin .out)
+=== randomTest.java ===
+✅ randomTest.java
+=== return_types.java ===
+✅ return_types.java
+=== strings_tests.java ===
+✅ strings_tests.java

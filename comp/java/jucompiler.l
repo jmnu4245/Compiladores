@@ -11,7 +11,7 @@
     #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
-    //#include "codegen.h"
+    #include "codegen.h"
 
     void check_semantics(struct node *n);
     void print_sym_table(SymTable *table);
@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
             } else if (flag_e3) {
                 
             } else if (semantic_errors == 0) {
-                //codegen_program(ast, global_table);
+                codegen_program(ast, global_table);
             }
         }
     }

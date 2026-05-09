@@ -1,5 +1,5 @@
 
-#line 2 "lex.yy.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -686,7 +686,11 @@ char *yytext;
     #include "sym_table.h"
     #include "y.tab.h"
     #include "ast.h"
+<<<<<<< HEAD
     //#include "codegen.h"
+=======
+    #include "codegen.h"
+>>>>>>> gabriela
 
     void check_semantics(struct node *n);
     void print_sym_table(SymTable *table);
@@ -717,9 +721,15 @@ char *yytext;
     extern struct node *ast;
     extern int yychar;
 
+<<<<<<< HEAD
 #line 720 "lex.yy.c"
 
 #line 722 "lex.yy.c"
+=======
+#line 721 "lex.yy.c"
+>>>>>>> gabriela
+
+#line 723 "lex.yy.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -940,7 +950,11 @@ YY_DECL
 	{
 #line 103 "jucompiler.l"
 
+<<<<<<< HEAD
 #line 943 "lex.yy.c"
+=======
+#line 944 "lex.yy.c"
+>>>>>>> gabriela
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1393,7 +1407,11 @@ YY_RULE_SETUP
 #line 237 "jucompiler.l"
 ECHO;
 	YY_BREAK
+<<<<<<< HEAD
 #line 1396 "lex.yy.c"
+=======
+#line 1397 "lex.yy.c"
+>>>>>>> gabriela
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2438,12 +2456,24 @@ int main(int argc, char *argv[]) {
             check_semantics(ast); 
             extern SymTable *global_table;
             if (flag_s) {
+<<<<<<< HEAD
                 print_all_tables(global_table);
+=======
+                SymTable *curr = global_table;
+                while (curr) {
+                    print_sym_table(curr);
+                    curr = curr->next;
+                }
+>>>>>>> gabriela
                 show_annotated(ast, 0);
             } else if (flag_e3) {
                 
             } else if (semantic_errors == 0) {
+<<<<<<< HEAD
                 //codegen_program(ast, global_table);
+=======
+                codegen_program(ast, global_table);
+>>>>>>> gabriela
             }
         }
     }
