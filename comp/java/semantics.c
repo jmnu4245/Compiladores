@@ -274,32 +274,22 @@ static void check_relational_op(struct node *n) {
     n->annot_type = T_Bool;
 }
 
-/* And, Or, Xor */
+/* And, Or */
 static void check_logical_binary_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
-    
-    if (n->category == Xor) {
-        if (l->annot_type == T_Int  && r->annot_type == T_Int) {
-            n->annot_type = l->annot_type;
-        } else {
-            err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
-            n->annot_type = T_Int;
-        }
-    } else {   /* And, Or */
-        if (l->annot_type != T_Bool || r->annot_type != T_Bool)
-            err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
-        n->annot_type = T_Bool;
+    if (l->annot_type != T_Bool || r->annot_type != T_Bool) {
+        err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
     }
+    n->annot_type = T_Bool;
 }
-
-/* Lshift, Rshift */
-static void check_shift_op(struct node *n) {
+/* Lshift, Rshift, Xor */
+static void check_bitwise_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
     
-    // Eliminado el early return de T_Undef
     if (l->annot_type != T_Int || r->annot_type != T_Int) {
-        err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);}
-    n->annot_type = T_Int;
+        err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
+    }
+    n->annot_type = T_Int; // Falla o no, asume T_Int para evitar cascadas
 }
 
 /* Unary Minus / Plus */
@@ -479,9 +469,11 @@ static void check_call(struct node *n, SymTable *global) {
 /* If/While condition must be boolean. Called after children are processed. */
 static void check_condition(struct node *n) {
     struct node *cond = get_child(n, 0);
-    if (cond && cond->annot_type != T_Bool)
+    
+    if (cond && cond->annot_type != T_Bool) {
         err_incompatible_type(cond->line, cond->col, cond->annot_type,
                               n->category == If ? "if" : "while");
+    }
     n->annot_type = T_None;
 }
 
@@ -511,12 +503,12 @@ static void check_node(struct node *n, SymTable *global, SymTable *local) {
             check_math_op(n);                      break;
         case Eq:   case Ne:   case Lt:   case Gt:   case Le:   case Ge:
             check_relational_op(n);                break;
-        case And:  case Or:   case Xor:
+        case And:  case Or:   
             check_logical_binary_op(n);            break;
         case Not:
             check_not_op(n);                       break;
-        case Lshift: case Rshift:
-            check_shift_op(n);                     break;
+        case Lshift: case Rshift: case Xor:
+            check_bitwise_op(n);                   break;
         case Minus: case Plus:
             check_unary_numeric_op(n);             break;
         case Assign:
@@ -639,7 +631,7 @@ static void register_method_header(struct node *method) {
             }
         }
     } else {
-        method_id->annot_type = T_Undef;
+        method->annot_type = T_Undef;
     }
 
     Symbol *curr = tmp_params->first;
@@ -698,6 +690,13 @@ static void process_method_body(struct node *method) {
     check_semantics_pass2(body);
 
     current_table = saved;
+
+    ParamType *curr = params_list;
+    while (curr) {
+        ParamType *next = curr->next;
+        free(curr);
+        curr = next;
+    }
 }
 
 void check_semantics_pass2(struct node *n) {
@@ -729,13 +728,12 @@ void check_semantics_pass2(struct node *n) {
             break;
         }
         case MethodDecl: {
-            struct node *header    = get_child(n, 0);
-            struct node *method_id = get_child(header, 1);
             /* Si Pass 1 NO lo marcó como inválido, procesamos su interior */
-            if (method_id && method_id->annot_type != T_Undef) {
+            if (n->annot_type != T_Undef) {
                 process_method_body(n);
-            } else if (method_id && method_id->annot_type == T_Undef) {
-                method_id->annot_type = T_None; 
+            }
+            else{
+                n->annot_type = T_None;
             }
             break;
         }

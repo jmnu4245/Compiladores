@@ -86,15 +86,6 @@ void show_annotated(struct node *n, int depth) {
     }
 }
 
-/* Finds the first Identifier child of a node (used for declarations). */
-struct node *get_identifier(struct node *parent) {
-    if (!parent) return NULL;
-    for (struct node_list *c = parent->children ? parent->children->next : NULL;
-         c; c = c->next)
-        if (c->node && c->node->category == Identifier) return c->node;
-    return NULL;
-}
-
 struct node *get_child(struct node *n, int index) {
     if (n == NULL || n->children == NULL) return NULL;
     struct node_list *curr = n->children->next;//Hay un nodo centinela
