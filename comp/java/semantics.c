@@ -261,7 +261,7 @@ static void check_relational_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
     int ok = 0;
     if (n->category == Eq || n->category == Ne) {
-        if ((l->annot_type == r->annot_type && l->annot_type != T_StringArray && l->annot_type != T_Undef) ||
+        if ((l->annot_type == r->annot_type && l->annot_type != T_StringArray && l->annot_type != T_Undef && l->annot_type != T_Void) ||
             (is_numeric(l->annot_type) && is_numeric(r->annot_type))) {
             ok = 1;
         }
@@ -457,12 +457,13 @@ static void check_call(struct node *n, SymTable *global) {
         id_node->annot_params = chosen->params ? params_to_str(chosen->params) : strdup("()");
     } else if (n_compat > 1) {
         err_ambiguous(id_node->line, id_node->col, full_name);
-        n->annot_type = id_node->annot_type = T_Undef;
+        n->annot_type = T_Undef;
+        id_node->annot_type = T_Undef;
     } else {
         err_cannot_find(id_node->line, id_node->col, full_name);
-        n->annot_type = id_node->annot_type = T_Undef;
+        n->annot_type = T_Undef;
+        id_node->annot_type = T_Undef;
     }
-
     free(params_str);
     free(full_name);
 
@@ -543,8 +544,8 @@ static void check_node(struct node *n, SymTable *global, SymTable *local) {
 static int check_declaration_valid(const char *name, int line, int col,
                                    SymTable *table, SymbolKind kind, ParamType *params) {
     if (!strcmp(name, "_")) { 
-        err_reserved(line, col); 
-        return 1; 
+        err_reserved(line, col);
+        return 1;
     }
     if (kind != SYM_METHOD) {
         for (Symbol *s = table->first; s; s = s->next) {
@@ -557,9 +558,21 @@ static int check_declaration_valid(const char *name, int line, int col,
     } else {
         for (Symbol *s = table->first; s; s = s->next) {
             if (s->kind == SYM_METHOD && strcmp(s->name, name) == 0) {
-                if (params_equal(s->params, params)) {
+                int is_match = 1;
+                ParamType *p1 = s->params;
+                ParamType *p2 = params;
+                
+                while (p1 && p2) {
+                    if (p1->type != p2->type) { is_match = 0; break; }
+                    p1 = p1->next;
+                    p2 = p2->next;
+                }
+                if (p1 || p2) is_match = 0;
+
+                if (is_match) {
                     char *pbuf = params_to_str(params);
                     err_already_defined(line, col, name, pbuf);
+                    free(pbuf);
                     return 1;
                 }
             }
@@ -694,8 +707,9 @@ void check_semantics_pass2(struct node *n) {
 
         case Program: {
             struct node *child;
-            for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
-                if (child->category != Identifier) check_semantics_pass2(child);
+            //Lanzamos para methods y declaraciones
+            for (int i = 1; (child = get_child(n, i)) != NULL; i++) {
+                check_semantics_pass2(child);
             }
             break;
         }
@@ -705,21 +719,18 @@ void check_semantics_pass2(struct node *n) {
 
         case VarDecl: {
             struct node *type_node = get_child(n, 0);
-            struct node *id_node   = get_identifier(n);
-            if (!type_node || !id_node || !id_node->token) break;
-            if (!check_declaration_valid(id_node->token, id_node->line, id_node->col,
-                                         current_table, SYM_LOCAL,NULL))
+            struct node *id_node   = get_child(n, 1);
+            if (!check_declaration_valid(id_node->token, id_node->line, id_node->col, current_table, SYM_LOCAL,NULL))
                 insert_symbol(current_table, id_node->token, type_from_node(type_node),
                               SYM_LOCAL, NULL);
             break;
         }
-
         case FieldDecl: {
             break;
         }
         case MethodDecl: {
-            struct node *header = get_child(n, 0);
-            struct node *method_id = get_identifier(header);
+            struct node *header    = get_child(n, 0);
+            struct node *method_id = get_child(header, 1);
             /* Si Pass 1 NO lo marcó como inválido, procesamos su interior */
             if (method_id && method_id->annot_type != T_Undef) {
                 process_method_body(n);
