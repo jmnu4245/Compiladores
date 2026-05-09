@@ -192,8 +192,11 @@ static void check_literal(struct node *n) {
 
     switch (n->category) {
         case Natural: {
-            long long val = atoll(stripped);
-            if (val > 2147483647LL) err_number_out_of_bounds(n->line, n->col, n->token);
+            errno = 0;
+            char *endptr;
+            long long val = strtoll(stripped, &endptr, 10);
+            if (errno == ERANGE || val > 2147483647LL || val < 0)
+                err_number_out_of_bounds(n->line, n->col, n->token);
             n->annot_type = T_Int;
             break;
         }
@@ -274,7 +277,7 @@ static void check_relational_op(struct node *n) {
     n->annot_type = T_Bool;
 }
 
-/* And, Or */
+/* And, Or, Xor */
 static void check_logical_binary_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
     if (l->annot_type != T_Bool || r->annot_type != T_Bool) {
@@ -285,7 +288,15 @@ static void check_logical_binary_op(struct node *n) {
 /* Lshift, Rshift, Xor */
 static void check_bitwise_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
-    
+    if (n->category == Xor){
+        if(l->annot_type != T_Bool || r->annot_type != T_Bool){
+                err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
+        }
+        if(l->annot_type == T_Bool || r->annot_type == T_Bool){
+            n->annot_type = T_Bool;
+        }
+        return;
+    }
     if (l->annot_type != T_Int || r->annot_type != T_Int) {
         err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
     }
@@ -430,10 +441,6 @@ static void check_call(struct node *n, SymTable *global) {
     Symbol *chosen = exact ? exact : (n_compat == 1 ? compat : NULL);
 
     /* 3. Utilizar la utilidad 'params_to_str' para generar la firma (elimina buffer overflows de strncat) */
-    if (actual_list) {
-        params_to_str(actual_list);
-    }
-
     char *params_str = actual_list ? params_to_str(actual_list) : strdup("()");
 
     int name_len = snprintf(NULL, 0, "%s%s", name, params_str) + 1;
@@ -732,9 +739,7 @@ void check_semantics_pass2(struct node *n) {
             if (n->annot_type != T_Undef) {
                 process_method_body(n);
             }
-            else{
                 n->annot_type = T_None;
-            }
             break;
         }
 

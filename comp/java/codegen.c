@@ -11,6 +11,10 @@
  * ========================================================================= */
 static int tmp_counter = 1;   /* SSA register / label counter, reset per method */
 static BasicType current_ret_type = T_Void;
+
+static char **emitted_methods = NULL;
+static int emitted_count = 0;
+static int emitted_capacity = 0;
 static int main_emitted = 0;
 
 /* =========================================================================
@@ -37,7 +41,8 @@ static const char *default_val_llvm(BasicType t) {
 }
 
 
-static void build_mangled_suffix(BasicType *types, int n, char *out) {
+static char *build_mangled_suffix(BasicType *types, int n) {
+    char *out = malloc(n * 3 + 1); // Cada tipo añade un máximo de "_x" (2 chars) + null
     out[0] = '\0';
     for (int i = 0; i < n; i++) {
         switch (types[i]) {
@@ -47,15 +52,19 @@ static void build_mangled_suffix(BasicType *types, int n, char *out) {
             default:       strcat(out, "_x"); break;
         }
     }
+    return out;
 }
 
 /* =========================================================================
  * Numeric literal cleaning  (Juc allows 1_000_000 style underscores)
  * ========================================================================= */
-static void strip_underscores(const char *in, char *out) {
+static char *strip_underscores(const char *in) {
+    char *out = malloc(strlen(in) + 3); // +3 permite añadir un ".0" posteriormente si es necesario
+    char *q = out;
     for (; *in; in++)
-        if (*in != '_') *out++ = *in;
-    *out = '\0';
+        if (*in != '_') *q++ = *in;
+    *q = '\0';
+    return out;
 }
 
 /* =========================================================================
@@ -63,27 +72,38 @@ static void strip_underscores(const char *in, char *out) {
  *   Juc STRLIT tokens (with surrounding quotes) are collected in a pre-pass
  *   so that their global LLVM constants can be emitted before the functions.
  * ========================================================================= */
-#define MAX_STRLITS 256
 
-static char *strlit_tokens[MAX_STRLITS];
-static char  strlit_llvm_content[MAX_STRLITS][1024];  /* LLVM c"..." body  */
-static int   strlit_byte_count[MAX_STRLITS];           /* bytes incl. \00   */
-static int   strlit_count = 0;
+typedef struct {
+    char *token;
+    char *llvm_content;
+    int byte_count;
+} StrLitEntry;
+
+static StrLitEntry *strlits = NULL;
+static int strlit_count = 0;
+static int strlit_capacity = 0;
 
 
- static void free_strlits(void) {
+static void free_strlits(void) {
     for (int i = 0; i < strlit_count; i++) {
-        free(strlit_tokens[i]);
+        free(strlits[i].token);
+        free(strlits[i].llvm_content);
     }
+    free(strlits);
+    strlits = NULL;
+    strlit_count = strlit_capacity = 0;
 }
+
 /*
  * Convert a Juc STRLIT token (with surrounding quotes) to an LLVM constant
  * string body.  Juc escape sequences are translated to \XX hex escapes that
  * LLVM's assembler understands.  A null terminator \00 is appended.
  * Returns the total byte count (string length + 1 for '\0').
  */
-static int juc_strlit_to_llvm(const char *token, char *out) {
-    const char *p = token + 1;  /* skip opening '"' */
+static void juc_strlit_to_llvm(const char *token, char **out_content, int *out_count) {
+    // El peor caso es que todos los caracteres se conviertan en \XX (3 bytes) + \00 y null
+    char *out = malloc(strlen(token) * 3 + 5);
+    const char *p = token + 1;
     char *q = out;
     int count = 0;
 
@@ -100,36 +120,32 @@ static int juc_strlit_to_llvm(const char *token, char *out) {
                 case '"':  c = '"';  break;
                 default:   c = (unsigned char)*p; break;
             }
-        } else {
-            c = (unsigned char)*p;
-        }
+        } else { c = (unsigned char)*p; }
 
-        /* Non-printable, backslash and quote → \XX */
         if (c < 32 || c == '"' || c == '\\' || c > 126) {
             sprintf(q, "\\%02X", c);
             q += 3;
-        } else {
-            *q++ = c;
-        }
-        count++;
-        p++;
+        } else { *q++ = c; }
+        count++; p++;
     }
-
-    /* Null terminator */
     strcpy(q, "\\00");
-    count++;   /* the \0 byte */
-    return count;
+    count++;
+    *out_content = out;
+    *out_count = count;
 }
 
 /* Returns the index of this literal in the registry (adds if new). */
 static int register_strlit(const char *token) {
-    int i;
-    for (i = 0; i < strlit_count; i++)
-        if (strcmp(strlit_tokens[i], token) == 0) return i;
-    if (strlit_count >= MAX_STRLITS) return 0;
-    strlit_tokens[strlit_count] = strdup(token);
-    strlit_byte_count[strlit_count] =
-        juc_strlit_to_llvm(token, strlit_llvm_content[strlit_count]);
+    for (int i = 0; i < strlit_count; i++)
+        if (strcmp(strlits[i].token, token) == 0) return i;
+
+    if (strlit_count >= strlit_capacity) {
+        strlit_capacity = strlit_capacity == 0 ? 16 : strlit_capacity * 2;
+        strlits = realloc(strlits, strlit_capacity * sizeof(StrLitEntry));
+    }
+
+    strlits[strlit_count].token = strdup(token);
+    juc_strlit_to_llvm(token, &strlits[strlit_count].llvm_content, &strlits[strlit_count].byte_count);
     return strlit_count++;
 }
 
@@ -147,7 +163,7 @@ static void emit_strlits(void) {
     int i;
     for (i = 0; i < strlit_count; i++)
         printf("@.str.lit.%d = private unnamed_addr constant [%d x i8] c\"%s\"\n",
-               i, strlit_byte_count[i], strlit_llvm_content[i]);
+               i, strlits[i].byte_count, strlits[i].llvm_content);
     if (strlit_count > 0) printf("\n");
 }
 
@@ -161,7 +177,7 @@ static const char *get_var_prefix(SymTable *global, SymTable *local,
         for (s = local->first; s; s = s->next)
             if (strcmp(s->name, name) == 0) return "%";
     }
-    return "@_";
+    return "@_g_";
 }
 
 /* =========================================================================
@@ -204,32 +220,29 @@ static int codegen_expression(struct node *expr, SymTable *global,
         /* ---- Literals ---- */
 
         case Natural: {
-            char clean[256];
-            strip_underscores(expr->token, clean);
+            char *clean = strip_underscores(expr->token);
             int r = tmp_counter++;
             printf("  %%%d = add i32 0, %s\n", r, clean);
+            free(clean);
             return r;
         }
 
-case Decimal: {
-    char clean[64];
-    strip_underscores(expr->token, clean);
-
-    if (clean[0] == '.') {
-        memmove(clean + 1, clean, strlen(clean) + 1);
-        clean[0] = '0';
-    }
-    char *e_pos = strpbrk(clean, "eE");
-    if (e_pos && !memchr(clean, '.', e_pos - clean)) {
-        memmove(e_pos + 2, e_pos, strlen(e_pos) + 1);
-        e_pos[0] = '.';
-        e_pos[1] = '0';
-    }
-
-    int r = tmp_counter++;
-    printf("  %%%d = fadd double 0.0, %s\n", r, clean);
-    return r;
-}
+        case Decimal: {
+            char *clean = strip_underscores(expr->token);
+            if (clean[0] == '.') {
+                memmove(clean + 1, clean, strlen(clean) + 1);
+                clean[0] = '0';
+            }
+            char *e_pos = strpbrk(clean, "eE");
+            if (e_pos && !memchr(clean, '.', e_pos - clean)) {
+                memmove(e_pos + 2, e_pos, strlen(e_pos) + 1);
+                e_pos[0] = '.'; e_pos[1] = '0';
+            }
+            int r = tmp_counter++;
+            printf("  %%%d = fadd double 0.0, %s\n", r, clean);
+            free(clean);
+            return r;
+        }
 
         case BoolLit: {
             int r = tmp_counter++;
@@ -255,7 +268,7 @@ case Decimal: {
             int idx = register_strlit(expr->token);
             int r   = tmp_counter++;
             printf("  %%%d = getelementptr inbounds [%d x i8], [%d x i8]* @.str.lit.%d, i32 0, i32 0\n",
-                   r, strlit_byte_count[idx], strlit_byte_count[idx], idx);
+                   r, strlits[idx].byte_count, strlits[idx].byte_count, idx);
             return r;
         }
 
@@ -284,23 +297,58 @@ case Decimal: {
 
         /* ---- Bitwise / logical binary operators ---- */
 
-        case And: case Or: case Xor: case Lshift: case Rshift: {
+        /* ---- Bitwise / logical binary operators ---- */
+        case Xor: case Lshift: case Rshift: {
             struct node *c0 = get_child(expr, 0);
             struct node *c1 = get_child(expr, 1);
             int t1 = codegen_expression(c0, global, local);
             int t2 = codegen_expression(c1, global, local);
             int r   = tmp_counter++;
             const char *op =
-                expr->category == And    ? "and"  :
-                expr->category == Or     ? "or"   :
                 expr->category == Xor    ? "xor"  :
-                expr->category == Lshift ? "shl"  :
-                                           "ashr";
+                expr->category == Lshift ? "shl"  : "ashr";
             printf("  %%%d = %s %s %%%d, %%%d\n", r, op,
                    type_to_llvm(expr->annot_type), t1, t2);
             return r;
         }
 
+        case And: {
+            int r_res_ptr = tmp_counter++;
+            printf("  %%%d = alloca i1\n", r_res_ptr);
+            int c0_r = codegen_expression(get_child(expr, 0), global, local);
+            int id = tmp_counter++;
+            printf("  store i1 %%%d, i1* %%%d\n", c0_r, r_res_ptr);
+            printf("  br i1 %%%d, label %%Land_right_%d, label %%Land_end_%d\n", c0_r, id, id);
+            
+            printf("Land_right_%d:\n", id);
+            int c1_r = codegen_expression(get_child(expr, 1), global, local);
+            printf("  store i1 %%%d, i1* %%%d\n", c1_r, r_res_ptr);
+            printf("  br label %%Land_end_%d\n", id);
+            
+            printf("Land_end_%d:\n", id);
+            int r = tmp_counter++;
+            printf("  %%%d = load i1, i1* %%%d\n", r, r_res_ptr);
+            return r;
+        }
+
+        case Or: {
+            int r_res_ptr = tmp_counter++;
+            printf("  %%%d = alloca i1\n", r_res_ptr);
+            int c0_r = codegen_expression(get_child(expr, 0), global, local);
+            int id = tmp_counter++;
+            printf("  store i1 %%%d, i1* %%%d\n", c0_r, r_res_ptr);
+            printf("  br i1 %%%d, label %%Lor_end_%d, label %%Lor_right_%d\n", c0_r, id, id);
+            
+            printf("Lor_right_%d:\n", id);
+            int c1_r = codegen_expression(get_child(expr, 1), global, local);
+            printf("  store i1 %%%d, i1* %%%d\n", c1_r, r_res_ptr);
+            printf("  br label %%Lor_end_%d\n", id);
+            
+            printf("Lor_end_%d:\n", id);
+            int r = tmp_counter++;
+            printf("  %%%d = load i1, i1* %%%d\n", r, r_res_ptr);
+            return r;
+        }
         /* ---- Relational binary operators ---- */
 
         case Eq: case Ne: case Lt: case Gt: case Le: case Ge: {
@@ -390,57 +438,74 @@ else
 
         /* ---- Method call ---- */
         case Call: {
-            struct node *name_node = get_identifier(expr);
-            if (!name_node) return -1;
+            struct node *name_node = get_child(expr, 0);
+            if (!name_node || !name_node->annot_params) return -1;
 
-            int arg_regs[64];
-            BasicType arg_types[64];
-            BasicType param_types[64];
+            int nargs_count = 0;
+            while (get_child(expr, nargs_count + 1) != NULL) nargs_count++;
+
+            int *arg_regs = nargs_count > 0 ? malloc(nargs_count * sizeof(int)) : NULL;
+            BasicType *arg_types = nargs_count > 0 ? malloc(nargs_count * sizeof(BasicType)) : NULL;
+            BasicType *param_types = nargs_count > 0 ? malloc(nargs_count * sizeof(BasicType)) : NULL;
+            int *final_arg_regs = nargs_count > 0 ? malloc(nargs_count * sizeof(int)) : NULL;
+
             int nargs = 0;
             struct node *a;
-            
-            /* El índice 0 es el nombre de la función, los args empiezan en el 1 */
-            while ((a = get_child(expr, nargs + 1)) != NULL && nargs < 64) {
+            while ((a = get_child(expr, nargs + 1)) != NULL) {
                 arg_regs[nargs]  = codegen_expression(a, global, local);
                 arg_types[nargs] = a->annot_type;
                 nargs++;
             }
 
-            SymTable *method_table = search_table_name(global, name_node->token);
-                int n_params = 0;
-                for (Symbol *s = method_table->first; s != NULL; s = s->next) {
-                    if (s->kind==SYM_PARAM) {
-                        param_types[n_params++] = s->type;
-                    }
+            Symbol *called_sym = NULL;
+            for (Symbol *s = global->first; s; s = s->next) {
+                if (s->kind == SYM_METHOD && strcmp(s->name, name_node->token) == 0) {
+                    char *ps = params_to_str(s->params);
+                    int match = strcmp(ps, name_node->annot_params) == 0;
+                    free(ps);
+                    if (match) { called_sym = s; break; }
                 }
-            BasicType ret = expr->annot_type;
-            int r=-1;
+            }
 
-            int final_arg_regs[64];
-            
+            SymTable *method_table = called_sym ? called_sym->nested_table : NULL;
+            if (!method_table) {
+                free(arg_regs); free(arg_types); free(param_types); free(final_arg_regs);
+                return -1;
+            }
+
+            int n_params = 0;
+            for (Symbol *s = method_table->first; s != NULL; s = s->next) {
+                if (s->kind==SYM_PARAM && n_params < nargs_count) {
+                    param_types[n_params++] = s->type;
+                }
+            }
+
+            int r = -1;
             for (int i = 0; i < nargs; i++) {
-                final_arg_regs[i] = arg_regs[i]; 
-
+                final_arg_regs[i] = arg_regs[i];
                 if (arg_types[i] == T_Int && param_types[i] == T_Double) {
                     final_arg_regs[i] = tmp_counter++;
                     printf("  %%%d = sitofp i32 %%%d to double\n", final_arg_regs[i], arg_regs[i]);
                 }
             }
 
-            char mangled[256];
-            build_mangled_suffix(param_types, nargs, mangled);
+            char *mangled = build_mangled_suffix(param_types, nargs);
+            BasicType ret = expr->annot_type;
+
             if (ret == T_Void) {
                 printf("  call void @_%s%s(", name_node->token, mangled);
             } else {
                 r = tmp_counter++;
                 printf("  %%%d = call %s @_%s%s(", r, type_to_llvm(ret), name_node->token, mangled);
             }
-            
+
             for (int i = 0; i < nargs; i++) {
                 if (i > 0) printf(", ");
                 printf("%s %%%d", type_to_llvm(param_types[i]), final_arg_regs[i]);
             }
             printf(")\n");
+
+            free(mangled); free(arg_regs); free(arg_types); free(param_types); free(final_arg_regs);
             return r;
         }
 
@@ -585,8 +650,8 @@ static int codegen_statement(struct node *stmt, SymTable *global,
                 int call_r = tmp_counter++;
                 printf("  %%%d = getelementptr inbounds [%d x i8], "
                        "[%d x i8]* @.str.lit.%d, i32 0, i32 0\n",
-                       str_r, strlit_byte_count[idx],
-                       strlit_byte_count[idx], idx);
+                       str_r, strlits[idx].byte_count,
+                       strlits[idx].byte_count, idx);
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
                        "([3 x i8], [3 x i8]* @.str.string, i32 0, i32 0), "
@@ -705,41 +770,57 @@ static void codegen_method(struct node *method, SymTable *global) {
     if (!header) return;
 
     struct node *ret_type = get_child(header, 0);
+
+    if (!body) {
+        printf("  ret %s %s\n", 
+               type_to_llvm(type_from_node(ret_type)),
+               default_val_llvm(type_from_node(ret_type)));
+        printf("}\n\n");
+        return;
+    }
+    
     struct node *id_node  = get_child(header, 1);
     struct node *params   = get_child(header, 2);
 
     if (!id_node || !id_node->token) return;
 
     ParamType *params_list = build_params_list(params);
-    char params_str[256];
-    params_to_str(params_list, params_str, sizeof(params_str));
+ 
+    char *params_str = params_to_str(params_list);
     
     char title[512];
     snprintf(title, sizeof(title), "Method %s%s", id_node->token, params_str);
-    SymTable *local_table = search_table(global, title);
+
+    Symbol *method_sym = search_exact_method(global, id_node->token, params_list);
+    SymTable *local_table = method_sym ? method_sym->nested_table : NULL;
     int is_main = 0;
-    if (strcmp(id_node->token, "main") == 0) {
-        if (main_emitted == 0) {
-            is_main = 1;
-            main_emitted = 1;
-        }
-    }
+
 
     tmp_counter = 1;
 
     /* ---- 1. Function signature ---- */
 
-    current_ret_type = is_main ? T_Int : type_from_node(ret_type); //main needs i32 as return
-    BasicType param_types[64]; int npt = 0;
+    int npt_count = 0;
+    while (get_child(params, npt_count) != NULL) npt_count++;
+
+    BasicType *param_types = npt_count > 0 ? malloc(npt_count * sizeof(BasicType)) : NULL;
+    int npt = 0;
+
     { int pi = 0; struct node *p;
     while ((p = get_child(params, pi++)) != NULL) {
         struct node *pt = get_child(p, 0);
         if (pt) param_types[npt++] = type_from_node(pt);
     }
     }
-    char mangled[128]; build_mangled_suffix(param_types, npt, mangled);
+    char *mangled = build_mangled_suffix(param_types, npt);
 
+    if (strcmp(id_node->token, "main") == 0 && npt == 1 
+    && param_types[0] == T_StringArray && main_emitted == 0) {
+        is_main = 1;
+        main_emitted = 1;
+    }
 
+    current_ret_type = is_main ? T_Int : type_from_node(ret_type);
 
 if (is_main) {
     /* main siempre con firma estándar C */
@@ -840,6 +921,9 @@ printf("entry:\n");
     }
 
     printf("}\n\n");
+
+    free(mangled);
+    free(param_types);
 }
 
 /* =========================================================================
@@ -862,14 +946,10 @@ void codegen_program(struct node *program, SymTable *global_table) {
      *      false\n\0   → 7   [7 x i8]
      *      %s\0        → 3   [3 x i8]   
      */
-    printf("@.str.int    = private unnamed_addr constant "
-           "[4 x i8] c\"%%d\\0A\\00\"\n");
-    printf("@.str.double = private unnamed_addr constant "
-           "[7 x i8] c\"%%.16e\\0A\\00\"\n");
-    printf("@.str.true   = private unnamed_addr constant "
-           "[6 x i8] c\"true\\0A\\00\"\n");
-    printf("@.str.false  = private unnamed_addr constant "
-           "[7 x i8] c\"false\\0A\\00\"\n");
+    printf("@.str.int    = private unnamed_addr constant [3 x i8] c\"%%d\\00\"\n");
+    printf("@.str.double = private unnamed_addr constant [6 x i8] c\"%%.16e\\00\"\n");
+    printf("@.str.true   = private unnamed_addr constant [5 x i8] c\"true\\00\"\n");
+    printf("@.str.false  = private unnamed_addr constant [6 x i8] c\"false\\00\"\n");
     printf("@.str.string = private unnamed_addr constant "
            "[3 x i8] c\"%%s\\00\"\n\n");
 
@@ -886,21 +966,51 @@ void codegen_program(struct node *program, SymTable *global_table) {
             if (!id_node || !id_node->token) continue;
             
             BasicType t = type_from_node(type_node);
-            printf("@_%s = global %s %s\n", id_node->token, type_to_llvm(t), default_val_llvm(t));
+            printf("@_g_%s = global %s %s\n", id_node->token, type_to_llvm(t), default_val_llvm(t));
         }
     }
     printf("\n");
 
     /* 5. Methods */
     i = 0;
+    emitted_count = 0;
     while ((c = get_child(program, i++)) != NULL) {
         if (c->category == MethodDecl) {
             struct node *header = get_child(c, 0);
             if (!header) continue;
             
             struct node *mid = get_child(header, 1);
-            if (mid && mid->annot_type != T_Undef) {
-                codegen_method(c, global_table);
+            struct node *params = get_child(header, 2);
+            if (!mid || !mid->token) continue;
+
+            ParamType *pl = build_params_list(params);
+            Symbol *sym = search_exact_method(global_table, mid->token, pl);
+
+            char *ps = params_to_str(pl);
+            int sig_len = snprintf(NULL, 0, "%s%s", mid->token, ps) + 1;
+            char *sig = malloc(sig_len);
+            snprintf(sig, sig_len, "%s%s", mid->token, ps);
+            free(ps);
+
+            ParamType *cur = pl;
+            while (cur) { ParamType *nx = cur->next; free(cur); cur = nx; }
+            if (sym) {
+                int already = 0;
+                for (int k = 0; k < emitted_count; k++) {
+                    if (strcmp(emitted_methods[k], sig) == 0) { already = 1; break; }
+                }
+                if (!already) {
+                    if (emitted_count == emitted_capacity) {
+                        emitted_capacity = emitted_capacity == 0 ? 16 : emitted_capacity * 2;
+                        emitted_methods = realloc(emitted_methods, emitted_capacity * sizeof(char*));
+                    }
+                    emitted_methods[emitted_count++] = sig; // Guardamos el puntero (no lo liberamos aquí)
+                    codegen_method(c, global_table);
+                } else {
+                    free(sig); // Si ya existe, liberamos la memoria generada
+                }
+            } else {
+                free(sig);
             }
         }
     }
