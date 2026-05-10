@@ -12,9 +12,6 @@
 static int tmp_counter = 1;   /* SSA register / label counter, reset per method */
 static BasicType current_ret_type = T_Void;
 
-static char **emitted_methods = NULL;
-static int emitted_count = 0;
-static int emitted_capacity = 0;
 static int main_emitted = 0;
 
 /* =========================================================================
@@ -910,62 +907,18 @@ void codegen_program(struct node *program, SymTable *global_table) {
     while ((c = get_child(program, i++)) != NULL) {
         if (c->category == FieldDecl) {
             struct node *type_node = get_child(c, 0);
-            struct node *id_node   = get_child(c, 1);
-            if (!id_node || !id_node->token) continue;
-            
+            struct node *id_node   = get_child(c, 1);            
             BasicType t = type_from_node(type_node);
             printf("@_g_%s = global %s %s\n", id_node->token, type_to_llvm(t), default_val_llvm(t));
         }
     }
     printf("\n");
-
     /* Methods */
     i = 0;
-    emitted_count = 0;
     while ((c = get_child(program, i++)) != NULL) {
         if (c->category == MethodDecl) {
-            struct node *header = get_child(c, 0);
-            if (!header) continue;
-            
-            struct node *mid = get_child(header, 1);
-            struct node *params = get_child(header, 2);
-            if (!mid || !mid->token) continue;
-
-            ParamType *pl = build_params_list(params);
-            Symbol *sym = search_exact_method(global_table, mid->token, pl);
-
-            char *ps = params_to_str(pl);
-            int sig_len = snprintf(NULL, 0, "%s%s", mid->token, ps) + 1;
-            char *sig = malloc(sig_len);
-            snprintf(sig, sig_len, "%s%s", mid->token, ps);
-            free(ps);
-
-            ParamType *cur = pl;
-            while (cur) { ParamType *nx = cur->next; free(cur); cur = nx; }
-            if (sym) {
-                int already = 0;
-                for (int k = 0; k < emitted_count; k++) {
-                    if (strcmp(emitted_methods[k], sig) == 0) { already = 1; break; }
-                }
-                if (!already) {
-                    if (emitted_count == emitted_capacity) {
-                        emitted_capacity = emitted_capacity == 0 ? 16 : emitted_capacity * 2;
-                        emitted_methods = realloc(emitted_methods, emitted_capacity * sizeof(char*));
-                    }
-                    emitted_methods[emitted_count++] = sig;
-                    codegen_method(c, global_table);
-                } else {
-                    free(sig); // If exists we liberate the mem
-                }
-            } else {
-                free(sig);
-            }
+            codegen_method(c, global_table);
         }
     }
     free_strlits();
-
-    for (int k = 0; k < emitted_count; k++) free(emitted_methods[k]);
-    free(emitted_methods);
-    emitted_methods = NULL;
-    emitted_count = emitted_capacity = 0;
 }
