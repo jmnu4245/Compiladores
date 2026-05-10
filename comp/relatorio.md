@@ -51,3 +51,28 @@ Each symbol is represented by the `Symbol` structure, which contains the name, t
 ### Semantic Analysis Algorithm
 
 Semantic analysis is performed in two passes. **Pass 1** (`check_semantics_pass1`) eagerly registers all global fields and method headers in the global table, immediately creating each method's `nested_table` with the `return` symbol and formal parameters, which enables calls to methods declared later in the file. **Pass 2** (`check_semantics_pass2`) recursively traverses the AST, registers each method's local variables, and delegates type checking to `check_node`, which operates in post-order to ensure that children's types are annotated before the parent node is checked. Errors are collected in a linked list and printed at the end, before the symbol tables and the annotated AST.
+
+## Section iii
+
+### Code Generation Architecture and Memory Model
+
+For generating the LLVM Intermediate Representation, all local variables and method parameters receive their own alloca instruction right in the entry block of the method. Whenever we need to read or write to them, we use load and store instructions. This design delegates the complex task of register promotion to the LLVM optimizer, specifically the mem2reg pass. Evaluation of expressions generates sequential virtual registers managed by a global counter that resets at the start of each method.
+
+### Method Emission and Name Mangling
+
+Since LLVM does not natively understand Java-style method overloading, we implemented a name mangling system. We prefix functions with @_ and we append a suffix to the method name based on its parameter types, using identifiers like _i for integers or _d for doubles. The only exception is the main method, which is emitted with the standard LLVM signature of i32 @main(i32 %argc, i8 %argv) to serve as the correct program entry point. Additionally, we calculate %argc - 1 at the beginning and store it locally to support the args.length operation naturally.
+
+### Type Coercion
+
+When the semantic rules dictate some type widening, such as promoting an integer to a double, this conversion is managed by our code, coerce_to intercepts it and writes IR with register assignments and method arguments correctly typed. If an integer register must be consumed where a double is expected, we inject a sitofp instruction right before the target operation.
+Furthermore, coerce_to includes defensive guards against T_Undef. While this acts as dead code under a correct semantic analysis, it prevents our program from crashing if it processes an AST containing prior semantic errors.
+
+### Control Flow Translation
+
+Translating control flow structures like if-else and while loops involved setting up different basic blocks and jumping between them with br instructions. Conditional statements evaluate their condition into a boolean register and emit a conditional branch to the respective blocks, which then unconditionally branch to a convergent end block. For logical AND and OR operators, we ensured proper short-circuiting by using dynamic branching and temporary stack allocations, preserving the strict evaluation semantics required by the language rather than relying on bitwise operations.
+
+### Global State and Built-in Functions
+
+Before generating method bodies, our generator performs a pre-pass over the AST to collect all string literals. We convert their escape sequences into LLVM-compatible hexadecimal formats and declare them at the top of the file as private constant arrays of bytes. Class fields are similarly declared globally with a specific prefix and initialized to their default values. 
+To handle language built-ins like System.out.print and Integer.parseInt, we simply declare and call the standard C library functions printf and atoi, utilizing our pre-defined global format strings.
+Decimal literals undergo string normalization before LLVM emission: if a literal starts with a dot (e.g., .5), a 0 is prepended; if it uses scientific notation without a decimal point (e.g., 1e5), a .0 is injected. Additionally, unary plus operators are treated simply as no-ops.
