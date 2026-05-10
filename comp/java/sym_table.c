@@ -111,18 +111,15 @@ void print_sym_table(SymTable *table) {
     while (curr) {
         printf("%s\t", curr->name);
         
-        // Formateo especial dependiendo de si es un método o una variable
         if (curr->kind == SYM_METHOD) {
             if (curr->params != NULL) {
                 char *parambuf = params_to_str(curr->params);
                 printf("%s\t", parambuf);
             } else {
-                // Si es un método pero no tiene parámetros, imprime ()
                 printf("()\t");
             }
             printf("%s", type_to_str(curr->type));
         } else {
-            // Si es una variable, solo ponemos tabulador para alinear el tipo
             printf("\t%s", type_to_str(curr->type));
         }
         

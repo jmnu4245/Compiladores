@@ -176,7 +176,6 @@ static int register_strlit(const char *token) {
 
 static void collect_strlits(struct node *n) {
     /* pre-scan of the entire AST to collect every StrLit token. */
-
     if (!n) return;
     if (n->category == StrLit && n->token)
         register_strlit(n->token);
@@ -643,23 +642,17 @@ static int codegen_statement(struct node *stmt, SymTable *global,
                 int call_r = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
-                       "([4 x i8], [4 x i8]* @.str.int, i32 0, i32 0), "
+                       "([3 x i8], [3 x i8]* @.str.int, i32 0, i32 0), "
                        "i32 %%%d)\n",
                        call_r, val_r);
             } else if (expr->annot_type == T_Double) {
                 int call_r = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
-                       "([7 x i8], [7 x i8]* @.str.double, i32 0, i32 0), "
+                       "([6 x i8], [6 x i8]* @.str.double, i32 0, i32 0), "
                        "double %%%d)\n",
                        call_r, val_r);
             } else if (expr->annot_type == T_Bool) {
-                /*
-                 * Boolean printing requires a branch: emit br before Ltrue/
-                 * Lfalse, print the right string, then merge at Lendbool.
-                 * Note: call_r was reserved before the branch only for int/
-                 * double, for bool we use fresh registers inside each branch.
-                 */
                 int id  = tmp_counter++;
                 printf("  br i1 %%%d, label %%L_true_%d, label %%L_false_%d\n",
                        val_r, id, id);
@@ -667,7 +660,7 @@ static int codegen_statement(struct node *stmt, SymTable *global,
                 int cr1 = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
-                       "([6 x i8], [6 x i8]* @.str.true, i32 0, i32 0))\n",
+                       "([5 x i8], [5 x i8]* @.str.true, i32 0, i32 0))\n",
                        cr1);
                 printf("  br label %%L_endbool_%d\n", id);
 
@@ -675,7 +668,7 @@ static int codegen_statement(struct node *stmt, SymTable *global,
                 int cr2 = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
-                       "([7 x i8], [7 x i8]* @.str.false, i32 0, i32 0))\n",
+                       "([6 x i8], [6 x i8]* @.str.false, i32 0, i32 0))\n",
                        cr2);
                 printf("  br label %%L_endbool_%d\n", id);
                 printf("L_endbool_%d:\n", id);

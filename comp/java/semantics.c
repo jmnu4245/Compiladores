@@ -18,14 +18,6 @@ int semantic_errors=0;
 static void check_node(struct node *n, SymTable *global, SymTable *local);
 void check_semantics_pass2(struct node *n);
 
-/* ================================================================
- * ERROR REPORTING
- * One function per error type defined in the spec.
- * ================================================================ */
-/* ================================================================
- * ERROR COLLECTOR (Strategy 3)
- * ================================================================ */
-
 typedef struct ErrorNode {
     int line;
     int col;
@@ -66,8 +58,10 @@ void print_semantic_errors() {
     }
     error_list_head = NULL;
 }
-//Strings dinamicos
 static void report_error_fmt(int line, int col, const char *fmt,...) {
+    /* Two-pass vsnprintf: first call with NULL measures the required
+     * buffer size, second call writes into the exact-sized allocation. */
+
     va_list args;
     va_start(args, fmt);
     int len = vsnprintf(NULL, 0, fmt, args) + 1;
@@ -249,7 +243,6 @@ static void check_identifier(struct node *n, SymTable *global, SymTable *local) 
 static void check_math_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
     
-    // Eliminado el early return de T_Undef
     if (!is_numeric(l->annot_type) || !is_numeric(r->annot_type)) {
         err_op_binary(n->line, n->col, get_op_str(n->category), l->annot_type, r->annot_type);
         n->annot_type = T_Undef;
@@ -277,7 +270,7 @@ static void check_relational_op(struct node *n) {
     n->annot_type = T_Bool;
 }
 
-/* And, Or, Xor */
+/* And, Or*/
 static void check_logical_binary_op(struct node *n) {
     struct node *l = get_child(n, 0), *r = get_child(n, 1);
     if (l->annot_type != T_Bool || r->annot_type != T_Bool) {
@@ -307,7 +300,6 @@ static void check_bitwise_op(struct node *n) {
 static void check_unary_numeric_op(struct node *n) {
     struct node *child = get_child(n, 0);
     
-    // Eliminado el early return de T_Undef
     if (!is_numeric(child->annot_type)) {
         err_op_unary(n->line, n->col, get_op_str(n->category), child->annot_type);
         n->annot_type = T_Undef;
@@ -319,7 +311,7 @@ static void check_unary_numeric_op(struct node *n) {
 /* Not */
 static void check_not_op(struct node *n) {
     struct node *child = get_child(n, 0);
-    if (child->annot_type != T_Bool) // Quitamos el "&& != T_Undef" para que falle con undef
+    if (child->annot_type != T_Bool)
         err_op_unary(n->line, n->col, get_op_str(n->category), child->annot_type);
     n->annot_type = T_Bool;
 }
@@ -450,7 +442,8 @@ static void check_call(struct node *n, SymTable *global) {
     if (chosen) {
         n->annot_type         = chosen->type;
         id_node->annot_type   = T_None;
-        
+
+        // Then annot_params will also be read by codegen to resolve the overload. 
         id_node->annot_params = chosen->params ? params_to_str(chosen->params) : strdup("()");
     } else if (n_compat > 1) {
         err_ambiguous(id_node->line, id_node->col, full_name);
@@ -596,9 +589,7 @@ static void register_method_header(struct node *method) {
     struct node *method_id = get_child(header, 1);
     struct node *params    = get_child(header, 2);
 
-    ParamType *params_list = build_params_list(params);
-    //char params_str[512];
-    //params_to_str(params_list, params_str, sizeof(params_str));
+    ParamType *params_list = build_params_list(params);s
     
     SymTable *tmp_params = create_table("param_check");
     if (params) {
@@ -707,19 +698,18 @@ static void process_method_body(struct node *method) {
 }
 
 void check_semantics_pass2(struct node *n) {
-    if (!n) return;
-
+    if (!n) return;//this should be dead code
     switch (n->category) {
 
         case Program: {
             struct node *child;
-            //Lanzamos para methods y declaraciones
             for (int i = 1; (child = get_child(n, i)) != NULL; i++) {
                 check_semantics_pass2(child);
             }
             break;
         }
         case ParamDecl: {
+            //already procesed completly in pass1
             break;
         }
 
@@ -732,10 +722,11 @@ void check_semantics_pass2(struct node *n) {
             break;
         }
         case FieldDecl: {
+            //already procesed completly in pass1
             break;
         }
         case MethodDecl: {
-            /* Si Pass 1 NO lo marcó como inválido, procesamos su interior */
+            /* If Pass 1 marqued as invalid we dont process it */
             if (n->annot_type != T_Undef) {
                 process_method_body(n);
             }
@@ -753,7 +744,7 @@ void check_semantics_pass2(struct node *n) {
             break;
         }
 
-        /* Expressions and expression-statements: delegate to check_node */
+        /* Expressions and expression-statements we delegate to check_node */
         case Assign:
         case Add:  case Sub:  case Mul:  case Div:  case Mod:
         case Eq:   case Ne:   case Lt:   case Gt:   case Le:  case Ge:
@@ -765,7 +756,7 @@ void check_semantics_pass2(struct node *n) {
             check_node(n, global_table, current_table);
             break;
 
-        /* Structural nodes (Block, MethodBody, MethodParams, …): just recurse */
+        /* Structural nodes (Block, MethodBody, MethodParams): recurse */
         default:{
             struct node *child;
             for (int i = 0; (child = get_child(n, i)) != NULL; i++) {
