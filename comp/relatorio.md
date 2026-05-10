@@ -34,24 +34,19 @@ These productions allow the parser to recover from local errors, continue analys
 
 ## Section ii
 
-### AST Data Structure
-
-Each AST node is represented by the `node` structure, which contains: the node category (enum `category`), the original token text (`token`), the line and column in the input file (`line`, `col`), the annotated type (`annot_type`), the parameter signature for method calls (`annot_params`), and a pointer to the list of children.
-
-Children are stored in a `node_list` linked list with a sentinel node at the head, which simplifies insertion in `addchild` and index-based access in `get_child`. Printing is done recursively by `show` and `show_annotated`, with the type annotation printed as ` - type` after the node name, using `annot_params` for `Identifier` nodes of method calls and `annot_type` for all others.
-
-### AST Construction
-
-Nodes are created in the semantic actions of `jucompiler.y` using `newnode`. For multiple declarations on a single line (e.g. `int x, y;`), the auxiliary function `create_multiple_decls` creates a temporary `MethodBody` node as a container with one `FieldDecl`/`VarDecl` node per identifier, which is then unpacked into the parent node using `unpack_nodes`. Superfluous nodes are avoided: a `Block` with zero children is replaced by `NULL` and with a single child is replaced by that child itself, except when it represents a mandatory empty `Statement`.
-
+### AST Data Structure and Construction
+ 
+Each AST node is represented by the `node` structure, containing the category, the original token text, the line and column, the annotated type (`annot_type`), the parameter signature for method calls (`annot_params`), and a pointer to a `node_list` children linked list with a sentinel head. Nodes are created in `jucompiler.y` semantic actions using `newnode`. Superfluous `Block` nodes are eliminated: zero children become `NULL`, one child is replaced by that child itself. For multiple declarations on a single line, `create_multiple_decls` builds a temporary container unpacked into the parent with `unpack_nodes`. The full tree is released by `free_tree`; in syntax error cases, partially built subtrees are freed before the parser returns. Printing is done recursively by `show` and `show_annotated`, using `annot_params` for method call `Identifier` nodes and `annot_type` for all others.
+ 
 ### Symbol Table Data Structure
-
-Each symbol is represented by the `Symbol` structure, which contains the name, type (`BasicType`), classification (`SymbolKind`: `SYM_FIELD`, `SYM_METHOD`, `SYM_PARAM`, `SYM_LOCAL`, `SYM_RETURN`), the list of formal parameter types (`ParamType *params`, methods only), and a pointer to the method's own symbol table (`nested_table`). The global table contains all fields and methods; each method's table, stored directly in `nested_table`, contains the pseudo-symbol `return`, the formal parameters, and the local variables.
-
+ 
+Each symbol is represented by the `Symbol` structure, containing the name, type (`BasicType`), classification (`SymbolKind`), formal parameter types (`ParamType *params`, methods only), and a pointer to the method's nested table (`nested_table`). Five kinds are defined: `SYM_FIELD`, `SYM_METHOD`, `SYM_PARAM`, `SYM_LOCAL`, and `SYM_RETURN`. The last stores the enclosing method's expected return type as a pseudo-symbol, avoiding special-case lookups when validating `return` statements. The global table holds all fields and methods; each method's `nested_table` holds `return`, formal parameters, and local variables.
+ 
 ### Semantic Analysis Algorithm
-
-Semantic analysis is performed in two passes. **Pass 1** (`check_semantics_pass1`) eagerly registers all global fields and method headers in the global table, immediately creating each method's `nested_table` with the `return` symbol and formal parameters, which enables calls to methods declared later in the file. **Pass 2** (`check_semantics_pass2`) recursively traverses the AST, registers each method's local variables, and delegates type checking to `check_node`, which operates in post-order to ensure that children's types are annotated before the parent node is checked. Errors are collected in a linked list and printed at the end, before the symbol tables and the annotated AST.
-
+ 
+Semantic analysis runs in two passes. **Pass 1** eagerly registers all fields and method headers, immediately building each method's `nested_table`, enabling forward calls. **Pass 2** recursively traverses the AST, registers local variables, and delegates expression type-checking to `check_node`, which operates in post-order so children are annotated before their parent.
+ 
+Type compatibility follows Java rules: `int` promotes implicitly to `double`; arithmetic operators require numeric operands; `&&` and `||` require `boolean`; `^` requires `int`; `==` and `!=` accept two operands of the same type or any two numeric types. When an operation receives invalid operands, the result is set to `undef`, which propagates up the tree to suppress cascading errors on parent nodes. Method overload resolution prioritises exact matches; if none exists, a unique compatible match is selected; multiple compatible matches yield an ambiguity error; no match yields a cannot-find error — in both cases, the `Call` and `Identifier` nodes are annotated with `undef`. Errors are collected in a linked list and printed before the symbol tables and annotated AST.
 ## Section iii
 
 ### Code Generation Architecture and Memory Model
