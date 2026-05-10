@@ -7,7 +7,7 @@
 #include "ast.h"
 
 /* =========================================================================
- * Globals
+ * Global variables
  * ========================================================================= */
 static int tmp_counter = 1;   /* SSA register / label counter, reset per method */
 static BasicType current_ret_type = T_Void;
@@ -20,8 +20,6 @@ static int main_emitted = 0;
 /* =========================================================================
  * Type helpers
  * ========================================================================= */
-
-
 static const char *type_to_llvm(BasicType t) {
     switch (t) {
         case T_Int:         return "i32";
@@ -55,16 +53,47 @@ static char *build_mangled_suffix(BasicType *types, int n) {
     return out;
 }
 
-/* =========================================================================
- * Numeric literal cleaning  (Juc allows 1_000_000 style underscores)
- * ========================================================================= */
 static char *strip_underscores(const char *in) {
+    //(Juc allows 1_000_000 style underscores)
     char *out = malloc(strlen(in) + 3); // +3 permite añadir un ".0" posteriormente si es necesario
     char *q = out;
     for (; *in; in++)
         if (*in != '_') *q++ = *in;
     *q = '\0';
     return out;
+}
+
+static const char *get_var_prefix(SymTable *global, SymTable *local, const char *name) {
+    if (local) {
+        Symbol *s;
+        for (s = local->first; s; s = s->next)
+            if (strcmp(s->name, name) == 0) return "%";
+    }
+    return "@_g_";
+}
+
+
+static int coerce_to(int reg, BasicType from, BasicType to) {
+    /*  Emits a conversion instruction when the register type does not match the
+    *  target type, and returns the (possibly new) register holding the result*/
+
+    if (from == to || from == T_Undef || to == T_Undef) return reg; //Dead code if semantics works well
+    if (from == T_Int && to == T_Double) {
+        int r = tmp_counter++;
+        printf("  %%%d = sitofp i32 %%%d to double\n", r, reg);
+        return r;
+    }
+    if (from == T_Double && to == T_Int) {
+        int r = tmp_counter++;
+        printf("  %%%d = fptosi double %%%d to i32\n", r, reg);
+        return r;
+    }
+    if (from == T_Bool && to == T_Int) {
+        int r = tmp_counter++;
+        printf("  %%%d = zext i1 %%%d to i32\n", r, reg);
+        return r;
+    }
+    return reg;
 }
 
 /* =========================================================================
@@ -94,14 +123,13 @@ static void free_strlits(void) {
     strlit_count = strlit_capacity = 0;
 }
 
+
+static void juc_strlit_to_llvm(const char *token, char **out_content, int *out_count) {
 /*
  * Convert a Juc STRLIT token (with surrounding quotes) to an LLVM constant
- * string body.  Juc escape sequences are translated to \XX hex escapes that
+ * string body. Juc escape sequences are translated to \XX hex escapes that
  * LLVM's assembler understands.  A null terminator \00 is appended.
- * Returns the total byte count (string length + 1 for '\0').
  */
-static void juc_strlit_to_llvm(const char *token, char **out_content, int *out_count) {
-    // El peor caso es que todos los caracteres se conviertan en \XX (3 bytes) + \00 y null
     char *out = malloc(strlen(token) * 3 + 5);
     const char *p = token + 1;
     char *q = out;
@@ -134,8 +162,8 @@ static void juc_strlit_to_llvm(const char *token, char **out_content, int *out_c
     *out_count = count;
 }
 
-/* Returns the index of this literal in the registry (adds if new). */
 static int register_strlit(const char *token) {
+    /* Returns the index of this literal in the registry (and adds if new). */
     for (int i = 0; i < strlit_count; i++)
         if (strcmp(strlits[i].token, token) == 0) return i;
 
@@ -149,8 +177,9 @@ static int register_strlit(const char *token) {
     return strlit_count++;
 }
 
-/* DFS pre-scan of the entire AST to collect every StrLit token. */
 static void collect_strlits(struct node *n) {
+    /* pre-scan of the entire AST to collect every StrLit token. */
+
     if (!n) return;
     if (n->category == StrLit && n->token)
         register_strlit(n->token);
@@ -158,8 +187,8 @@ static void collect_strlits(struct node *n) {
         collect_strlits(c->node);
 }
 
-/* Emit global string-literal constants (call before method codegen). */
 static void emit_strlits(void) {
+    /* Emit global string-literal constants befor generating any code */
     int i;
     for (i = 0; i < strlit_count; i++)
         printf("@.str.lit.%d = private unnamed_addr constant [%d x i8] c\"%s\"\n",
@@ -168,49 +197,9 @@ static void emit_strlits(void) {
 }
 
 /* =========================================================================
- * Variable access prefix  (local → %, global → @_)
+ * Code Generation methods
  * ========================================================================= */
-static const char *get_var_prefix(SymTable *global, SymTable *local,
-                                   const char *name) {
-    if (local) {
-        Symbol *s;
-        for (s = local->first; s; s = s->next)
-            if (strcmp(s->name, name) == 0) return "%";
-    }
-    return "@_g_";
-}
 
-/* =========================================================================
- * Type coercion helper
- *   Emits a conversion instruction when the register type does not match the
- *   target type, and returns the (possibly new) register holding the result.
- * ========================================================================= */
-static int coerce_to(int reg, BasicType from, BasicType to) {
-    if (from == to || from == T_Undef || to == T_Undef) return reg;
-    if (from == T_Int && to == T_Double) {
-        int r = tmp_counter++;
-        printf("  %%%d = sitofp i32 %%%d to double\n", r, reg);
-        return r;
-    }
-    if (from == T_Double && to == T_Int) {
-        int r = tmp_counter++;
-        printf("  %%%d = fptosi double %%%d to i32\n", r, reg);
-        return r;
-    }
-    if (from == T_Bool && to == T_Int) {
-        int r = tmp_counter++;
-        printf("  %%%d = zext i1 %%%d to i32\n", r, reg);
-        return r;
-    }
-    return reg;
-}
-
-static int codegen_statement(struct node *stmt, SymTable *global,
-                              SymTable *local);
-
-/* =========================================================================
- * ExprGen
- * ========================================================================= */
 static int codegen_expression(struct node *expr, SymTable *global,
                                SymTable *local) {
     if (!expr) return -1;
@@ -260,11 +249,11 @@ static int codegen_expression(struct node *expr, SymTable *global,
             return r;
         }
 
+        case StrLit: {
         /*
          * StrLit appearing as a standalone expression (e.g. inside Print).
          * Returns a pointer to the first byte of the global string constant.
          */
-        case StrLit: {
             int idx = register_strlit(expr->token);
             int r   = tmp_counter++;
             printf("  %%%d = getelementptr inbounds [%d x i8], [%d x i8]* @.str.lit.%d, i32 0, i32 0\n",
@@ -294,10 +283,7 @@ static int codegen_expression(struct node *expr, SymTable *global,
                    type_to_llvm(rt), t1, t2);
             return r;
         }
-
-        /* ---- Bitwise / logical binary operators ---- */
-
-        /* ---- Bitwise / logical binary operators ---- */
+        /* ---- Bitwise binary operators ---- */
         case Xor: case Lshift: case Rshift: {
             struct node *c0 = get_child(expr, 0);
             struct node *c1 = get_child(expr, 1);
@@ -391,14 +377,12 @@ static int codegen_expression(struct node *expr, SymTable *global,
         }
 
         /* ---- Unary operators ---- */
-
         case Not: {
             int t = codegen_expression(get_child(expr, 0), global, local);
             int r = tmp_counter++;
             printf("  %%%d = xor i1 %%%d, 1\n", r, t);
             return r;
         }
-
         case Minus: {
             struct node *c0 = get_child(expr, 0);
             int t = codegen_expression(c0, global, local);
@@ -409,14 +393,10 @@ static int codegen_expression(struct node *expr, SymTable *global,
                 printf("  %%%d = sub i32 0, %%%d\n", r, t);
             return r;
         }
-
         case Plus: {
             /* Unary plus is a no-op */
             return codegen_expression(get_child(expr, 0), global, local);
         }
-
-        /* ---- Assignment ---- */
-
         case Assign: {
             struct node *id_node  = get_child(expr, 0);
             struct node *val_node = get_child(expr, 1);
@@ -427,7 +407,7 @@ static int codegen_expression(struct node *expr, SymTable *global,
             const char *lt  = type_to_llvm(id_node->annot_type);
             printf("  store %s %%%d, %s* %s%s\n",
                    lt, val_r, lt, pfx, id_node->token);
-            /* In Java/Juc, assignment is also an expression → return value */
+            /* Assignment is also an expression return value */
             int r = tmp_counter++;
             if (id_node->annot_type == T_Double)
     printf("  %%%d = fadd double 0.0, %%%d\n", r, val_r);
@@ -435,8 +415,6 @@ else
     printf("  %%%d = add %s 0, %%%d\n", r, lt, val_r);
             return r;
         }
-
-        /* ---- Method call ---- */
         case Call: {
             struct node *name_node = get_child(expr, 0);
             if (!name_node || !name_node->annot_params) return -1;
@@ -550,14 +528,14 @@ else
     }
 }
 
-/* =========================================================================
- * StmtGen
- *   Returns 1 when the statement DEFINITELY ends on a terminator instruction
- *   (ret or unconditional br), so the caller knows whether to emit a fall-
- *   through branch.  Returns 0 otherwise.
- * ========================================================================= */
+
 static int codegen_statement(struct node *stmt, SymTable *global,
                               SymTable *local) {
+
+/*  Returns 1 when the statement DEFINITELY ends on a terminator instruction
+ *   (ret or unconditional br), so the caller knows whether to emit a fall-
+ *   through branch.  Returns 0 otherwise.
+*/
     if (!stmt) return 0;
 
     switch (stmt->category) {
@@ -643,7 +621,7 @@ static int codegen_statement(struct node *stmt, SymTable *global,
             struct node *expr = get_child(stmt, 0);
             if (!expr) return 0;
 
-            /* STRLIT argument: use printf("%s", literal_ptr) */
+            /* STRLIT argument: we call printf("%s", literal_ptr) from c*/
             if (expr->category == StrLit) {
                 int idx    = register_strlit(expr->token);
                 int str_r  = tmp_counter++;
@@ -662,16 +640,17 @@ static int codegen_statement(struct node *stmt, SymTable *global,
 
             if (expr->annot_type == T_StringArray) return 0;
 
+            
             int val_r  = codegen_expression(expr, global, local);
-            int call_r = tmp_counter++;
-
             if (expr->annot_type == T_Int) {
+                int call_r = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
                        "([4 x i8], [4 x i8]* @.str.int, i32 0, i32 0), "
                        "i32 %%%d)\n",
                        call_r, val_r);
             } else if (expr->annot_type == T_Double) {
+                int call_r = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
                        "i8* getelementptr inbounds "
                        "([7 x i8], [7 x i8]* @.str.double, i32 0, i32 0), "
@@ -682,12 +661,11 @@ static int codegen_statement(struct node *stmt, SymTable *global,
                  * Boolean printing requires a branch: emit br before Ltrue/
                  * Lfalse, print the right string, then merge at Lendbool.
                  * Note: call_r was reserved before the branch only for int/
-                 * double; for bool we use fresh registers inside each branch.
+                 * double, for bool we use fresh registers inside each branch.
                  */
                 int id  = tmp_counter++;
                 printf("  br i1 %%%d, label %%L_true_%d, label %%L_false_%d\n",
                        val_r, id, id);
-
                 printf("L_true_%d:\n", id);
                 int cr1 = tmp_counter++;
                 printf("  %%%d = call i32 (i8*, ...) @printf("
@@ -703,13 +681,7 @@ static int codegen_statement(struct node *stmt, SymTable *global,
                        "([7 x i8], [7 x i8]* @.str.false, i32 0, i32 0))\n",
                        cr2);
                 printf("  br label %%L_endbool_%d\n", id);
-
                 printf("L_endbool_%d:\n", id);
-
-                /* The pre-allocated call_r went unused for bool; that is
-                 * intentional — it is subsumed by cr1/cr2 inside the branches.
-                 * Suppress the unused variable warning by casting. */
-                (void)call_r;
             }
             return 0;
         }
@@ -720,7 +692,7 @@ static int codegen_statement(struct node *stmt, SymTable *global,
     struct node *expr = get_child(stmt, 0);
     if (expr) {
         int val_r = codegen_expression(expr, global, local);
-        /* coerce al tipo de retorno declarado (int→double, etc.) */
+        /* coerce al tipo de retorno declarado (int->double, etc.) */
         val_r = coerce_to(val_r, expr->annot_type, current_ret_type);
         printf("  ret %s %%%d\n", type_to_llvm(current_ret_type), val_r);
     } else {
@@ -760,46 +732,32 @@ static int codegen_statement(struct node *stmt, SymTable *global,
     }
 }
 
-/* =========================================================================
- * MethodGen
- * ========================================================================= */
 static void codegen_method(struct node *method, SymTable *global) {
     struct node *header   = get_child(method, 0);
     struct node *body     = get_child(method, 1);
     
-    if (!header) return;
-
-    struct node *ret_type = get_child(header, 0);
-
-    if (!body) {
-        printf("  ret %s %s\n", 
-               type_to_llvm(type_from_node(ret_type)),
-               default_val_llvm(type_from_node(ret_type)));
-        printf("}\n\n");
-        return;
-    }
-    
+    struct node *ret_type = get_child(header, 0);    
     struct node *id_node  = get_child(header, 1);
     struct node *params   = get_child(header, 2);
-
-    if (!id_node || !id_node->token) return;
 
     ParamType *params_list = build_params_list(params);
  
     char *params_str = params_to_str(params_list);
-    
-    char title[512];
-    snprintf(title, sizeof(title), "Method %s%s", id_node->token, params_str);
+
+    free(params_str);
 
     Symbol *method_sym = search_exact_method(global, id_node->token, params_list);
     SymTable *local_table = method_sym ? method_sym->nested_table : NULL;
     int is_main = 0;
 
+    //free param_list
+    ParamType *cur_pl = params_list;
+    while (cur_pl) { ParamType *nx = cur_pl->next; free(cur_pl); cur_pl = nx; }
+
 
     tmp_counter = 1;
 
-    /* ---- 1. Function signature ---- */
-
+    /* ---- Function signature ---- */
     int npt_count = 0;
     while (get_child(params, npt_count) != NULL) npt_count++;
 
@@ -823,14 +781,14 @@ static void codegen_method(struct node *method, SymTable *global) {
     current_ret_type = is_main ? T_Int : type_from_node(ret_type);
 
 if (is_main) {
-    /* main siempre con firma estándar C */
+
+    /* main always with standard signature*/
     printf("define i32 @main(i32 %%argc, i8** %%argv) {\n");
 } else {
     printf("define %s @_%s%s(",
            type_to_llvm(type_from_node(ret_type)),
            id_node->token, mangled);
 
-    /* Imprimir parámetros formales */
     int first = 1, pi = 0;
     struct node *p;
     while ((p = get_child(params, pi++)) != NULL) {
@@ -845,7 +803,7 @@ if (is_main) {
     printf(") {\n");
 }
 printf("entry:\n");
-    /* ---- 2. Alloca + store for parameters ---- */
+    /* ---- Allocation and store for parameters ---- */
     if (is_main) {
         int i = 0;
         struct node *p;
@@ -857,7 +815,7 @@ printf("entry:\n");
             if (type_from_node(p_type) == T_StringArray) {
                 printf("  %%%s = alloca i8**\n", p_id->token);
                 printf("  store i8** %%argv, i8*** %%%s\n", p_id->token);
-                printf("  %%__%s_len = alloca i32\n", p_id->token);
+                printf("  %%__%s_len = alloca i32\n", p_id->token); // __<name>_len: slot for argc-1 
                 int r_argc = tmp_counter++;
                 printf("  %%%d = sub i32 %%argc, 1\n", r_argc);
                 printf("  store i32 %%%d, i32* %%__%s_len\n", r_argc, p_id->token);
@@ -886,7 +844,7 @@ printf("entry:\n");
         }
     }
 
-    /* ---- 3. Alloca for local variables ---- */
+    /* ---- Allocation for local variables ---- */
     int i = 0;
     struct node *s;
     while ((s = get_child(body, i++)) != NULL) {
@@ -900,7 +858,7 @@ printf("entry:\n");
     }
     printf("\n");
 
-    /* ---- 4. Generate body statements ---- */
+    /* ---- Generate body statements ---- */
     int last_term = 0;
     i = 0;
     while ((s = get_child(body, i++)) != NULL) {
@@ -909,13 +867,14 @@ printf("entry:\n");
         }
     }
 
-    /* ---- 5. Fallback return ---- */
+    /* ---- Fallback return ---- */
     if (!last_term) {
         if (is_main) {
             printf("  ret i32 0\n");
         } else if (type_from_node(ret_type) == T_Void) {
             printf("  ret void\n");
         } else {
+            //This only would execute if semantics was wrong
             printf("  ret %s %s\n", type_to_llvm(type_from_node(ret_type)), default_val_llvm(type_from_node(ret_type)));
         }
     }
@@ -926,26 +885,16 @@ printf("entry:\n");
     free(param_types);
 }
 
-/* =========================================================================
- * ProgramGen  —  top-level entry point
- * ========================================================================= */
-void codegen_program(struct node *program, SymTable *global_table) {
 
-    /* 0. Pre-scan to collect all string literals before emitting anything */
+void codegen_program(struct node *program, SymTable *global_table) {
+    //entry point
+
     collect_strlits(program);
 
-    /* 1. External C function declarations */
     printf("declare i32 @printf(i8*, ...)\n");
     printf("declare i32 @atoi(i8*)\n\n");
 
-    /* 2. Static format strings
-     *    Sizes (bytes, including \n and \0):
-     *      %d\n\0      → 4   [4 x i8]
-     *      %.16e\n\0   → 7   [7 x i8]   
-     *      true\n\0    → 6   [6 x i8]
-     *      false\n\0   → 7   [7 x i8]
-     *      %s\0        → 3   [3 x i8]   
-     */
+    //sizes
     printf("@.str.int    = private unnamed_addr constant [3 x i8] c\"%%d\\00\"\n");
     printf("@.str.double = private unnamed_addr constant [6 x i8] c\"%%.16e\\00\"\n");
     printf("@.str.true   = private unnamed_addr constant [5 x i8] c\"true\\00\"\n");
@@ -953,10 +902,9 @@ void codegen_program(struct node *program, SymTable *global_table) {
     printf("@.str.string = private unnamed_addr constant "
            "[3 x i8] c\"%%s\\00\"\n\n");
 
-    /* 3. User string-literal globals */
     emit_strlits();
 
-    /* 4. Global (field) variables */
+    //global variables
     int i = 0;
     struct node *c;
     while ((c = get_child(program, i++)) != NULL) {
@@ -971,7 +919,7 @@ void codegen_program(struct node *program, SymTable *global_table) {
     }
     printf("\n");
 
-    /* 5. Methods */
+    /* Methods */
     i = 0;
     emitted_count = 0;
     while ((c = get_child(program, i++)) != NULL) {
@@ -1004,10 +952,10 @@ void codegen_program(struct node *program, SymTable *global_table) {
                         emitted_capacity = emitted_capacity == 0 ? 16 : emitted_capacity * 2;
                         emitted_methods = realloc(emitted_methods, emitted_capacity * sizeof(char*));
                     }
-                    emitted_methods[emitted_count++] = sig; // Guardamos el puntero (no lo liberamos aquí)
+                    emitted_methods[emitted_count++] = sig;
                     codegen_method(c, global_table);
                 } else {
-                    free(sig); // Si ya existe, liberamos la memoria generada
+                    free(sig); // If exists we liberate the mem
                 }
             } else {
                 free(sig);
@@ -1015,4 +963,9 @@ void codegen_program(struct node *program, SymTable *global_table) {
         }
     }
     free_strlits();
+
+    for (int k = 0; k < emitted_count; k++) free(emitted_methods[k]);
+    free(emitted_methods);
+    emitted_methods = NULL;
+    emitted_count = emitted_capacity = 0;
 }
