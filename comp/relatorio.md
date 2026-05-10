@@ -1,28 +1,28 @@
-# Relatório
+# Report
 
-## Secção i
+## Section i
 
-### Transformações da Gramática EBNF para LALR(1)
+### Transformations from EBNF Grammar to LALR(1)
 
-A gramática original, fornecida em notação EBNF, foi transformada para uma gramática compatível com análise ascendente LALR(1) usando `yacc`. As principais transformações e decisões são descritas a seguir.
+The original grammar, provided in EBNF notation, was transformed into a grammar compatible with LALR(1) bottom-up parsing using `yacc`. The main transformations and design decisions are described below.
 
-### Eliminação de Ambiguidade e Definição de Precedências
+### Disambiguation and Precedence Rules
 
-A gramática original das expressões é ambígua. Em vez de reescrever as produções para codificar precedência estruturalmente, optou-se por manter uma gramática mais plana para `SimpleExpr` e usar as diretivas `%left`, `%right` e `%nonassoc` do `yacc` para definir precedência e associatividade. A hierarquia definida, da menor para a maior precedência, é: atribuição (`ASSIGN`, associativa à direita), disjunção lógica (`OR`), conjunção lógica (`AND`), XOR, igualdade/diferença (`EQ`, `NE`), relacionais (`LT`, `GT`, `LE`, `GE`), deslocamentos (`LSHIFT`, `RSHIFT`), adição/subtração (`PLUS`, `MINUS`), multiplicação/divisão/módulo (`STAR`, `DIV`, `MOD`), e operadores unários (`NOT`, `UNARY`). Esta abordagem reproduz fielmente a precedência da linguagem Java.
+The original expression grammar is ambiguous. Rather than rewriting productions to encode precedence structurally, a flat grammar for `SimpleExpr` was kept and the `%left`, `%right`, and `%nonassoc` directives of `yacc` were used to define operator precedence and associativity. The hierarchy defined, from lowest to highest precedence, is: assignment (`ASSIGN`, right-associative), logical disjunction (`OR`), logical conjunction (`AND`), XOR, equality/inequality (`EQ`, `NE`), relational operators (`LT`, `GT`, `LE`, `GE`), shifts (`LSHIFT`, `RSHIFT`), addition/subtraction (`PLUS`, `MINUS`), multiplication/division/modulo (`STAR`, `DIV`, `MOD`), and unary operators (`NOT`, `UNARY`). This approach faithfully reproduces Java's operator precedence.
 
-O conflito clássico do `if-else` pendente foi resolvido declarando `IF_PREC` com `%nonassoc` a uma precedência inferior à de `ELSE`, e anotando a produção `IF ... Statement` sem `ELSE` com `%prec IF_PREC`, forçando o `yacc` a preferir o shift do `ELSE` ao reduce.
+The classic dangling `else` conflict was resolved by declaring `IF_PREC` with `%nonassoc` at a lower precedence than `ELSE`, and annotating the `IF ... Statement` production without `ELSE` with `%prec IF_PREC`, forcing `yacc` to prefer shifting `ELSE` over reducing.
 
-### Separação de Expr e SimpleExpr
+### Separation of Expr and SimpleExpr
 
-A produção `Expr` foi dividida em duas: `Expr` trata apenas a atribuição (`Assignment`) e delega tudo o resto a `SimpleExpr`. Esta separação foi necessária para o yacc poder distinguir claramente entre uma atribuição e qualquer outra expressão, uma vez que ambas partilham o prefixo `IDENTIFIER`. A atribuição é declarada associativa à direita e com menor precedência que todos os operadores binários, mantendo a semântica correta da linguagem Java.
+The `Expr` production was split into two: `Expr` handles only assignment (`Assignment`) and delegates everything else to `SimpleExpr`. This separation was necessary for `yacc` to clearly distinguish between an assignment and any other expression, since both share the prefix `IDENTIFIER`. Assignment is declared right-associative and with lower precedence than all binary operators, preserving the correct semantics of the Java language.
 
-### Declarações Múltiplas numa Linha
+### Multiple Declarations on a Single Line
 
-As produções `FieldDecl` e `VarDecl` permitem declarar múltiplos identificadores numa única instrução (e.g., `int x, y, z;`). Para preservar a estrutura da AST — onde cada declaração corresponde a um nó separado `FieldDecl`/`VarDecl` — foi criada a função auxiliar `create_multiple_decls`, que constrói um nó `MethodBody` temporário (usado como contentor) com um nó de declaração por identificador. Este contentor é depois desempacotado com `unpack_nodes` no nó pai correto.
+The `FieldDecl` and `VarDecl` productions allow declaring multiple identifiers in a single statement (e.g., `int x, y, z;`). To preserve the AST structure — where each declaration corresponds to a separate `FieldDecl`/`VarDecl` node — an auxiliary function `create_multiple_decls` was created, which builds a temporary `MethodBody` node as a container with one declaration node per identifier. This container is then unpacked into the correct parent node using `unpack_nodes`.
 
-### Produções de Erro para Recuperação
+### Error Recovery Productions
 
-Foram incluídas as seguintes produções de recuperação de erros sintáticos, conforme especificado:
+The following syntax error recovery productions were included, as specified:
 
 - `FieldDecl → error SEMICOLON`
 - `Statement → error SEMICOLON`
@@ -30,24 +30,24 @@ Foram incluídas as seguintes produções de recuperação de erros sintáticos,
 - `MethodInvocation → IDENTIFIER LPAR error RPAR`
 - `SimpleExpr → LPAR error RPAR`
 
-Estas produções permitem ao analisador recuperar de erros locais, continuar a análise e reportar múltiplos erros numa única invocação.
+These productions allow the parser to recover from local errors, continue analysis, and report multiple errors in a single invocation.
 
-## Secção ii
+## Section ii
 
-### Estrutura de Dados da AST
- 
-Cada nó da AST é representado pela estrutura `node`, que contém: a categoria do nó (enum `category`), o texto original do token (`token`), a linha e coluna no ficheiro de entrada (`line`, `col`), o tipo anotado (`annot_type`), a assinatura de parâmetros para chamadas de métodos (`annot_params`), e um ponteiro para a lista de filhos.
+### AST Data Structure
 
-Os filhos são armazenados numa lista ligada `node_list` com um nó sentinela na cabeça, o que simplifica a inserção em `addchild` e o acesso por índice em `get_child`. A impressão é feita recursivamente por `show` e `show_annotated`, sendo a anotação de tipo impressa como ` - tipo` após o nome do nó, usando `annot_params` para nós `Identifier` de chamadas de métodos e `annot_type` para os restantes.
- 
-### Construção da AST
- 
-Os nós são criados nas ações semânticas do `jucompiler.y` com `newnode`. Para declarações múltiplas numa linha (e.g. `int x, y;`), a função auxiliar `create_multiple_decls` cria um nó `MethodBody` temporário como contentor com um nó `FieldDecl`/`VarDecl` por identificador, que é depois desempacotado no nó pai com `unpack_nodes`. Nós supérfluos são evitados: um `Block` com zero filhos é substituído por `NULL` e com um único filho é substituído pelo próprio filho, exceto quando representa um `Statement` obrigatoriamente vazio.
- 
-### Estrutura de Dados da Tabela de Símbolos
- 
-Cada símbolo é representado pela estrutura `Symbol`, que contém: o nome, o tipo (`BasicType`), o classificação (`SymbolKind`: `SYM_FIELD`, `SYM_METHOD`, `SYM_PARAM`, `SYM_LOCAL`, `SYM_RETURN`), a lista de tipos dos parâmetros formais (`ParamType *params`, apenas para métodos), e um ponteiro para a tabela de símbolos do próprio método (`nested_table`). A tabela global contém todos os campos e métodos, a tabela de cada método, armazenada diretamente em `nested_table`, contém o pseudo-símbolo `return`, os parâmetros formais e as variáveis locais. 
- 
-### Algoritmo de Análise Semântica
- 
-A análise semântica é feita em duas passagens. A **passagem 1** (`check_semantics_pass1`) regista antecipadamente todos os campos e cabeçalhos de métodos na tabela global, criando desde logo a `nested_table` de cada método com o símbolo `return` e os parâmetros formais, o que permite chamadas a métodos declarados posteriormente. A **passagem 2** (`check_semantics_pass2`) percorre recursivamente a AST, regista as variáveis locais de cada método, e delega a verificação de tipos a `check_node`, que opera em pós-ordem para garantir que os tipos dos filhos etsão anotados antes do nó pai ser verificado. Os erros são recolhidos numa lista ligada e impressos no final, antes das tabelas e da AST anotada.
+Each AST node is represented by the `node` structure, which contains: the node category (enum `category`), the original token text (`token`), the line and column in the input file (`line`, `col`), the annotated type (`annot_type`), the parameter signature for method calls (`annot_params`), and a pointer to the list of children.
+
+Children are stored in a `node_list` linked list with a sentinel node at the head, which simplifies insertion in `addchild` and index-based access in `get_child`. Printing is done recursively by `show` and `show_annotated`, with the type annotation printed as ` - type` after the node name, using `annot_params` for `Identifier` nodes of method calls and `annot_type` for all others.
+
+### AST Construction
+
+Nodes are created in the semantic actions of `jucompiler.y` using `newnode`. For multiple declarations on a single line (e.g. `int x, y;`), the auxiliary function `create_multiple_decls` creates a temporary `MethodBody` node as a container with one `FieldDecl`/`VarDecl` node per identifier, which is then unpacked into the parent node using `unpack_nodes`. Superfluous nodes are avoided: a `Block` with zero children is replaced by `NULL` and with a single child is replaced by that child itself, except when it represents a mandatory empty `Statement`.
+
+### Symbol Table Data Structure
+
+Each symbol is represented by the `Symbol` structure, which contains the name, type (`BasicType`), classification (`SymbolKind`: `SYM_FIELD`, `SYM_METHOD`, `SYM_PARAM`, `SYM_LOCAL`, `SYM_RETURN`), the list of formal parameter types (`ParamType *params`, methods only), and a pointer to the method's own symbol table (`nested_table`). The global table contains all fields and methods; each method's table, stored directly in `nested_table`, contains the pseudo-symbol `return`, the formal parameters, and the local variables.
+
+### Semantic Analysis Algorithm
+
+Semantic analysis is performed in two passes. **Pass 1** (`check_semantics_pass1`) eagerly registers all global fields and method headers in the global table, immediately creating each method's `nested_table` with the `return` symbol and formal parameters, which enables calls to methods declared later in the file. **Pass 2** (`check_semantics_pass2`) recursively traverses the AST, registers each method's local variables, and delegates type checking to `check_node`, which operates in post-order to ensure that children's types are annotated before the parent node is checked. Errors are collected in a linked list and printed at the end, before the symbol tables and the annotated AST.
